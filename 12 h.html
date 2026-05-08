@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>地支藏干圖</title>
+    <style>
+        /* 1. 共用屬性 (不隨主題改變的變數) */
+        :root {
+            --trans: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 2. 預設主題 (深色模式) */
+        body {
+            --bg: #0f0e0c; 
+            --gold: #d4a75b; 
+            --green: #4fac8d; 
+            --red: #e55b5b; 
+            --blue: #5b9dd4; 
+            --earth: #b08d5b; 
+            --metal: #9e9e9e; 
+            
+            --grid: rgba(212, 167, 91, 0.6); 
+            --sub-grid: rgba(212, 167, 91, 0.35); 
+
+            --bg-wood: rgba(79, 172, 141, 0.15); 
+            --bg-fire: rgba(229, 91, 91, 0.15); 
+            --bg-metal: rgba(158, 158, 158, 0.12); 
+            --bg-water: rgba(91, 157, 212, 0.15);
+
+            --highlight: rgba(212, 167, 91, 0.25); 
+            --highlight-conflict: rgba(229, 91, 91, 0.25); 
+        }
+
+        /* 3. 淺色主題覆蓋 */
+        body.light-theme {
+            --bg: #f5f0e6; 
+            --gold: #5d4037; 
+            --metal: #666666; 
+            
+            --grid: rgba(60, 60, 60, 0.6); 
+            --sub-grid: rgba(60, 60, 60, 0.35);
+
+            --bg-wood: rgba(46, 120, 95, 0.15); 
+            --bg-fire: rgba(180, 50, 50, 0.15); 
+            --bg-metal: rgba(102, 102, 102, 0.12); 
+            --bg-water: rgba(44, 94, 138, 0.15);
+
+            --highlight: rgba(93, 64, 55, 0.15); 
+            --highlight-conflict: rgba(180, 50, 50, 0.15); 
+        }
+
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; -webkit-touch-callout: none; user-select: none; }
+        
+        body { background: var(--bg); color: var(--gold); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; transition: background 0.4s; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; overflow: hidden; }
+        
+        .diagram-wrapper { position: relative; width: min(92vmin, 850px); height: min(92vmin, 850px); z-index: 5; margin-top: -10px; }
+        svg { width: 100%; height: 100%; display: block; overflow: visible; }
+        
+        .center-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 10; width: 37.5%; height: 37.5%; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; }
+        .big-branch { font-weight: bold; line-height: 1; transition: var(--trans); margin-bottom: clamp(5px, 2.5vmin, 20px); }
+        .stems-container { display: flex; justify-content: center; transition: var(--trans); }
+        .stem-group { display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
+        
+        /* 手機端預設：3x2 網格 */
+        .mode-console { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: clamp(10px, 2.5vh, 20px); z-index: 50; width: min(92vw, 420px); }
+        .btn-mode { padding: clamp(6px, 1.5vh, 10px) 0; border: 1.5px solid var(--grid); border-radius: 4px; background: transparent; color: var(--gold); cursor: pointer; transition: var(--trans); font-size: clamp(14px, 4vmin, 16px); font-weight: bold; text-align: center; }
+        .btn-mode.active { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+
+        /* 主題切換鈕置中於底部 */
+        .theme-switch { margin-top: clamp(15px, 3vh, 25px); z-index: 50; display: flex; justify-content: center; }
+        .btn-toggle { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--gold); background: #0f0e0c; cursor: pointer; transition: var(--trans); }
+        body.light-theme .btn-toggle { background: #f5f0e6; }
+
+        /* ====== 響應式切換點 (Desktop / 橫螢幕) ====== */
+        @media (min-width: 768px) {
+            .diagram-wrapper { width: min(80vh, 800px); height: min(80vh, 800px); margin-top: -3vh; }
+            .mode-console { display: flex; width: auto; gap: 12px; margin-top: 12px; }
+            .btn-mode { padding: 8px 18px; font-size: 16px; }
+            .theme-switch { margin-top: 15px; }
+        }
+
+        text { transition: fill 0.3s; }
+        .ring-line { fill: none; stroke: var(--grid); stroke-width: 2.5; } 
+        #activeSector { transition: d 0.3s cubic-bezier(0.4, 0, 0.2, 1), fill 0.3s; pointer-events: none; }
+        .interactive-sector { fill: transparent; cursor: pointer; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<div class="diagram-wrapper">
+    <svg viewBox="0 0 800 800">
+        <g id="bgArcs"></g>
+        <path id="activeSector" d="M400 400"></path>
+        <circle cx="400" cy="400" r="380" class="ring-line"/> 
+        <circle cx="400" cy="400" r="300" class="ring-line"/> 
+        <circle cx="400" cy="400" r="240" class="ring-line"/> 
+        <circle cx="400" cy="400" r="195" class="ring-line"/> 
+        <circle cx="400" cy="400" r="150" class="ring-line"/> 
+        <g id="gridLines"></g><g id="subGridLines"></g><g id="seasonTexts"></g><g id="stageTexts"></g><g id="branchTexts"></g><g id="stemTexts"></g>
+        <g id="interactionLayer"></g>
+    </svg>
+    <div class="center-display">
+        <div class="big-branch" id="centerBranch">寅</div>
+        <div class="stems-container" id="centerStems"></div>
+    </div>
+</div>
+
+<div class="mode-console">
+    <button class="btn-mode active" onclick="setMode('sanhe')">三合</button>
+    <button class="btn-mode" onclick="setMode('liuhe')">六合</button>
+    <button class="btn-mode" onclick="setMode('chong')">六沖</button>
+    <button class="btn-mode" onclick="setMode('xing')">相刑</button>
+    <button class="btn-mode" onclick="setMode('hai')">六害</button>
+    <button class="btn-mode" onclick="setMode('po')">六破</button>
+</div>
+
+<div class="theme-switch">
+    <div class="btn-toggle" onclick="toggleTheme()"></div>
+</div>
+
+<script>
+    const colors = { wood: 'var(--green)', fire: 'var(--red)', metal: 'var(--metal)', water: 'var(--blue)', earth: 'var(--earth)' };
+    const elementsMap = { '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土', '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水' };
+    const stemColors = { '甲': colors.wood, '乙': colors.wood, '丙': colors.fire, '丁': colors.fire, '戊': colors.earth, '己': colors.earth, '庚': colors.metal, '辛': colors.metal, '壬': colors.water, '癸': colors.water };
+
+    const modeNames = { chong: "六沖", xing: "相刑", hai: "六害", po: "六破" };
+    const modeWarnings = { chong: "對立衝擊", xing: "刑剋摩擦", hai: "暗中干擾", po: "結構破壞" };
+
+    const relationships = [
+        { sanhe: [0,4,8], liuhe: [1], chong: [6], xing: [3], hai: [7], po: [9], xName: "無禮之刑" },      // 子
+        { sanhe: [1,5,9], liuhe: [0], chong: [7], xing: [7,10], hai: [6], po: [4], xName: "恃勢之刑" },    // 丑
+        { sanhe: [2,6,10], liuhe: [11], chong: [8], xing: [5,8], hai: [5], po: [11], xName: "無恩之刑" },   // 寅
+        { sanhe: [3,7,11], liuhe: [10], chong: [9], xing: [0], hai: [4], po: [6], xName: "無禮之刑" },     // 卯
+        { sanhe: [4,0,8], liuhe: [9], chong: [10], xing: [4], hai: [3], po: [1], xName: "辰辰自刑" },     // 辰
+        { sanhe: [5,1,9], liuhe: [8], chong: [11], xing: [2,8], hai: [2], po: [8], xName: "無恩之刑" },   // 巳
+        { sanhe: [6,2,10], liuhe: [7], chong: [0], xing: [6], hai: [1], po: [3], xName: "午午自刑" },     // 午
+        { sanhe: [7,3,11], liuhe: [6], chong: [1], xing: [1,10], hai: [0], po: [10], xName: "恃勢之刑" },  // 未
+        { sanhe: [8,0,4], liuhe: [5], chong: [2], xing: [2,5], hai: [11], po: [5], xName: "無恩之刑" },   // 申
+        { sanhe: [9,1,5], liuhe: [4], chong: [3], xing: [9], hai: [10], po: [0], xName: "酉酉自刑" },     // 酉
+        { sanhe: [10,2,6], liuhe: [3], chong: [4], xing: [1,7], hai: [9], po: [7], xName: "恃勢之刑" },    // 戌
+        { sanhe: [11,3,7], liuhe: [2], chong: [5], xing: [11], hai: [8], po: [2], xName: "亥亥自刑" }     // 亥
+    ];
+
+    const baziData = [
+        { b: "子", s: "冬", stage: "帝旺", color: colors.water, start: -12, end: 12, mid: 0, bg: "var(--bg-water-peak)", stems: [{n: "癸", r: 1.0}] },
+        { b: "丑", s: "冬", stage: "墓庫", color: colors.earth, start: 12, end: 45, mid: 28.5, bg: "var(--bg-water-side)", stems: [{n: "己", r: 0.6}, {n: "癸", r: 0.25}, {n: "辛", r: 0.15}] },
+        { b: "寅", s: "春", stage: "長生", color: colors.wood, start: 45, end: 78, mid: 61.5, bg: "var(--bg-wood-side)", stems: [{n: "甲", r: 0.6}, {n: "丙", r: 0.25}, {n: "戊", r: 0.15}] },
+        { b: "卯", s: "春", stage: "帝旺", color: colors.wood, start: 78, end: 102, mid: 90, bg: "var(--bg-wood-peak)", stems: [{n: "乙", r: 1.0}] },
+        { b: "辰", s: "春", stage: "墓庫", color: colors.earth, start: 102, end: 135, mid: 118.5, bg: "var(--bg-wood-side)", stems: [{n: "戊", r: 0.6}, {n: "乙", r: 0.25}, {n: "癸", r: 0.15}] },
+        { b: "巳", s: "夏", stage: "長生", color: colors.fire, start: 135, end: 168, mid: 151.5, bg: "var(--bg-fire-side)", stems: [{n: "丙", r: 0.6}, {n: "戊", r: 0.25}, {n: "庚", r: 0.15}] },
+        { b: "午", s: "夏", stage: "帝旺", color: colors.fire, start: 168, end: 192, mid: 180, bg: "var(--bg-fire-peak)", stems: [{n: "丁", r: 0.7}, {n: "己", r: 0.3}] },
+        { b: "未", s: "夏", stage: "墓庫", color: colors.earth, start: 192, end: 225, mid: 208.5, bg: "var(--bg-fire-side)", stems: [{n: "己", r: 0.6}, {n: "丁", r: 0.25}, {n: "乙", r: 0.15}] },
+        { b: "申", s: "秋", stage: "長生", color: colors.metal, start: 225, end: 258, mid: 241.5, bg: "var(--bg-metal-side)", stems: [{n: "庚", r: 0.6}, {n: "壬", r: 0.25}, {n: "戊", r: 0.15}] },
+        { b: "酉", s: "秋", stage: "帝旺", color: colors.metal, start: 258, end: 282, mid: 270, bg: "var(--bg-metal-peak)", stems: [{n: "辛", r: 1.0}] },
+        { b: "戌", s: "秋", stage: "墓庫", color: colors.earth, start: 282, end: 315, mid: 298.5, bg: "var(--bg-metal-side)", stems: [{n: "戊", r: 0.6}, {n: "辛", r: 0.25}, {n: "丁", r: 0.15}] },
+        { b: "亥", s: "冬", stage: "長生", color: colors.water, start: 315, end: 348, mid: 331.5, bg: "var(--bg-water-side)", stems: [{n: "壬", r: 0.7}, {n: "甲", r: 0.3}] }
+    ];
+
+    const seasonData = [
+        { s: "冬季", start: 315, end: 405, tColor: colors.water, mid: 360, hui: "三會北方水", branches: "亥 ‧ 子 ‧ 丑" },
+        { s: "春季", start: 45, end: 135, tColor: colors.wood, mid: 90, hui: "三會東方木", branches: "寅 ‧ 卯 ‧ 辰" },
+        { s: "夏季", start: 135, end: 225, tColor: colors.fire, mid: 180, hui: "三會南方火", branches: "巳 ‧ 午 ‧ 未" },
+        { s: "秋季", start: 225, end: 315, tColor: colors.metal, mid: 270, hui: "三會西方金", branches: "申 ‧ 酉 ‧ 戌" }
+    ];
+
+    let currentMode = 'sanhe'; 
+    let currentBranchIndex = 2; 
+    let currentSeasonIndex = 1; 
+    let isBranchView = true;
+
+    const polarToCartesian = (r, deg) => ({ x: 400 + (r * Math.cos((deg - 90) * Math.PI / 180.0)), y: 400 + (r * Math.sin((deg - 90) * Math.PI / 180.0)) });
+    const createArcPath = (r1, r2, startDeg, endDeg) => {
+        const p1 = polarToCartesian(r2, startDeg), p2 = polarToCartesian(r2, endDeg), p3 = polarToCartesian(r1, endDeg), p4 = polarToCartesian(r1, startDeg);
+        return `M ${p4.x} ${p4.y} L ${p1.x} ${p1.y} A ${r2} ${r2} 0 0 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${r1} ${r1} 0 0 0 ${p4.x} ${p4.y} Z`;
+    };
+
+    function setMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.btn-mode').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.btn-mode[onclick="setMode('${mode}')"]`).classList.add('active');
+        updateUI();
+    }
+
+    function createSVGText(parent, text, r, deg, color, fontSize, isBold = false) {
+        const pos = polarToCartesian(r, deg);
+        const el = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        el.setAttribute("x", pos.x); el.setAttribute("y", pos.y); el.setAttribute("fill", color); el.setAttribute("font-size", fontSize);
+        if(isBold) el.setAttribute("font-weight", "bold");
+        el.setAttribute("text-anchor", "middle"); el.setAttribute("dominant-baseline", "middle");
+        let rotateDeg = deg;
+        if (deg >= 90 && deg <= 270) rotateDeg -= 180; 
+        el.setAttribute("transform", `rotate(${rotateDeg} ${pos.x} ${pos.y})`);
+        el.textContent = text;
+        document.getElementById(parent).appendChild(el);
+    }
+
+    function createStemWithElement(parent, stemObj, r, deg) {
+        const pos = polarToCartesian(r, deg);
+        const el = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        el.setAttribute("x", pos.x); el.setAttribute("y", pos.y); el.setAttribute("text-anchor", "middle"); el.setAttribute("dominant-baseline", "middle");
+        let rotateDeg = deg;
+        if (deg >= 90 && deg <= 270) rotateDeg -= 180; 
+        el.setAttribute("transform", `rotate(${rotateDeg} ${pos.x} ${pos.y})`);
+        const stemColor = stemColors[stemObj.n];
+        const mainTspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+        mainTspan.textContent = stemObj.n; mainTspan.setAttribute("fill", stemColor); mainTspan.setAttribute("font-size", "22"); mainTspan.setAttribute("font-weight", "bold"); mainTspan.setAttribute("x", pos.x); mainTspan.setAttribute("dy", "-0.2em"); 
+        const elemTspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+        elemTspan.textContent = elementsMap[stemObj.n]; elemTspan.setAttribute("fill", stemColor); elemTspan.setAttribute("font-size", "13"); elemTspan.style.opacity = "0.8"; elemTspan.setAttribute("x", pos.x); elemTspan.setAttribute("dy", "1.3em"); 
+        el.appendChild(mainTspan); el.appendChild(elemTspan);
+        document.getElementById(parent).appendChild(el);
+    }
+
+    function initDiagram() {
+        seasonData.forEach((season, index) => {
+            createSVGText("seasonTexts", season.s, 172.5, season.mid, "var(--gold)", "18", true);
+            const clickArea = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            clickArea.setAttribute("d", createArcPath(150, 195, season.start, season.end));
+            clickArea.setAttribute("class", "interactive-sector");
+            clickArea.addEventListener("click", () => { isBranchView = false; currentSeasonIndex = index; updateUI(); });
+            document.getElementById('interactionLayer').appendChild(clickArea);
+        });
+        baziData.forEach((item, index) => {
+            let drawEnd = (item.start > item.end) ? item.end + 360 : item.end;
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            const p1 = polarToCartesian((item.start % 90 === 45 ? 150 : 195), item.start), p2 = polarToCartesian(380, item.start);
+            line.setAttribute("x1", p1.x); line.setAttribute("y1", p1.y); line.setAttribute("x2", p2.x); line.setAttribute("y2", p2.y);
+            line.setAttribute("stroke", "var(--grid)"); line.setAttribute("stroke-width", (item.start % 90 === 45 ? "5" : "3.5")); 
+            document.getElementById('gridLines').appendChild(line);
+            createSVGText("stageTexts", item.stage, 217.5, item.mid, "var(--gold)", "16");
+            createSVGText("branchTexts", item.b, 270, item.mid, item.color, "28", true);
+            let currentDeg = item.start;
+            item.stems.forEach((stem, stemIndex) => {
+                const stemSpan = (drawEnd - item.start) * stem.r;
+                createStemWithElement("stemTexts", stem, 340, currentDeg + stemSpan/2);
+                if (stemIndex < item.stems.length - 1) {
+                    const subLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    const sp1 = polarToCartesian(300, currentDeg + stemSpan), sp2 = polarToCartesian(380, currentDeg + stemSpan);
+                    subLine.setAttribute("x1", sp1.x); subLine.setAttribute("y1", sp1.y); subLine.setAttribute("x2", sp2.x); subLine.setAttribute("y2", sp2.y);
+                    subLine.setAttribute("stroke", "var(--sub-grid)"); subLine.setAttribute("stroke-width", "2.5"); 
+                    document.getElementById('subGridLines').appendChild(subLine);
+                }
+                currentDeg += stemSpan;
+            });
+            const clickArea = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            clickArea.setAttribute("d", createArcPath(195, 380, item.start, drawEnd));
+            clickArea.setAttribute("class", "interactive-sector");
+            
+            let isTouch = false;
+            let touchStartX = 0, touchStartY = 0;
+            
+            clickArea.addEventListener("click", (e) => { 
+                if(isTouch) return; 
+                isBranchView = true; currentBranchIndex = index; updateUI(); 
+            });
+            
+            clickArea.addEventListener("touchstart", (e) => { 
+                isTouch = true; 
+                touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
+            }, {passive: true});
+            
+            clickArea.addEventListener("touchend", (e) => { 
+                let dx = e.changedTouches[0].clientX - touchStartX;
+                let dy = e.changedTouches[0].clientY - touchStartY;
+                if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+                    isBranchView = true; currentBranchIndex = index; updateUI();
+                }
+                setTimeout(() => isTouch = false, 300); 
+            }, {passive: true});
+
+            document.getElementById('interactionLayer').appendChild(clickArea);
+        });
+        updateUI();
+    }
+
+    function updateUI() {
+        const cb = document.getElementById('centerBranch'), cs = document.getElementById('centerStems'), activeSector = document.getElementById('activeSector');
+        if (isBranchView) {
+            const item = baziData[currentBranchIndex], rel = relationships[currentBranchIndex];
+            
+            cb.style.fontSize = "clamp(35px, 12vmin, 90px)"; 
+            cb.style.letterSpacing = "normal";
+            cb.textContent = item.b; 
+            
+            const isConflict = ['chong', 'xing', 'hai', 'po'].includes(currentMode);
+            cb.style.color = isConflict ? "var(--red)" : item.color;
+            
+            if (!isConflict) {
+                cs.style.flexDirection = "row"; 
+                cs.style.gap = "clamp(8px, 2vmin, 30px)";
+                cs.innerHTML = item.stems.map(s => `
+                    <div class="stem-group" style="color: ${stemColors[s.n]};">
+                        <span class="stem-main" style="font-size: clamp(16px, 4.5vmin, 32px);">${s.n}</span>
+                        <span class="stem-elem" style="font-size: clamp(10px, 2.5vmin, 16px); opacity: 0.8;">${elementsMap[s.n]}</span>
+                    </div>`).join("");
+            } else {
+                cs.style.flexDirection = "column"; 
+                cs.style.gap = "clamp(4px, 1vmin, 8px)";
+                let title = modeNames[currentMode];
+                let subtitle = modeWarnings[currentMode];
+                
+                if (currentMode === 'xing') {
+                    title = rel.xName;
+                    subtitle = (rel.xing.length === 1 && rel.xing[0] === currentBranchIndex) ? "自刑內耗" : "相刑衝突";
+                }
+                
+                cs.innerHTML = `
+                    <div style="font-size: clamp(16px, 5vmin, 34px); font-weight: bold; letter-spacing: 2px; color: var(--red);">${title}</div>
+                    <div style="font-size: clamp(11px, 3vmin, 20px); opacity: 0.8; letter-spacing: 1px; color: var(--red);">${subtitle}</div>`;
+            }
+            
+            let targets = rel[currentMode] || [];
+            let combinedPath = "";
+            targets.forEach(idx => {
+                const t = baziData[idx]; let dEnd = (t.start > t.end) ? t.end + 360 : t.end;
+                combinedPath += (idx === currentBranchIndex) ? createArcPath(195, 380, t.start, dEnd) + " " : createArcPath(240, 300, t.start, dEnd) + " ";
+            });
+            if (!targets.includes(currentBranchIndex)) {
+                let dEnd = (item.start > item.end) ? item.end + 360 : item.end;
+                combinedPath += createArcPath(195, 380, item.start, dEnd);
+            }
+            activeSector.setAttribute("d", combinedPath.trim());
+            activeSector.style.fill = isConflict ? "var(--highlight-conflict)" : "var(--highlight)";
+        } else {
+            const season = seasonData[currentSeasonIndex];
+            cb.textContent = season.s; 
+            cb.style.color = season.tColor; 
+            cb.style.fontSize = "clamp(28px, 8vmin, 60px)"; 
+            cb.style.letterSpacing = "2px";
+            
+            cs.style.flexDirection = "column"; 
+            cs.style.gap = "clamp(4px, 1vmin, 10px)";
+            cs.innerHTML = `
+                <div style="font-size: clamp(13px, 3.8vmin, 26px); font-weight: bold; letter-spacing: 4px; color: var(--gold); margin-left: 4px;">${season.branches}</div>
+                <div style="font-size: clamp(10px, 2.8vmin, 16px); opacity: 0.8; letter-spacing: 1px; color: var(--gold);">${season.hui}</div>`;
+                
+            activeSector.setAttribute("d", createArcPath(150, 195, season.start, season.end));
+            activeSector.style.fill = "var(--highlight)";
+        }
+    }
+
+    function toggleTheme() { document.body.classList.toggle('light-theme'); }
+    initDiagram();
+</script>
+</body>
+</html>

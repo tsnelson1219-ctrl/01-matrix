@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
+    <title>十神五極</title>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --bg: #e9e4d1; --gold: #5d5d4d; --text-main: #5d5d4d; 
+            --green: #2e5a4b; --red: #a64d4d;
+            --wood: #2d5d4d; --fire: #a64d4d; --earth: #8c6d31; --metal: #5a5a5a; --water: #2d4a5d;
+            --same-bg: rgba(46, 90, 75, 0.15); --oppo-bg: rgba(166, 77, 77, 0.15); 
+        }
+        body.dark-theme { 
+            --bg: #0f0e0c; --gold: #d4a75b; --text-main: #4a907a; 
+            --green: #4fac8d; --red: #ff3e3e; 
+            --same-bg: rgba(79, 172, 141, 0.2); --oppo-bg: rgba(255, 62, 62, 0.2); 
+        }
+        body { background: var(--bg); color: var(--text-main); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; font-family: "PingFang TC", sans-serif; overflow: hidden; transition: background 0.5s; }
+        
+        /* 修正 1：縮減圓盤最大高度，確保電腦螢幕底部不被擠壓 */
+        .disc-wrapper { position: relative; width: min(92vw, calc(100vh - 210px), 680px); height: min(92vw, calc(100vh - 210px), 680px); cursor: pointer; outline: none; }
+        svg { width: 100%; height: 100%; overflow: visible; }
+
+        .node-group { transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sector-part, .card-part { transition: opacity 0.5s ease, transform 0.8s ease; transform-origin: 350px 350px; }
+        .dm-main, .bazi-group, .connect-line, .relation-label { transition: all 0.7s ease; }
+
+        .sector-path, .inner-grid { fill: none; stroke: var(--gold); stroke-width: 1.2; }
+        .inner-grid { opacity: 0.5; }
+        
+        .card-bg { fill: rgba(93, 93, 77, 0.05); stroke: var(--gold); stroke-width: 1.5; rx: 8px; }
+        .card-line { fill: none; stroke: var(--gold); stroke-width: 0.8; opacity: 0.5; }
+        
+        .connect-line { 
+            fill: none; stroke: var(--text-main); stroke-width: 2.2; 
+            opacity: 0.8; stroke-dasharray: 8 4; 
+            filter: drop-shadow(0 0 6px var(--text-main));
+        }
+
+        .c-t, .c-s, .inner-label, .outer-stem, .relation-label, .bazi-sub { fill: var(--text-main); }
+        
+        /* 修正 2：強制上移 45px，縮小電腦版的垂直間隙 */
+        .footer { 
+            margin-top: -45px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 12px;
+            padding-bottom: 20px; 
+            width: 100%; 
+            position: relative;
+            z-index: 10;
+        }
+        
+        .selectable {
+            -webkit-user-select: text;
+            user-select: text;
+            cursor: text;
+        }
+
+        .date-pill { padding: 8px 22px; border: 1.5px solid var(--gold); border-radius: 20px; font-size: 13px; font-weight: bold; background: rgba(93, 93, 77, 0.05); cursor: pointer; color: var(--text-main); text-align: center; max-width: 85vw; line-height: 1.5; }
+        
+        .q-btn {
+            width: 36px; height: 36px; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center;
+            font-size: 14px; font-weight: 900; color: #fff; cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.2); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+            user-select: none; 
+        }
+        .q-btn:active { transform: scale(0.85); }
+        
+        /* 修正 3：回到 footer 流中，自動置中，並增加一點與上方的間隔 */
+        .theme-btn { 
+            width: 32px; height: 32px; 
+            margin-top: 5px;
+            border-radius: 50%; 
+            border: 2.5px solid var(--gold); 
+            cursor: pointer; 
+            opacity: 0.5; 
+        }
+    </style>
+</head>
+<body>
+
+<div class="disc-wrapper" onclick="toggleMode()">
+    <svg id="main-svg" viewBox="0 0 700 700">
+        <g id="grid-extras"></g>
+        <g id="node-0" class="node-group"></g>
+        <g id="node-1" class="node-group"></g>
+        <g id="node-2" class="node-group"></g>
+        <g id="node-3" class="node-group"></g>
+        <g id="node-4" class="node-group"></g>
+        
+        <text x="350" y="335" class="dm-main selectable" id="dmDisplay" text-anchor="middle" dominant-baseline="middle" font-weight="900" font-size="60" onclick="event.stopPropagation()">--</text>
+        <g id="bazi-group" class="bazi-group" onclick="event.stopPropagation()">
+            <text class="bazi-sub selectable" id="baziL1" text-anchor="middle" dominant-baseline="middle" font-size="20"></text>
+            <text class="bazi-sub selectable" id="baziL2" text-anchor="middle" dominant-baseline="middle" font-size="20"></text>
+        </g>
+    </svg>
+</div>
+
+<div class="footer">
+    <div class="date-pill" id="dp" onclick="toggleModal(true); event.stopPropagation();" style="user-select: none;">設定時間...</div>
+    
+    <div style="display:flex; gap:15px; margin: 2px 0;">
+        <div class="q-btn" style="background:var(--wood)" onclick="setQuick(0); event.stopPropagation();">木</div>
+        <div class="q-btn" style="background:var(--fire)" onclick="setQuick(1); event.stopPropagation();">火</div>
+        <div class="q-btn" style="background:var(--earth)" onclick="setQuick(2); event.stopPropagation();">土</div>
+        <div class="q-btn" style="background:var(--metal)" onclick="setQuick(3); event.stopPropagation();">金</div>
+        <div class="q-btn" style="background:var(--water)" onclick="setQuick(4); event.stopPropagation();">水</div>
+    </div>
+
+    <div class="date-pill" style="border-width:3.5px; color:var(--red);" onclick="resetToToday(); event.stopPropagation();">
+        <span id="dp-ref" class="selectable" onclick="event.stopPropagation();">今日干支...</span>
+    </div>
+
+    <div class="theme-btn" onclick="document.body.classList.toggle('dark-theme'); event.stopPropagation();"></div>
+</div>
+
+<div class="modal" id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); backdrop-filter:blur(8px); z-index:100; justify-content:center; align-items:center;">
+    <div style="background:var(--bg); padding:30px; border-radius:20px; border:2px solid var(--gold); text-align:center; width:300px;">
+        <h4 style="margin-top:0;">時間設定</h4>
+        <input type="datetime-local" id="dtInput" style="width:100%; padding:10px; border-radius:8px; border:1.2px solid var(--gold); background:transparent; color:inherit; margin-bottom:20px;">
+        <button onclick="updateInput()" style="width:100%; padding:12px; background:var(--green); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">確定</button>
+        <button onclick="toggleModal(false)" style="width:100%; margin-top:10px; background:#888; color:white; border:none; border-radius:8px; padding:10px; cursor:pointer;">取消</button>
+    </div>
+</div>
+
+<script>
+    const ELEMENTS = ["木", "火", "土", "金", "水"], WX_COLOR = { "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water" };
+    const GOD_NAMES = ["比肩", "劫財", "食神", "傷官", "偏財", "正財", "七殺", "正官", "偏印", "正印"];
+    const STEMS = [["甲", "乙"], ["丙", "丁"], ["戊", "己"], ["庚", "辛"], ["壬", "癸"]];
+    let isGrid = false, cur = null;
+
+    function toggleModal(s) { document.getElementById('modal').style.display = s ? 'flex' : 'none'; }
+    function toggleMode() { isGrid = !isGrid; render(); }
+    function updateInput() { const v = document.getElementById('dtInput').value; if(v){ calc(v); toggleModal(false); } }
+    function getNowStr() { const n = new Date(); n.setMinutes(n.getMinutes() - n.getTimezoneOffset()); return n.toISOString().slice(0, 16); }
+    function resetToToday() { const n = getNowStr(); document.getElementById('dtInput').value = n; calc(n); }
+
+    function getBaziStr(ts) {
+        const t = ts.match(/\d+/g);
+        const s = Solar.fromYmdHms(parseInt(t[0]),parseInt(t[1]),parseInt(t[2]),parseInt(t[3]),parseInt(t[4]),0);
+        const lunar = s.getLunar();
+        const bc = lunar.getEightChar();
+        return `今日：${bc.getYear()}年 ${bc.getMonth()}月 ${bc.getDay()}日 ${bc.getTime()}時 <span style="font-size:12px; font-weight:normal;">(農曆${lunar.getMonthInChinese()}月${lunar.getDayInChinese()})</span>`;
+    }
+
+    function calc(ts) {
+        const t = ts.match(/\d+/g);
+        const s = Solar.fromYmdHms(parseInt(t[0]),parseInt(t[1]),parseInt(t[2]),parseInt(t[3]),parseInt(t[4]),0);
+        const lunar = s.getLunar(), bc = lunar.getEightChar(), dg = bc.getDayGan();
+        const lunarStr = lunar.getMonthInChinese() + '月' + lunar.getDayInChinese();
+        let di = -1, dp = -1;
+        for(let i=0;i<5;i++){ if(STEMS[i][0]===dg){di=i;dp=0;} if(STEMS[i][1]===dg){di=i;dp=1;} }
+        cur = { dg, dw: ELEMENTS[di], di, dp, year: bc.getYear(), month: bc.getMonth(), day: bc.getDay(), time: bc.getTime(), ts, lunarStr, isQuick: false };
+        initDOM(); render();
+    }
+
+    function setQuick(idx) {
+        let newDp = 0; 
+        if (cur && cur.di === idx && cur.isQuick) newDp = (cur.dp + 1) % 2;
+        cur = { dg: STEMS[idx][newDp], dw: ELEMENTS[idx], di: idx, dp: newDp, year: "-", month: "-", day: "-", time: "-", ts: document.getElementById('dtInput').value, lunarStr: cur ? cur.lunarStr : "", isQuick: true };
+        initDOM(); render();
+    }
+
+    function initDOM() {
+        if(!cur) return;
+        for(let i=0; i<5; i++) {
+            const g = document.getElementById(`node-${i}`), targetIdx = (cur.di + i) % 5, targetWx = ELEMENTS[targetIdx];
+            g.innerHTML = `
+                <g class="sector-part">
+                    <path class="sector-bg-s"></path><path class="sector-bg-o"></path>
+                    <path class="sector-path"></path><path class="inner-arc-180"></path><path class="inner-arc-230"></path><path class="inner-radial-sep"></path>
+                    <text class="w-label" text-anchor="middle" dominant-baseline="middle" font-weight="900" font-size="22" style="fill:var(--${WX_COLOR[targetWx]})">${targetWx}</text>
+                    <g class="s-texts"></g>
+                </g>
+                <g class="card-part" style="opacity:0; transform: scale(0.5);">
+                    <rect class="c-bg-s" x="300" y="305" width="50" height="60" fill="var(--same-bg)"></rect><rect class="c-bg-o" x="350" y="305" width="50" height="60" fill="var(--oppo-bg)"></rect>
+                    <rect class="card-bg" x="300" y="305" width="100" height="90"></rect><line class="card-line" x1="300" y1="335" x2="400" y2="335"></line><line class="card-line" x1="300" y1="365" x2="400" y2="365"></line><line class="card-line" x1="350" y1="305" x2="350" y2="365"></line>
+                    <text class="c-t" x="325" y="320" text-anchor="middle" dominant-baseline="middle" font-size="14">${GOD_NAMES[i*2]}</text><text class="c-t" x="375" y="320" text-anchor="middle" dominant-baseline="middle" font-size="14">${GOD_NAMES[i*2+1]}</text>
+                    <text class="c-s" x="325" y="350" text-anchor="middle" dominant-baseline="middle" font-weight="bold" font-size="16">${STEMS[targetIdx][(cur.dp+0)%2]}</text><text class="c-s" x="375" y="350" text-anchor="middle" dominant-baseline="middle" font-weight="bold" font-size="16">${STEMS[targetIdx][(cur.dp+1)%2]}</text>
+                    <text class="c-title" x="350" y="380" text-anchor="middle" dominant-baseline="middle" font-weight="900" font-size="16" style="fill:var(--${WX_COLOR[targetWx]})">${targetWx}</text>
+                </g>`;
+            const sPart = g.querySelector('.sector-part'), gap=10, gArc=310/5, sArc=gArc/2, sS=5+i*(gArc+gap), sE=sS+gArc, sM=sS+gArc/2;
+            const isT = (i===0||i===4), rot = isT? sM: sM+180;
+            sPart.querySelector('.sector-bg-s').setAttribute("d", getArc(sS, sS+sArc, 180, 280)); sPart.querySelector('.sector-bg-s').style.fill = "var(--same-bg)";
+            sPart.querySelector('.sector-bg-o').setAttribute("d", getArc(sS+sArc, sE, 180, 280)); sPart.querySelector('.sector-bg-o').style.fill = "var(--oppo-bg)";
+            sPart.querySelector('.sector-path').setAttribute("d", getArc(sS, sE, 140, 280));
+            sPart.querySelector('.inner-arc-180').setAttribute("d", getArcLine(sS, sE, 180)); sPart.querySelector('.inner-arc-180').setAttribute("class", "inner-grid");
+            sPart.querySelector('.inner-arc-230').setAttribute("d", getArcLine(sS, sE, 230)); sPart.querySelector('.inner-arc-230').setAttribute("class", "inner-grid");
+            const pStart = getXY(180, sS+sArc), pEnd = getXY(280, sS+sArc);
+            sPart.querySelector('.inner-radial-sep').setAttribute("d", `M ${pStart.x} ${pStart.y} L ${pEnd.x} ${pEnd.y}`); sPart.querySelector('.inner-radial-sep').setAttribute("class", "inner-grid");
+            const wXY = getXY(160, sM), wL = sPart.querySelector('.w-label'); wL.setAttribute("x", wXY.x); wL.setAttribute("y", wXY.y); wL.setAttribute("transform", `rotate(${rot},${wXY.x},${wXY.y})`);
+            const tG = sPart.querySelector('.s-texts');
+            for(let j=0; j<2; j++) {
+                const ssM = sS+j*sArc+sArc/2, ssRot = isT? ssM: ssM+180, p1 = getXY(205, ssM), p2 = getXY(255, ssM);
+                tG.appendChild(createSVGText(p1.x, p1.y, GOD_NAMES[i*2+j], "inner-label", ssRot));
+                tG.appendChild(createSVGText(p2.x, p2.y, STEMS[targetIdx][(cur.dp+j)%2]+targetWx, "outer-stem", ssRot));
+            }
+        }
+    }
+
+    function render() {
+        if(!cur) return;
+        const d = cur, bG = document.getElementById('bazi-group'), bL1 = document.getElementById('baziL1'), bL2 = document.getElementById('baziL2');
+        const extras = document.getElementById('grid-extras'), dm = document.getElementById('dmDisplay');
+        dm.textContent = d.dg + d.dw; dm.style.fill = `var(--${WX_COLOR[d.dw]})`; extras.innerHTML = '';
+        const gridPos = [{x:460, y:240}, {x:630, y:350}, {x:350, y:480}, {x:130, y:350}, {x:350, y:100}];
+        if(isGrid) {
+            bG.setAttribute("transform", "translate(0, 190)"); 
+            bL1.setAttribute("x", 350); bL1.textContent = `${d.year}年 ${d.month}月 ${d.day}日 ${d.time}時`; bL1.setAttribute("font-weight", "800"); bL2.textContent = "";
+            gridPos.forEach((p, i) => {
+                if(i===0) return;
+                const offsets = [[0,0], [135,-15], [-25,75], [-110,-15], [-25,-105]], labels = ["", "我生", "我剋", "剋我", "生我"];
+                let ex=p.x, ey=p.y; if(ex>350) ex-=50; else if(ex<350) ex+=50; if(ey>350) ey-=45; else if(ey<350) ey+=45;
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                line.setAttribute("d", `M 350 350 L ${ex} ${ey}`); line.setAttribute("class", "connect-line"); extras.appendChild(line);
+                const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                txt.setAttribute("x", 350+offsets[i][0]); txt.setAttribute("y", 350+offsets[i][1]); txt.setAttribute("class", "relation-label"); txt.setAttribute("text-anchor", "middle"); txt.textContent = labels[i]; extras.appendChild(txt);
+            });
+        } else {
+            bG.setAttribute("transform", "translate(0, 0)");
+            bL1.setAttribute("x", 310); bL1.setAttribute("y", 395); bL2.setAttribute("x", 390); bL2.setAttribute("y", 425);
+            bL1.textContent = `${d.year}年 ${d.month}月`; bL2.textContent = `${d.day}日 ${d.time}時`; bL1.setAttribute("font-weight", "800"); bL2.setAttribute("font-weight", "800");
+        }
+        for(let i=0; i<5; i++) {
+            const g = document.getElementById(`node-${i}`), s = g.querySelector('.sector-part'), c = g.querySelector('.card-part');
+            if(isGrid) { g.setAttribute("transform", `translate(${gridPos[i].x-350}, ${gridPos[i].y-350})`); s.style.opacity = "0"; s.style.transform = "scale(0.6)"; c.style.opacity = "1"; c.style.transform = "scale(1)"; }
+            else { g.setAttribute("transform", "translate(0,0)"); s.style.opacity = "1"; s.style.transform = "scale(1)"; c.style.opacity = "0"; c.style.transform = "scale(0.6)"; }
+        }
+        document.getElementById('dp').innerHTML = d.isQuick ? `設定：自訂${d.dg}${d.dw}` : `設定：${d.ts.replace('T', ' ')} <span style="font-size:12px; font-weight:normal;">(農曆${d.lunarStr})</span>`;
+    }
+
+    function getXY(r, d) { const ra = (d-90)*Math.PI/180; return { x: 350+r*Math.cos(ra), y: 350+r*Math.sin(ra) }; }
+    function getArc(s, e, r1, r2) { const f = (r, d) => { const ra = (d-90)*Math.PI/180; return { x: 350+r*Math.cos(ra), y: 350+r*Math.sin(ra) }; }; const p1 = f(r1, s), p2 = f(r1, e), p3 = f(r2, e), p4 = f(r2, s); return `M ${p1.x} ${p1.y} A ${r1} ${r1} 0 0 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${r2} ${r2} 0 0 0 ${p4.x} ${p4.y} Z`; }
+    function getArcLine(s, e, r) { const p1=getXY(r,s), p2=getXY(r,e); return `M ${p1.x} ${p1.y} A ${r} ${r} 0 0 1 ${p2.x} ${p2.y}`; }
+    function createSVGText(x, y, txt, cls, rot) { const t = document.createElementNS("http://www.w3.org/2000/svg", "text"); t.setAttribute("x", x); t.setAttribute("y", y); t.setAttribute("class", cls); t.setAttribute("text-anchor", "middle"); t.setAttribute("dominant-baseline", "middle"); t.setAttribute("transform", `rotate(${rot},${x},${y})`); t.textContent = txt; return t; }
+    window.onload = () => { const n = getNowStr(); document.getElementById('dp-ref').innerHTML = getBaziStr(n); document.getElementById('dtInput').value = n; calc(n); };
+</script>
+</body>
+</html>

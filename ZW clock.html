@@ -1,0 +1,251 @@
+<!-- Version: 9.6 | Title: 子午流注-合於日月 | Update: Diff-Check DOM Rendering to Preserve Text Selection -->
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="./icon.png">
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
+    <title>子午流注-合於日月</title>
+    <style>
+        :root {
+            --bg: #0f0e0c; --gold: #d4a75b; --green: #4fac8d; --red: #ff3e3e;
+            --grid: rgba(212, 167, 91, 0.15); --glow: drop-shadow(0 0 10px var(--green));
+            --center-glow: drop-shadow(0 0 15px var(--gold)) drop-shadow(0 0 50px rgba(212, 167, 91, 0.5));
+            --trans: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            --stagger: 0.015s;
+        }
+
+        * { -webkit-tap-highlight-color: transparent; }
+
+        body.light-theme {
+            --bg: #f1e7d0; --gold: #5d4037; --green: #2e5a4b; --red: #a93226;
+            --grid: rgba(60, 60, 60, 0.25); --glow: none;
+            --center-glow: drop-shadow(0 0 15px rgba(139, 107, 61, 0.3));
+        }
+
+        .stagger-item { transition: opacity 0.2s ease-in-out; opacity: 1; }
+        body.minimal-mode .stagger-item { opacity: 0; transition-delay: calc((11 - var(--i)) * var(--stagger)); }
+        body:not(.minimal-mode) .stagger-item { transition-delay: calc(var(--i) * var(--stagger)); }
+
+        .persistent-item { transition: opacity 0.3s ease; opacity: 0; pointer-events: none; }
+        body.minimal-mode .persistent-item { opacity: 0.8; pointer-events: auto; }
+
+        .outer-ring, .center-display, .footer-container, #activeSector, #greenDot { transition: opacity 0.4s ease; opacity: 1; }
+        body.minimal-mode .outer-ring, body.minimal-mode .center-display, body.minimal-mode .footer-container, body.minimal-mode #activeSector, body.minimal-mode #greenDot { opacity: 0 !important; visibility: hidden; }
+
+        body.preview-mode .outer-ring, body.preview-mode .zhi-segment, body.preview-mode #activeSector, body.preview-mode #hourHandLine, body.preview-mode #minHandLine, body.preview-mode #cb, body.preview-mode #ct, body.preview-mode #timeLink, body.preview-mode #secondProgress, body.preview-mode #redHourDot, body.preview-mode #redMinDot, body.preview-mode #greenDot { opacity: 0 !important; visibility: hidden !important; pointer-events: none; }
+        
+        body { background: var(--bg); color: var(--gold); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; transition: var(--trans); font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; overflow: hidden; }
+        .clock-wrapper { position: relative; width: min(95vmin, 550px); height: min(95vmin, 550px); cursor: pointer; z-index: 5; transition: transform 0.2s; user-select: none; }
+        svg { width: 100%; height: 100%; display: block; overflow: visible; }
+        
+        .center-display { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            text-align: center; z-index: 10; width: 65%;
+            pointer-events: auto; 
+        }
+        
+        .big-branch, .date-row, .time-row, .ganzhi-row, #st {
+            user-select: text; -webkit-user-select: text;
+        }
+
+        .big-branch { font-size: clamp(32px, 12vmin, 60px); color: var(--green); filter: var(--glow); line-height: 1; margin-bottom: 4px; }
+        .date-row { font-size: clamp(12px, 3.2vmin, 18px); margin: 2px 0; opacity: 0.9; letter-spacing: 1px; }
+        body.preview-mode .date-row { cursor: cell; color: var(--green); text-decoration: underline; text-underline-offset: 4px; }
+        .time-row { font-family: monospace; font-size: clamp(18px, 4.5vmin, 24px); font-weight: bold; margin: 2px 0; letter-spacing: 1px; }
+        .ganzhi-row { color: var(--green); font-size: clamp(12px, 3.5vmin, 20px); font-weight: bold; margin: 2px 0; }
+        #st { font-weight:bold; margin-top: 5px; font-size: clamp(16px, 4vmin, 22px); }
+        
+        .footer-container { display: flex; align-items: center; gap: 12px; margin-top: 25px; z-index: 20; user-select: none; }
+        .lunar-footer { padding: 10px 24px; border: 1.5px solid var(--gold); border-radius: 30px; background: rgba(139, 107, 61, 0.05); font-size: clamp(14px, 3.6vmin, 19px); letter-spacing: 2px; text-align: center; min-width: 160px; cursor: pointer; }
+        .nav-moon { width: 35px; height: 35px; border-radius: 50%; cursor: pointer; transition: var(--trans); opacity: 0.4; position: relative; overflow: hidden; }
+        .nav-prev { background: linear-gradient(to right, var(--gold) 50%, transparent 50%); }
+        .nav-next { background: linear-gradient(to right, transparent 50%, var(--gold) 50%); }
+        .theme-switch { margin-top: 35px; display: flex; justify-content: center; width: 100%; z-index: 20; position: relative; }
+        .btn-toggle { width: 32px; height: 32px; border-radius: 50%; border: 2.5px solid var(--gold); background: #0f0e0c; cursor: pointer; transition: var(--trans); opacity: 0.5; }
+        body.light-theme .btn-toggle { background: #f1e7d0; border-width: 4px; }
+        
+        #hourHandLine, #minHandLine { stroke: var(--red); stroke-linecap: round; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+        body.minimal-mode:not(.preview-mode) #hourHandLine, body.minimal-mode:not(.preview-mode) #minHandLine { opacity: 0.5 !important; }
+        body.light-theme #hourHandLine, body.light-theme #minHandLine { stroke: var(--gold); }
+        #secondProgress { stroke: var(--gold); stroke-width: 1.8; fill: none; stroke-linecap: round; }
+        #centerDot { fill: url(#starGradient); filter: var(--center-glow); opacity: 0; visibility: hidden; transition: var(--trans); pointer-events: none; }
+        body.minimal-mode #centerDot { opacity: 1 !important; visibility: visible !important; }
+        #hourOrbit { opacity: 0; visibility: hidden; transition: var(--trans); }
+        body.minimal-mode #hourOrbit { opacity: 0.8; visibility: visible; }
+    </style>
+</head>
+<body class="dark">
+<div class="clock-wrapper" onclick="toggleMinimal(event)">
+    <svg viewBox="0 0 500 500">
+        <defs><radialGradient id="starGradient" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="white" /><stop offset="35%" stop-color="white" /><stop offset="100%" stop-color="var(--gold)" /></radialGradient></defs>
+        <g class="outer-ring"><circle cx="250" cy="250" r="230" fill="none" stroke="var(--grid)" stroke-width="1"/><circle cx="250" cy="250" r="175" fill="none" stroke="var(--grid)" stroke-width="1.5"/></g>
+        <circle cx="250" cy="250" r="120" fill="none" stroke="var(--grid)" stroke-width="1.2"/><circle id="hourOrbit" cx="250" cy="250" r="90" fill="none" stroke="var(--grid)" stroke-width="0.8"/>
+        <g id="clockFace"></g>
+        <line id="hourHandLine" x1="250" y1="250" /><line id="minHandLine" x1="250" y1="250" />
+        <circle id="centerDot" cx="250" cy="250" r="14" />
+        <circle id="timeLink" cx="250" cy="250" r="120" stroke="var(--red)" stroke-width="3.75" fill="none" transform="rotate(-90 250 250)" opacity="0.4"></circle>
+        <circle id="secondProgress" cx="250" cy="250" r="120" transform="rotate(-90 250 250)"></circle>
+        <path id="activeSector" fill="rgba(79, 172, 141, 0.12)" stroke="var(--green)" stroke-width="2.5"></path>
+        <circle id="greenDot" r="5.5" fill="var(--green)" />
+        <circle id="redHourDot" r="6" fill="var(--red)" /><circle id="redMinDot" r="4" fill="var(--red)" opacity="0.8" />
+    </svg>
+    <div class="center-display">
+        <div class="big-branch" id="cb">--</div>
+        <div class="date-row" id="cd" onclick="manualDateInput(event)">--</div>
+        <div class="time-row" id="ct">--:--:--</div>
+        <div class="ganzhi-row" id="cg">--</div>
+        <div id="st">--</div>
+    </div>
+</div>
+<div class="footer-container">
+    <div class="nav-moon nav-prev" onclick="shiftDate(event, -1)"></div>
+    <div class="lunar-footer" id="lf" onclick="shiftDate(event, 0)">--</div>
+    <div class="nav-moon nav-next" onclick="shiftDate(event, 1)"></div>
+</div>
+<div class="theme-switch"><div class="btn-toggle" onclick="toggleTheme(event)"></div></div>
+
+<script>
+    let offsetDays = 0, resetTimer = null;
+
+    function manualDateInput(e) {
+        if (offsetDays === 0) return; if (e) e.stopPropagation(); 
+        const cur = new Date(); cur.setHours(0,0,0,0);
+        const dis = new Date(); dis.setDate(cur.getDate() + offsetDays);
+        const input = prompt("跳轉日期 (YYYY-MM-DD):", dis.toISOString().split('T')[0]);
+        if (input) {
+            const target = new Date(input);
+            if (!isNaN(target.getTime())) {
+                const targetMid = new Date(target).setHours(0,0,0,0);
+                offsetDays = Math.round((targetMid - cur.getTime()) / 86400000);
+                shiftDate(null, 0); 
+            } else { alert("格式錯誤"); }
+        }
+    }
+
+    function shiftDate(e, n) {
+        if(e) e.stopPropagation(); clearTimeout(resetTimer);
+        if (n === 0 && e && e.currentTarget.id === 'lf') offsetDays = 0; else offsetDays += n;
+        if (offsetDays !== 0) {
+            resetTimer = setTimeout(() => { offsetDays = 0; document.body.classList.remove('preview-mode'); update(); }, 10000); 
+        }
+        document.body.classList.toggle('preview-mode', offsetDays !== 0); update(); 
+    }
+
+    function toggleTheme(e) { if(e) e.stopPropagation(); const isL = document.body.classList.toggle('light-theme'); localStorage.setItem('theme', isL ? 'light' : 'dark'); }
+    if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+
+    function toggleMinimal(e) {
+        if (offsetDays !== 0) return; 
+        if (window.getSelection().toString()) return; // 防誤觸
+        if (e && e.target.closest('.theme-switch, .footer-container')) return;
+        document.body.classList.toggle('minimal-mode'); 
+        localStorage.setItem('minimal', document.body.classList.contains('minimal-mode'));
+    }
+    if(localStorage.getItem('minimal') === 'true') document.body.classList.add('minimal-mode');
+
+    const data = [{ b: "子", o: "膽" }, { b: "丑", o: "肝" }, { b: "寅", o: "肺" }, { b: "卯", o: "大腸" }, { b: "辰", o: "胃" }, { b: "巳", o: "脾" }, { b: "午", o: "心" }, { b: "未", o: "小腸" }, { b: "申", o: "膀胱" }, { b: "酉", o: "腎" }, { b: "戌", o: "心包" }, { b: "亥", o: "三焦" }];
+    const CIRCUMFERENCE = 2 * Math.PI * 120;
+    const polarToCartesian = (r, deg) => ({ x: 250 + (r * Math.cos((deg - 90) * Math.PI / 180.0)), y: 250 + (r * Math.sin((deg - 90) * Math.PI / 180.0)) });
+
+    function init() {
+        const face = document.getElementById('clockFace');
+        document.getElementById('secondProgress').style.strokeDasharray = CIRCUMFERENCE;
+        document.getElementById('timeLink').style.strokeDasharray = CIRCUMFERENCE;
+        data.forEach((item, i) => {
+            const deg = i * 30;
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            g.setAttribute("class", "zhi-segment");
+            g.setAttribute("style", `--i: ${i}`);
+            const p120 = polarToCartesian(120, deg), p90 = polarToCartesian(90, deg);
+            const m = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            m.setAttribute("cx", p120.x); m.setAttribute("cy", p120.y); m.setAttribute("r", "1.5"); m.setAttribute("fill", "var(--gold)");
+            m.setAttribute("class", "stagger-item"); g.appendChild(m);
+            const im = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            im.setAttribute("cx", p90.x); im.setAttribute("cy", p90.y); im.setAttribute("r", "1.5"); im.setAttribute("fill", "var(--gold)");
+            im.setAttribute("class", "persistent-item"); g.appendChild(im);
+            const conn = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            conn.setAttribute("x1", p90.x); conn.setAttribute("y1", p90.y); conn.setAttribute("x2", p120.x); conn.setAttribute("y2", p120.y);
+            conn.setAttribute("stroke", "var(--gold)"); conn.setAttribute("stroke-width", "0.5");
+            conn.setAttribute("class", "persistent-item"); g.appendChild(conn);
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            const pG1 = polarToCartesian(120, deg - 15), pG2 = polarToCartesian(230, deg - 15);
+            line.setAttribute("x1", pG1.x); line.setAttribute("y1", pG1.y); line.setAttribute("x2", pG2.x); line.setAttribute("y2", pG2.y);
+            line.setAttribute("stroke", "var(--grid)"); line.setAttribute("class", "stagger-item"); g.appendChild(line);
+            const po = polarToCartesian(205, deg), pb = polarToCartesian(150, deg);
+            const tO = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            tO.setAttribute("x", po.x); tO.setAttribute("y", po.y); tO.setAttribute("fill", "var(--green)"); tO.setAttribute("font-size", "16"); tO.setAttribute("font-weight", "bold"); tO.setAttribute("text-anchor", "middle"); tO.setAttribute("dominant-baseline", "middle"); tO.setAttribute("class", "stagger-item"); tO.textContent = item.o; g.appendChild(tO);
+            const tB = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            tB.setAttribute("x", pb.x); tB.setAttribute("y", pb.y); tB.setAttribute("fill", "var(--gold)"); tB.setAttribute("font-size", "23"); tB.setAttribute("font-weight", "bold"); tB.setAttribute("text-anchor", "middle"); tB.setAttribute("dominant-baseline", "middle"); tB.setAttribute("class", "stagger-item"); tB.textContent = item.b; g.appendChild(tB);
+            face.appendChild(g);
+        });
+    }
+
+    function update() {
+        const realNow = new Date();
+        const displayDate = new Date(); displayDate.setDate(realNow.getDate() + offsetDays);
+        const h = realNow.getHours(), m = realNow.getMinutes(), s = realNow.getSeconds(), ms = realNow.getMilliseconds();
+        const isMin = document.body.classList.contains('minimal-mode'), isPreview = (offsetDays !== 0);
+        
+        // 智能渲染：Diff-Check 差異化更新邏輯
+        if (typeof Lunar !== 'undefined') {
+            try {
+                const sObj = Solar.fromDate(displayDate); const l = sObj.getLunar();
+                const colorMap = {'甲':'青','乙':'青','丙':'赤','丁':'赤','戊':'黃','己':'黃','庚':'白','辛':'白','壬':'黑','癸':'黑'};
+                const animalMap = {'子':'鼠','丑':'牛','寅':'虎','卯':'兔','辰':'龍','巳':'蛇','午':'馬','未':'羊','申':'猴','酉':'雞','戌':'狗','亥':'豬'};
+                const yA = (colorMap[l.getYearGanByLiChun()]||'') + (animalMap[l.getYearZhiByLiChun()]||'');
+                
+                const newCd = `${displayDate.getFullYear()}年${displayDate.getMonth()+1}月${displayDate.getDate()}日`;
+                const elCd = document.getElementById('cd');
+                if (elCd.innerText !== newCd) elCd.innerText = newCd;
+
+                const newCg = `${l.getYearInGanZhi()}年 ${l.getMonthInGanZhi()}月 ${l.getDayInGanZhi()}日`;
+                const elCg = document.getElementById('cg');
+                if (elCg.innerText !== newCg) elCg.innerText = newCg;
+
+                const newSt = l.getJieQi() || l.getPrevJieQi().getName();
+                const elSt = document.getElementById('st');
+                if (elSt.innerText !== newSt) elSt.innerText = newSt;
+
+                const newLf = `${yA}年 ${l.getMonthInChinese()}月 ${l.getDayInChinese()}`;
+                const elLf = document.getElementById('lf');
+                if (elLf.innerText !== newLf) elLf.innerText = newLf;
+            } catch(e) {}
+        }
+        
+        if (!isPreview) {
+            const newCt = realNow.toLocaleTimeString('zh-TW', {hour12:false});
+            const elCt = document.getElementById('ct');
+            if (elCt.innerText !== newCt) elCt.innerText = newCt;
+
+            let idx = Math.floor((h + 1) / 2) % 12; 
+            const newCb = data[idx].b;
+            const elCb = document.getElementById('cb');
+            if (elCb.innerText !== newCb) elCb.innerText = newCb;
+        }
+
+        const hR = isMin ? 90 : 120, degH = ((h % 12) * 3600 + m * 60 + s) / 43200 * 360, degM = (m * 60 + s) / 3600 * 360, deg24 = (h * 3600 + m * 60 + s) / 86400 * 360;
+        const ph = polarToCartesian(hR, degH), pm = polarToCartesian(120, degM);
+        
+        document.getElementById('redHourDot').setAttribute("cx", ph.x); document.getElementById('redHourDot').setAttribute("cy", ph.y);
+        document.getElementById('redMinDot').setAttribute("cx", pm.x); document.getElementById('redMinDot').setAttribute("cy", pm.y);
+        document.getElementById('greenDot').setAttribute("cx", polarToCartesian(230, deg24).x); document.getElementById('greenDot').setAttribute("cy", polarToCartesian(230, deg24).y);
+        
+        const hL = document.getElementById('hourHandLine'), mL = document.getElementById('minHandLine');
+        hL.setAttribute("x2", ph.x); hL.setAttribute("y2", ph.y); hL.setAttribute("stroke-width", "6");
+        mL.setAttribute("x2", pm.x); mL.setAttribute("y2", pm.y); mL.setAttribute("stroke-width", "4");
+        
+        document.getElementById('secondProgress').style.strokeDashoffset = CIRCUMFERENCE * (1 - (s + ms / 1000) / 60);
+        document.getElementById('timeLink').style.strokeDashoffset = CIRCUMFERENCE * (1 - (m + s / 60) / 60);
+        
+        let aIdx = Math.floor((h + 1) / 2) % 12;
+        const sA = aIdx * 30 - 15, eA = aIdx * 30 + 15, pS1 = polarToCartesian(230, sA), pS2 = polarToCartesian(230, eA), pS3 = polarToCartesian(175, eA), pS4 = polarToCartesian(175, sA);
+        document.getElementById('activeSector').setAttribute("d", `M ${pS4.x} ${pS4.y} L ${pS1.x} ${pS1.y} A 230 230 0 0 1 ${pS2.x} ${pS2.y} L ${pS3.x} ${pS3.y} A 175 175 0 0 0 ${pS4.x} ${pS4.y}`);
+    }
+    init(); setInterval(update, 50); update();
+</script>
+</body>
+</html>
