@@ -13,56 +13,58 @@
             flex-direction: column; height: 100vh; overflow: hidden; 
         }
         
-        /* 導覽列：確保在電腦端置中且不撐開 */
+        /* 導覽列：極簡高度設計，確保不擠壓下方內容 */
         .nav-container {
             display: flex; justify-content: center; align-items: center;
-            padding: env(safe-area-inset-top, 20px) 15px 15px 15px;
-            background: rgba(0,0,0,0.3); z-index: 100;
+            /* 僅保留必要的瀏海區安全間距與極小內距 */
+            padding: env(safe-area-inset-top, 10px) 15px 10px 15px;
+            background: rgba(0,0,0,0.4); z-index: 100;
             border-bottom: 1px solid rgba(212,167,91,0.2);
             backdrop-filter: blur(10px);
+            flex-shrink: 0; /* 防止導覽列被 iframe 擠壓變形 */
         }
 
         .nav-content {
             display: flex; align-items: center;
-            gap: 15px; 
-            max-width: 700px; /* 限制寬度防止電腦版過寬 */
+            gap: 12px; 
+            max-width: 650px; /* 電腦版寬度限制 */
             width: 100%; justify-content: center;
         }
 
         .tab-group { 
-            display: flex; gap: 8px; 
-            overflow-x: auto; /* 手機版若按鈕過多可微調滑動 */
-            scrollbar-width: none;
+            display: flex; gap: 6px; 
+            overflow: visible;
         }
-        .tab-group::-webkit-scrollbar { display: none; }
 
         .nav-btn { 
-            padding: 8px 14px; font-weight: 900; font-size: 13px; 
-            color: #d4a75b; opacity: 0.4; border-radius: 10px; 
+            padding: 6px 12px; font-weight: 900; font-size: 13px; 
+            color: #d4a75b; opacity: 0.4; border-radius: 8px; 
             cursor: pointer; transition: 0.3s; white-space: nowrap;
+            border: 1px solid transparent;
         }
-        .nav-btn.active { opacity: 1; background: rgba(212,167,91,0.15); }
+        .nav-btn.active { 
+            opacity: 1; 
+            background: rgba(212,167,91,0.12); 
+            border: 1px solid rgba(212,167,91,0.3);
+        }
 
         .nav-arrow { 
             font-size: 18px; font-weight: bold; cursor: pointer; 
-            color: #d4a75b; opacity: 0.4; padding: 10px;
+            color: #d4a75b; opacity: 0.4; padding: 5px 10px;
             user-select: none;
         }
         .nav-arrow:active { transform: scale(0.8); opacity: 1; }
 
-        .nav-title {
-            position: absolute; top: 5px; font-size: 10px; 
-            letter-spacing: 2px; opacity: 0.6; font-weight: bold;
+        /* iframe 填滿剩餘空間 */
+        iframe { 
+            flex: 1; width: 100%; border: none; background: #0f0e0c; 
+            display: block; /* 消除底邊縫隙 */
         }
-
-        iframe { flex: 1; width: 100%; border: none; background: #0f0e0c; }
     </style>
 </head>
 <body>
 
 <div class="nav-container">
-    <div class="nav-title" id="app-display-name">子午流注</div>
-
     <div class="nav-content">
         <div class="nav-arrow" onclick="prevApp()">&#10094;</div>
         
@@ -80,6 +82,7 @@
 <iframe id="main-frame" src="ZW clock.html"></iframe>
 
 <script>
+    // 確保檔案名稱與您資料夾內的完全一致
     const apps = [
         { name: '子午流注', file: 'ZW clock.html' },
         { name: '十神五極', file: '101010.html' },
@@ -107,13 +110,9 @@
     function updateUI() {
         const frame = document.getElementById('main-frame');
         const btns = document.querySelectorAll('.nav-btn');
-        const title = document.getElementById('app-display-name');
         
-        // 切換檔案
+        // 切換 Iframe 內容
         frame.src = apps[currentIndex].file;
-        
-        // 更新標題
-        title.textContent = apps[currentIndex].name;
         
         // 更新按鈕高亮狀態
         btns.forEach((btn, i) => {
