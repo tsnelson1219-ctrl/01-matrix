@@ -11,48 +11,58 @@
             margin: 0; padding: 0; background: #0f0e0c; color: #d4a75b; 
             font-family: "PingFang TC", sans-serif; display: flex; 
             flex-direction: column; height: 100vh; overflow: hidden; 
-            transition: background 0.4s ease;
         }
-
-        body.light-theme { background: #e9e4d1; color: #5d5d4d; }
         
-        /* --- 導覽列佈局：三鍵+兩側箭頭 --- */
+        /* 導覽列：確保在電腦端置中且不撐開 */
         .nav-container {
             display: flex; justify-content: center; align-items: center;
             padding: env(safe-area-inset-top, 20px) 15px 15px 15px;
-            background: rgba(0,0,0,0.2); z-index: 100;
-            border-bottom: 1px solid rgba(212,167,91,0.15);
+            background: rgba(0,0,0,0.3); z-index: 100;
+            border-bottom: 1px solid rgba(212,167,91,0.2);
             backdrop-filter: blur(10px);
         }
 
-        /* 限制導覽內容最大寬度，防止在電腦端兩側過開 */
         .nav-content {
             display: flex; align-items: center;
-            gap: 20px; /* 箭頭與按鈕組的距離 */
-            max-width: 600px; width: 100%; justify-content: center;
+            gap: 15px; 
+            max-width: 700px; /* 限制寬度防止電腦版過寬 */
+            width: 100%; justify-content: center;
         }
 
-        .tab-group { display: flex; gap: 10px; }
+        .tab-group { 
+            display: flex; gap: 8px; 
+            overflow-x: auto; /* 手機版若按鈕過多可微調滑動 */
+            scrollbar-width: none;
+        }
+        .tab-group::-webkit-scrollbar { display: none; }
 
         .nav-btn { 
-            padding: 8px 16px; font-weight: 900; font-size: 14px; 
-            color: inherit; opacity: 0.4; border-radius: 12px; 
+            padding: 8px 14px; font-weight: 900; font-size: 13px; 
+            color: #d4a75b; opacity: 0.4; border-radius: 10px; 
             cursor: pointer; transition: 0.3s; white-space: nowrap;
         }
-        .nav-btn.active { opacity: 1; background: rgba(128,128,128,0.15); }
+        .nav-btn.active { opacity: 1; background: rgba(212,167,91,0.15); }
 
         .nav-arrow { 
             font-size: 18px; font-weight: bold; cursor: pointer; 
-            opacity: 0.4; transition: 0.2s; padding: 10px;
+            color: #d4a75b; opacity: 0.4; padding: 10px;
+            user-select: none;
         }
         .nav-arrow:active { transform: scale(0.8); opacity: 1; }
 
-        iframe { flex: 1; width: 100%; border: none; }
+        .nav-title {
+            position: absolute; top: 5px; font-size: 10px; 
+            letter-spacing: 2px; opacity: 0.6; font-weight: bold;
+        }
+
+        iframe { flex: 1; width: 100%; border: none; background: #0f0e0c; }
     </style>
 </head>
 <body>
 
 <div class="nav-container">
+    <div class="nav-title" id="app-display-name">子午流注</div>
+
     <div class="nav-content">
         <div class="nav-arrow" onclick="prevApp()">&#10094;</div>
         
@@ -60,6 +70,7 @@
             <div class="nav-btn active" onclick="switchApp(0)">子午流注</div>
             <div class="nav-btn" onclick="switchApp(1)">十神五極</div>
             <div class="nav-btn" onclick="switchApp(2)">地支藏干</div>
+            <div class="nav-btn" onclick="switchApp(3)">九宮飛星</div>
         </div>
         
         <div class="nav-arrow" onclick="nextApp()">&#10095;</div>
@@ -72,11 +83,11 @@
     const apps = [
         { name: '子午流注', file: 'ZW clock.html' },
         { name: '十神五極', file: '101010.html' },
-        { name: '地支藏干', file: '12 h.html' }
+        { name: '地支藏干', file: '12 h.html' },
+        { name: '九宮飛星', file: '9P.html' }
     ];
     
     let currentIndex = 0;
-    let currentTheme = 'dark'; // 預設深色
 
     function switchApp(index) {
         currentIndex = index;
@@ -96,34 +107,19 @@
     function updateUI() {
         const frame = document.getElementById('main-frame');
         const btns = document.querySelectorAll('.nav-btn');
+        const title = document.getElementById('app-display-name');
         
         // 切換檔案
         frame.src = apps[currentIndex].file;
         
-        // 更新按鈕樣式
+        // 更新標題
+        title.textContent = apps[currentIndex].name;
+        
+        // 更新按鈕高亮狀態
         btns.forEach((btn, i) => {
             btn.classList.toggle('active', i === currentIndex);
         });
-
-        // 重點：當 Iframe 載入完成後，自動把目前的主題同步進去
-        frame.onload = () => syncThemeToFrame();
     }
-
-    // --- 主題同步邏輯 ---
-    function syncThemeToFrame() {
-        const frame = document.getElementById('main-frame');
-        frame.contentWindow.postMessage({ type: 'SET_THEME', theme: currentTheme }, '*');
-    }
-
-    // 監聽來自子頁面的主題切換請求
-    window.addEventListener('message', (event) => {
-        if (event.data.type === 'TOGGLE_THEME') {
-            currentTheme = (currentTheme === 'dark' ? 'light' : 'dark');
-            document.body.classList.toggle('light-theme', currentTheme === 'light');
-            // 同步給目前看得到的 iframe
-            syncThemeToFrame();
-        }
-    });
 </script>
 </body>
 </html>
