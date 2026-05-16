@@ -341,7 +341,9 @@
         }
     }
 
-    function toggleTheme() { document.body.classList.toggle('light-theme'); }
+    function toggleTheme() { const isL = document.body.classList.toggle('light-theme'); localStorage.setItem('theme', isL ? 'light' : 'dark'); }
+    if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+    else document.body.classList.remove('light-theme');
     initDiagram();
 
     // Pinch-to-zoom for SVG
