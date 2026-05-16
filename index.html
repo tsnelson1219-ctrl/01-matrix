@@ -55,6 +55,14 @@
         }
         .nav-arrow:active { transform: scale(0.8); opacity: 1; }
 
+        .theme-btn {
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 1px solid rgba(212,167,91,0.6); background: transparent;
+            color: #d4a75b; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
         /* iframe 填滿剩餘空間 */
         iframe { 
             flex: 1; width: 100%; border: none; background: #0f0e0c; 
@@ -76,6 +84,7 @@
         </div>
         
         <div class="nav-arrow" onclick="nextApp()">&#10095;</div>
+        <button class="theme-btn" onclick="toggleTheme()">◑</button>
     </div>
 </div>
 
@@ -110,15 +119,50 @@
     function updateUI() {
         const frame = document.getElementById('main-frame');
         const btns = document.querySelectorAll('.nav-btn');
-        
-        // 切換 Iframe 內容
         frame.src = apps[currentIndex].file;
-        
-        // 更新按鈕高亮狀態
+        // 切換後等頁面載入，再把主題注入
+        frame.onload = () => applyThemeToFrame(frame);
         btns.forEach((btn, i) => {
             btn.classList.toggle('active', i === currentIndex);
         });
     }
+
+    // 主題同步：用 localStorage 記住狀態，每次載入 iframe 時注入
+    function applyThemeToFrame(frame) {
+        const isLight = localStorage.getItem('theme') === 'light';
+        try {
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            const body = doc.body;
+            // 各頁面 class 名稱對應
+            const lightClasses = ['light-mode', 'light-theme', 'light-theme', 'light-theme'];
+            const darkClasses  = ['', '', '', 'dark-theme'];
+            // 用檔名判斷要用哪個 class
+            const src = frame.src;
+            let lightClass = 'light-mode', darkClass = '';
+            if (src.includes('101010')) { lightClass = ''; darkClass = 'dark-theme'; }
+            else if (src.includes('12') || src.includes('ZW') || src.includes('clock')) { lightClass = 'light-theme'; darkClass = ''; }
+
+            if (src.includes('101010')) {
+                body.classList.toggle('dark-theme', !isLight);
+            } else if (src.includes('12') || src.includes('ZW') || src.includes('clock')) {
+                body.classList.toggle('light-theme', isLight);
+            } else {
+                body.classList.toggle('light-mode', isLight);
+            }
+        } catch(e) {}
+    }
+
+    function toggleTheme() {
+        const isLight = localStorage.getItem('theme') === 'light';
+        localStorage.setItem('theme', isLight ? 'dark' : 'light');
+        const frame = document.getElementById('main-frame');
+        applyThemeToFrame(frame);
+    }
+
+    // 頁面初次載入也注入主題
+    document.getElementById('main-frame').onload = function() {
+        applyThemeToFrame(this);
+    };
 </script>
 </body>
 </html>
