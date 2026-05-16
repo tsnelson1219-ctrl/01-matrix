@@ -57,7 +57,7 @@
         <button class="btn btn-danger" onclick="clearMap()">清除底圖</button>
     </div>
     <div class="nav-group">
-        <button class="theme-toggle" onclick="document.body.classList.toggle('light-mode')">◑</button>
+        <button class="theme-toggle" onclick="(function(){ const isL = document.body.classList.toggle('light-mode'); localStorage.setItem('theme', isL ? 'light' : 'dark'); })()">◑</button>
     </div>
     <input type="file" id="fileInput" accept="image/*" onchange="handleImage(event)">
 </div>
@@ -200,6 +200,8 @@
     ws.addEventListener('wheel', e => { e.preventDefault(); if (state.mode === 'map') { state.map.scale *= (e.deltaY > 0 ? 0.95 : 1.05); updateMap(); } }, { passive: false });
     
     renderCompass();
+    if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+    else document.body.classList.remove('light-mode');
 </script>
 </body>
 </html>
