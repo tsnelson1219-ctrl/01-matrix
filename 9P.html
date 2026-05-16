@@ -2,7 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>九宮飛星</title>
     <style>
         :root {
@@ -38,7 +39,7 @@
         }
         
         #compassSvg { position: absolute; width: 85vmin; height: 85vmin; max-width: 700px; max-height: 700px; pointer-events: none; transition: opacity 0.3s, transform 0.05s linear; overflow: visible; transform-origin: center center; transform: translateY(-8vh); }
-        .theme-toggle-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; }
+        .theme-toggle-container { position: fixed; bottom: max(20px, env(safe-area-inset-bottom, 20px) + 12px); left: 50%; transform: translateX(-50%); z-index: 100; }
         .theme-toggle { width: 45px; height: 45px; border-radius: 50%; border: 1px solid var(--gold); background: var(--panel-bg); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gold); font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         #fileInput { display: none; }
     </style>
