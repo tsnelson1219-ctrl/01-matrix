@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>天干十二長生演化盤</title>
+    <style>
+        :root {
+            --bg: #0f0e0c; --gold: #d4a75b; --green: #4fac8d; --red: #ff3e3e;
+            --grid: rgba(212, 167, 91, 0.18); --glow: drop-shadow(0 0 10px var(--green));
+            --trans: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --wave-color: #ffd700;
+        }
+
+        body.light-theme {
+            --bg: #f1e7d0; --gold: #5d4037; --green: #2e5a4b; --red: #a93226;
+            --grid: rgba(60, 60, 60, 0.25); --glow: none;
+            --wave-color: #a93226;
+        }
+
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            box-sizing: border-box; 
+        }
+
+        /* 終極行動端防干擾設定：禁止所有原生滑動、回彈與縮放 */
+        html, body {
+            touch-action: none; 
+            overscroll-behavior: none; 
+            background: var(--bg); color: var(--gold); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; transition: background 0.4s;
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
+            overflow: hidden; 
+            user-select: none; -webkit-user-select: none;
+        }
+
+        .clock-wrapper { position: relative; width: min(95vmin, 550px); height: min(95vmin, 550px); z-index: 5; }
+        svg { width: 100%; height: 100%; display: block; overflow: visible; touch-action: none; }
+        
+        .ring-bg { fill: none; stroke: var(--grid); }
+        .grid-line { stroke: var(--grid); stroke-width: 1; pointer-events: none; }
+        
+        .active-sector-gan { fill: rgba(212, 167, 91, 0.08); stroke: var(--gold); stroke-width: 1.5; pointer-events: none; }
+        .active-sector-zhi { fill: rgba(79, 172, 141, 0.12); stroke: var(--green); stroke-width: 2.5; pointer-events: none; }
+        body.light-theme .active-sector-gan { fill: rgba(93, 64, 55, 0.08); }
+        body.light-theme .active-sector-zhi { fill: rgba(46, 90, 75, 0.15); }
+
+        .gan-text { fill: rgba(212, 167, 91, 0.5); font-size: 18px; transition: var(--trans); pointer-events: none; }
+        body.light-theme .gan-text { fill: rgba(93, 64, 55, 0.6); }
+        .gan-text.active { fill: var(--gold); font-weight: bold; font-size: 24px; opacity: 1; }
+
+        .zhi-text { fill: var(--gold); font-size: 18px; transition: var(--trans); pointer-events: none; opacity: 0.6; }
+        .zhi-text.active { fill: var(--green); filter: var(--glow); font-weight: bold; font-size: 24px; opacity: 1; }
+
+        /* 雙實體旋轉群組 */
+        .rotary-group { cursor: grab; }
+        .rotary-group:active { cursor: grabbing; }
+        
+        /* 核心防護：使用 1% 透明度的白色代替 transparent，強制手機端進行物理碰撞測試 */
+        .hit-ring { fill: none; stroke: rgba(255,255,255,0.01); cursor: inherit; pointer-events: stroke; }
+
+        .core-text { fill: var(--green); filter: var(--glow); font-size: 46px; font-weight: bold; text-anchor: middle; dominant-baseline: middle; transition: var(--trans); pointer-events: none; }
+        .axis-line { stroke: var(--grid); stroke-width: 1.2; pointer-events: none; }
+        
+        .wave-path { stroke: var(--wave-color); stroke-width: 2.5; fill: none; transition: stroke 0.4s ease; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+        
+        .node-dot { fill: var(--gold); opacity: 0.3; transition: opacity 0.3s ease; pointer-events: none; }
+        body.light-theme .node-dot { opacity: 0.5; }
+        
+        #energyDot { fill: var(--green); filter: var(--glow); pointer-events: none; } 
+
+        .theme-switch { margin-top: 30px; display: flex; justify-content: center; width: 100%; z-index: 20; position: relative; }
+        .btn-toggle { width: 32px; height: 32px; border-radius: 50%; border: 2.5px solid var(--gold); background: #0f0e0c; cursor: pointer; transition: var(--trans); opacity: 0.7; }
+        body.light-theme .btn-toggle { background: #f1e7d0; border-width: 4px; }
+        .btn-toggle:hover { opacity: 1; }
+    </style>
+</head>
+<body class="dark">
+
+<div class="clock-wrapper">
+    <svg viewBox="0 0 500 500" id="mainSvg">
+        <circle cx="250" cy="250" r="230" class="ring-bg" stroke-width="1.2"/>
+        <circle cx="250" cy="250" r="180" class="ring-bg" stroke-width="1.2"/>
+        <circle cx="250" cy="250" r="160" class="ring-bg" stroke-width="1.5"/>
+        <circle cx="250" cy="250" r="110" class="ring-bg" stroke-width="1.5"/>
+        <circle cx="250" cy="250" r="95" class="ring-bg" stroke-width="1" stroke-dasharray="4,4"/>
+
+        <path id="activeGanSector" class="active-sector-gan" />
+        <path id="activeZhiSector" class="active-sector-zhi" />
+
+        <g id="ganGroup" class="rotary-group">
+            <circle cx="250" cy="250" r="205" stroke-width="50" class="hit-ring" />
+            <g id="ganGridLines"></g>
+            <g id="ganRing"></g> 
+        </g>
+
+        <g id="zhiGroup" class="rotary-group">
+            <circle cx="250" cy="250" r="135" stroke-width="50" class="hit-ring" />
+            <g id="zhiGridLines"></g>
+            <g id="zhiRing"></g>
+        </g>
+
+        <g id="coreHub">
+            <text id="stageText" x="250" y="200" class="core-text">--</text>
+            <line id="baseLine" class="axis-line" />
+            <path id="sineWave" class="wave-path" />
+            <g id="ticksGroup"></g>
+            <g id="nodesGroup"></g>
+            <circle id="energyDot" r="6" />
+        </g>
+    </svg>
+</div>
+
+<div class="theme-switch"><div class="btn-toggle" onclick="toggleTheme(event)"></div></div>
+
+<script>
+        // 隱藏內部的主題切換按鈕 (若被嵌入在 index.html 的 iframe 中)
+        if (window.self !== window.top) {
+            document.addEventListener("DOMContentLoaded", () => {
+                const themeBtn = document.querySelector(".theme-switch");
+                if (themeBtn) themeBtn.style.display = "none";
+            });
+        }
+    const ganList = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
+    const zhiList = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+    const csList = ["長生", "沐浴", "冠帶", "臨官", "帝旺", "衰", "病", "死", "墓", "絕", "胎", "養"];
+
+    const csRules = {
+        "甲": { start: "亥", dir: 1 },  "乙": { start: "午", dir: -1 },
+        "丙": { start: "寅", dir: 1 },  "丁": { start: "酉", dir: -1 },
+        "戊": { start: "寅", dir: 1 },  "己": { start: "酉", dir: -1 },
+        "庚": { start: "巳", dir: 1 },  "辛": { start: "子", dir: -1 },
+        "壬": { start: "申", dir: 1 },  "癸": { start: "卯", dir: -1 }
+    };
+
+    const csEnergyMap = [0.0, 0.5, 0.866, 0.965, 1.0, 0.7, 0.0, -0.707, -1.0, -0.866, -0.5, 0.0];
+
+    let ganRotation = 0;
+    let zhiRotation = 0; 
+    let isDragging = false;
+    let dragTarget = null; 
+    let startAngle = 0;
+    let lastStep = -1;
+
+    const svg = document.getElementById('mainSvg');
+    const ganGroup = document.getElementById('ganGroup');
+    const zhiGroup = document.getElementById('zhiGroup');
+    const dot = document.getElementById('energyDot');
+
+    const polarToCartesian = (cx, cy, r, angleInDegrees) => {
+        const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+        return { x: cx + (r * Math.cos(angleInRadians)), y: cy + (r * Math.sin(angleInRadians)) };
+    };
+
+    function createSectorPath(cx, cy, rInner, rOuter, startAngle, endAngle) {
+        const p1 = polarToCartesian(cx, cy, rOuter, startAngle);
+        const p2 = polarToCartesian(cx, cy, rOuter, endAngle);
+        const p3 = polarToCartesian(cx, cy, rInner, endAngle);
+        const p4 = polarToCartesian(cx, cy, rInner, startAngle);
+        return `M ${p4.x} ${p4.y} L ${p1.x} ${p1.y} A ${rOuter} ${rOuter} 0 0 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${rInner} ${rInner} 0 0 0 ${p4.x} ${p4.y} Z`;
+    }
+
+    function getRawCoords(cStep) {
+        const startX = 175, endX = 325, baseY = 275, amp = 28;
+        const pct = cStep / 11;
+        const x = startX + pct * (endX - startX);
+        const baseStep = Math.floor(cStep);
+        const nextStep = Math.ceil(cStep);
+        const t = cStep - baseStep;
+        const currentEnergy = csEnergyMap[baseStep % 12] + (csEnergyMap[nextStep % 12] - csEnergyMap[baseStep % 12]) * t; 
+        return { x, y: baseY - (amp * currentEnergy) };
+    }
+
+    function init() {
+        const ganGrid = document.getElementById('ganGridLines');
+        const ganRing = document.getElementById('ganRing');
+        for(let i = 0; i < 10; i++) {
+            const angle = i * 36;
+            const lineP1 = polarToCartesian(250, 250, 180, angle + 18);
+            const lineP2 = polarToCartesian(250, 250, 230, angle + 18);
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", lineP1.x); line.setAttribute("y1", lineP1.y); line.setAttribute("x2", lineP2.x); line.setAttribute("y2", lineP2.y);
+            line.setAttribute("class", "grid-line"); ganGrid.appendChild(line);
+
+            const textP = polarToCartesian(250, 250, 205, angle);
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", textP.x); text.setAttribute("y", textP.y);
+            text.setAttribute("class", "gan-text");
+            text.setAttribute("id", `gan-${i}`);
+            text.setAttribute("text-anchor", "middle"); text.setAttribute("dominant-baseline", "middle");
+            text.setAttribute("transform", `rotate(${angle}, ${textP.x}, ${textP.y})`);
+            text.textContent = ganList[i];
+            ganRing.appendChild(text);
+        }
+
+        const zhiGrid = document.getElementById('zhiGridLines');
+        const zhiRing = document.getElementById('zhiRing');
+        for(let i = 0; i < 12; i++) {
+            const angle = i * 30;
+            const lineP1 = polarToCartesian(250, 250, 110, angle + 15);
+            const lineP2 = polarToCartesian(250, 250, 160, angle + 15);
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", lineP1.x); line.setAttribute("y1", lineP1.y); line.setAttribute("x2", lineP2.x); line.setAttribute("y2", lineP2.y);
+            line.setAttribute("class", "grid-line"); zhiGrid.appendChild(line);
+
+            const textP = polarToCartesian(250, 250, 135, angle);
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", textP.x); text.setAttribute("y", textP.y);
+            text.setAttribute("class", "zhi-text");
+            text.setAttribute("id", `zhi-${i}`);
+            text.setAttribute("text-anchor", "middle"); text.setAttribute("dominant-baseline", "middle");
+            text.setAttribute("transform", `rotate(${angle}, ${textP.x}, ${textP.y})`);
+            text.textContent = zhiList[i];
+            zhiRing.appendChild(text);
+        }
+
+        document.getElementById('activeGanSector').setAttribute("d", createSectorPath(250, 250, 180, 230, -18, 18));
+        document.getElementById('activeZhiSector').setAttribute("d", createSectorPath(250, 250, 110, 160, -15, 15));
+
+        buildCatmullRomWave();
+        updateCalculation(false, false);
+        setupDragEvents();
+    }
+
+    function buildCatmullRomWave() {
+        const wave = document.getElementById('sineWave');
+        const ticksGroup = document.getElementById('ticksGroup');
+        const nodesGroup = document.getElementById('nodesGroup');
+        const baseLine = document.getElementById('baseLine');
+
+        baseLine.setAttribute("x1", 170); baseLine.setAttribute("y1", 275);
+        baseLine.setAttribute("x2", 330); baseLine.setAttribute("y2", 275);
+
+        const points = [];
+        for (let i = 0; i < 12; i++) { points.push(getRawCoords(i)); }
+
+        let d = `M ${points[0].x} ${points[0].y}`;
+        for (let i = 0; i < points.length - 1; i++) {
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            const p0 = (i === 0) ? { x: p1.x - (p2.x - p1.x), y: p1.y } : points[i - 1];
+            const p3 = (i === points.length - 2) ? { x: p2.x + (p2.x - p1.x), y: p2.y } : points[i + 2];
+
+            const cpX1 = p1.x + (p2.x - p0.x) / 6;
+            const cpY1 = p1.y + (p2.y - p0.y) / 6;
+            const cpX2 = p2.x - (p3.x - p1.x) / 6;
+            const cpY2 = p2.y - (p3.y - p1.y) / 6;
+
+            d += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${p2.x} ${p2.y}`;
+        }
+        wave.setAttribute("d", d);
+
+        for (let i = 0; i < 12; i++) {
+            const pt = points[i];
+            const tick = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            tick.setAttribute("x1", pt.x); tick.setAttribute("y1", 271);
+            tick.setAttribute("x2", pt.x); tick.setAttribute("y2", 279);
+            tick.setAttribute("class", "axis-line"); ticksGroup.appendChild(tick);
+
+            const nDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            nDot.setAttribute("cx", pt.x); nDot.setAttribute("cy", pt.y);
+            nDot.setAttribute("r", "2.5"); nDot.setAttribute("class", "node-dot");
+            nDot.setAttribute("id", `node-${i}`); nodesGroup.appendChild(nDot);
+        }
+    }
+
+    function getBezierInterpolatedCoords(cStep) {
+        const wave = document.getElementById('sineWave');
+        const totalLength = wave.getTotalLength();
+        return wave.getPointAtLength((cStep / 11) * totalLength);
+    }
+
+    function getPointerAngle(e) {
+        const rect = svg.getBoundingClientRect();
+        // 兼容 PointerEvent 與傳統 TouchEvent
+        let clientX = e.clientX;
+        let clientY = e.clientY;
+        if (clientX === undefined && e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        }
+        return Math.atan2(clientY - (rect.top + rect.height / 2), clientX - (rect.left + rect.width / 2)) * 180 / Math.PI;
+    }
+
+    function setupDragEvents() {
+        // 處理按下事件
+        const handleDown = (target, groupEl) => (e) => {
+            isDragging = true;
+            dragTarget = target;
+            startAngle = getPointerAngle(e) - (target === 'gan' ? ganRotation : zhiRotation);
+            groupEl.style.transition = "none";
+        };
+
+        ganGroup.addEventListener('pointerdown', handleDown('gan', ganGroup));
+        zhiGroup.addEventListener('pointerdown', handleDown('zhi', zhiGroup));
+
+        // 綁定於 document 級別，防止手指滑出 SVG 範圍導致脫鉤 (Lost tracking)
+        document.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault(); // 絕對阻斷邊緣滑動等原生行為
+            
+            const currentAngle = getPointerAngle(e) - startAngle;
+            if (dragTarget === 'gan') {
+                ganRotation = currentAngle;
+                ganGroup.style.transform = `rotate(${ganRotation}deg)`;
+                ganGroup.style.transformOrigin = "250px 250px";
+            } else {
+                zhiRotation = currentAngle;
+                zhiGroup.style.transform = `rotate(${zhiRotation}deg)`;
+                zhiGroup.style.transformOrigin = "250px 250px";
+            }
+            updateCalculation(true, false);
+        }, { passive: false });
+
+        const handleUp = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            const target = dragTarget;
+            dragTarget = null;
+            
+            if (target === 'gan') {
+                ganRotation = Math.round(ganRotation / 36) * 36;
+                ganGroup.style.transition = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
+                ganGroup.style.transform = `rotate(${ganRotation}deg)`;
+            } else if (target === 'zhi') {
+                zhiRotation = Math.round(zhiRotation / 30) * 30;
+                zhiGroup.style.transition = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
+                zhiGroup.style.transform = `rotate(${zhiRotation}deg)`;
+            }
+            updateCalculation(false, true);
+        };
+
+        document.addEventListener('pointerup', handleUp);
+        document.addEventListener('pointercancel', handleUp);
+    }
+
+    function updateCalculation(dragging, snapping) {
+        let nGanAngle = (-ganRotation) % 360;
+        if (nGanAngle < 0) nGanAngle += 360;
+        const ganIndex = Math.round(nGanAngle / 36) % 10;
+
+        let nZhiAngle = (-zhiRotation) % 360;
+        if (nZhiAngle < 0) nZhiAngle += 360;
+        const continuousZhiIndex = nZhiAngle / 30;
+        const zhiIndex = Math.round(continuousZhiIndex) % 12;
+
+        document.querySelectorAll('.gan-text').forEach(el => el.classList.remove('active'));
+        document.getElementById(`gan-${ganIndex}`).classList.add('active');
+        document.querySelectorAll('.zhi-text').forEach(el => el.classList.remove('active'));
+        document.getElementById(`zhi-${zhiIndex}`).classList.add('active');
+
+        const selectedGan = ganList[ganIndex];
+        const rule = csRules[selectedGan];
+        const startIndex = zhiList.indexOf(rule.start);
+        
+        let cStep = 0;
+        if (rule.dir === 1) {
+            cStep = (continuousZhiIndex - startIndex + 12) % 12;
+        } else {
+            cStep = (startIndex - continuousZhiIndex + 12) % 12;
+        }
+
+        const discreteStep = Math.round(cStep) % 12;
+        document.getElementById('stageText').textContent = csList[discreteStep];
+
+        document.querySelectorAll('.node-dot').forEach((el, idx) => {
+            el.style.opacity = (idx === discreteStep) ? "0.9" : "0.3";
+        });
+
+        const coords = getBezierInterpolatedCoords(cStep);
+        
+        if ((lastStep !== -1 && Math.abs(cStep - lastStep) > 8) || dragTarget === 'gan') {
+            dot.style.transition = 'none'; 
+        } else if (dragging) {
+            dot.style.transition = 'none'; 
+        } else if (snapping) {
+            dot.style.transition = 'cx 0.3s cubic-bezier(0.25, 1, 0.5, 1), cy 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+        }
+
+        dot.setAttribute("cx", coords.x);
+        dot.setAttribute("cy", coords.y);
+        
+        lastStep = cStep;
+    }
+
+    function toggleTheme(e) { 
+        if(e) e.stopPropagation(); 
+        const isL = document.body.classList.toggle('light-theme'); 
+        localStorage.setItem('theme', isL ? 'light' : 'dark'); 
+    }
+    if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+
+    window.onload = init;
+</script>
+</body>
+</html>
