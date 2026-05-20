@@ -90,6 +90,12 @@
         .info-tab.active { opacity: 1; border-color: var(--gold); background: rgba(212, 167, 91, 0.1); }
         .info-desc { min-height: 45px; }
 
+    
+        /* 解除禁止選取，讓使用者可自由複製資訊欄內容 */
+        .info-panel, .info-panel * {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
     </style>
 </head>
 <body class="dark">
@@ -485,3 +491,4 @@ function changePillarTab(pillarKey) {
 </script>
 </body>
 </html>
+
