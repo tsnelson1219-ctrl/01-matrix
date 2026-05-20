@@ -134,10 +134,10 @@
     <div class="info-row"><span class="info-lbl">物理本質：</span><span id="info-nature">-</span></div>
     <div class="info-row"><span class="info-lbl">能量特性：</span><span id="info-core">-</span></div>
     <div class="info-tabs">
-        <div class="info-tab active" onclick="changePillarTab('year')">年柱</div>
-        <div class="info-tab" onclick="changePillarTab('month')">月柱</div>
-        <div class="info-tab" onclick="changePillarTab('day')">日柱</div>
-        <div class="info-tab" onclick="changePillarTab('hour')">時柱</div>
+        <div class="info-tab active" data-pillar="year" onclick="changePillarTab('year')">年柱</div>
+        <div class="info-tab" data-pillar="month" onclick="changePillarTab('month')">月柱</div>
+        <div class="info-tab" data-pillar="day" onclick="changePillarTab('day')">日柱</div>
+        <div class="info-tab" data-pillar="hour" onclick="changePillarTab('hour')">時柱</div>
     </div>
     <div class="info-desc" id="info-pillar-text">請轉動盤面對齊天干與地支...</div>
 </div>
@@ -395,7 +395,11 @@
         
         document.getElementById('stageText').textContent = csList[discreteStep];
         if (typeof updateDetailPanel === 'function') {
-            updateDetailPanel(selectedGan, csList[discreteStep]);
+            try {
+                updateDetailPanel(selectedGan, csList[discreteStep]);
+            } catch (err) {
+                console.error("資訊欄載入錯誤:", err);
+            }
         }
 
 
