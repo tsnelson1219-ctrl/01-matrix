@@ -220,9 +220,9 @@ function changePillarTab(pillarKey) {
         "庚": { start: "巳", dir: 1 },  "辛": { start: "子", dir: -1 },
         "壬": { start: "申", dir: 1 },  "癸": { start: "卯", dir: -1 }
     };
-
-    const csEnergyMap = [0.0, 0.5, 0.866, 0.965, 1.0, 0.7, 0.0, -0.707, -1.0, -0.866, -0.5, 0.0];
-
+// 長生=0, 帝旺=1.0 的平滑陣列
+    const csEnergyMap = [0.0, 0.38, 0.71, 0.92, 1.0, 0.92, 0.71, 0.38, 0.0, -0.38, -0.51, -0.38];
+   
     let ganRotation = 0;
     let zhiRotation = 0; 
     let isDragging = false;
