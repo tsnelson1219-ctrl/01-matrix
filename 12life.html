@@ -74,6 +74,22 @@
         .btn-toggle { width: 32px; height: 32px; border-radius: 50%; border: 2.5px solid var(--gold); background: #0f0e0c; cursor: pointer; transition: var(--trans); opacity: 0.7; }
         body.light-theme .btn-toggle { background: #f1e7d0; border-width: 4px; }
         .btn-toggle:hover { opacity: 1; }
+    
+        /* UI Panel Styles */
+        .info-panel {
+            width: 100%; max-width: 500px; margin: 15px auto 0;
+            background: rgba(0, 0, 0, 0.4); border: 1px solid var(--grid);
+            border-radius: 12px; padding: 15px; color: var(--gold);
+            font-size: 14px; line-height: 1.5; z-index: 10; position: relative;
+        }
+        body.light-theme .info-panel { background: rgba(255,255,255,0.6); }
+        .info-row { margin-bottom: 8px; display: flex; }
+        .info-lbl { font-weight: bold; width: 85px; flex-shrink: 0; color: var(--green); }
+        .info-tabs { display: flex; gap: 8px; margin: 15px 0 10px; border-bottom: 1px solid var(--grid); padding-bottom: 8px; }
+        .info-tab { padding: 4px 12px; border-radius: 4px; cursor: pointer; border: 1px solid transparent; opacity: 0.6; transition: var(--trans); }
+        .info-tab.active { opacity: 1; border-color: var(--gold); background: rgba(212, 167, 91, 0.1); }
+        .info-desc { min-height: 45px; }
+
     </style>
 </head>
 <body class="dark">
@@ -114,6 +130,20 @@
 
 <div class="theme-switch"><div class="btn-toggle" onclick="toggleTheme(event)"></div></div>
 
+<div class="info-panel">
+    <div class="info-row"><span class="info-lbl">物理本質：</span><span id="info-nature">-</span></div>
+    <div class="info-row"><span class="info-lbl">能量特性：</span><span id="info-core">-</span></div>
+    <div class="info-tabs">
+        <div class="info-tab active" onclick="changePillarTab('year')">年柱</div>
+        <div class="info-tab" onclick="changePillarTab('month')">月柱</div>
+        <div class="info-tab" onclick="changePillarTab('day')">日柱</div>
+        <div class="info-tab" onclick="changePillarTab('hour')">時柱</div>
+    </div>
+    <div class="info-desc" id="info-pillar-text">請轉動盤面對齊天干與地支...</div>
+</div>
+
+
+<script src="lifeData.js"></script>
 <script>
         // 隱藏內部的主題切換按鈕 (若被嵌入在 index.html 的 iframe 中)
         if (window.self !== window.top) {
@@ -362,7 +392,12 @@
         }
 
         const discreteStep = Math.round(cStep) % 12;
+        
         document.getElementById('stageText').textContent = csList[discreteStep];
+        if (typeof updateDetailPanel === 'function') {
+            updateDetailPanel(selectedGan, csList[discreteStep]);
+        }
+
 
         document.querySelectorAll('.node-dot').forEach((el, idx) => {
             el.style.opacity = (idx === discreteStep) ? "0.9" : "0.3";
