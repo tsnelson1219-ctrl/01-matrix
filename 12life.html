@@ -152,6 +152,57 @@
                 if (themeBtn) themeBtn.style.display = "none";
             });
         }
+    
+let currentGan = "甲"; 
+let currentStage = "長生";
+
+function updateDetailPanel(gan, stage) {
+    currentGan = gan;
+    currentStage = stage;
+    
+    if (typeof lifeDatabase === 'undefined') {
+        document.getElementById('info-pillar-text').textContent = "尚未載入資料，請確認 lifeData.js 是否在同目錄。";
+        return;
+    }
+    
+    const ganData = lifeDatabase[gan];
+    if (!ganData) return;
+    const stageData = ganData[stage];
+    
+    if (stageData) {
+        document.getElementById('info-nature').textContent = stageData.nature || "-";
+        document.getElementById('info-core').textContent = stageData.core || "-";
+        
+        const activeTab = document.querySelector('.info-tab.active');
+        const pillarKey = activeTab ? activeTab.getAttribute('data-pillar') : 'year';
+        changePillarTab(pillarKey);
+    } else {
+        document.getElementById('info-nature').textContent = "-";
+        document.getElementById('info-core').textContent = "暫無資料";
+        document.getElementById('info-pillar-text').textContent = "-";
+    }
+}
+
+function changePillarTab(pillarKey) {
+    if (typeof lifeDatabase === 'undefined') return;
+    const stageData = lifeDatabase[currentGan]?.[currentStage];
+    if (!stageData) return;
+    
+    if (stageData.pillars && stageData.pillars[pillarKey]) {
+        document.getElementById('info-pillar-text').textContent = stageData.pillars[pillarKey];
+    } else {
+        document.getElementById('info-pillar-text').textContent = "暫無此時期的詳細解析。";
+    }
+    
+    document.querySelectorAll('.info-tab').forEach(tab => {
+        if (tab.getAttribute('data-pillar') === pillarKey) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
+        }
+    });
+}
+
     const ganList = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
     const zhiList = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
     const csList = ["長生", "沐浴", "冠帶", "臨官", "帝旺", "衰", "病", "死", "墓", "絕", "胎", "養"];
