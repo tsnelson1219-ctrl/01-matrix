@@ -32,10 +32,12 @@
         }
 
                 .tab-group {
-            display: flex; gap: 8px; flex-grow: 1; justify-content: center;
+            display: flex; gap: 8px; flex-grow: 1; justify-content: flex-start;
             overflow-x: auto; scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch; scrollbar-width: none;
-            -ms-overflow-style: none; padding: 0 10px;
+            -ms-overflow-style: none;
+            /* 左右 padding 讓首尾 tab 不貼邊，同時不影響捲動起點 */
+            padding: 0 12px;
         }
         .tab-group::-webkit-scrollbar { display: none; }
         
