@@ -23,16 +23,25 @@
             box-sizing: border-box; 
         }
 
-        /* 終極行動端防干擾設定：禁止所有原生滑動、回彈與縮放 */
         html, body {
             touch-action: none; 
             overscroll-behavior: none; 
             background: var(--bg); color: var(--gold); 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            min-height: 100vh; margin: 0; transition: background 0.4s;
+            display: flex; flex-direction: column; align-items: center; 
+            height: 100vh; margin: 0; transition: background 0.4s;
             font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
             overflow: hidden; 
             user-select: none; -webkit-user-select: none;
+        }
+
+        /* 圓盤區：佔滿剩餘空間並內部居中，高度不受下方面板影響 */
+        .disc-section {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .clock-wrapper { position: relative; width: min(95vmin, 550px); height: min(95vmin, 550px); z-index: 5; }
@@ -70,17 +79,27 @@
         
         #energyDot { fill: var(--green); filter: var(--glow); pointer-events: none; } 
 
-        .theme-switch { margin-top: 30px; display: flex; justify-content: center; width: 100%; z-index: 20; position: relative; }
+        .theme-switch { margin-top: 12px; display: flex; justify-content: center; width: 100%; z-index: 20; position: relative; }
         .btn-toggle { width: 32px; height: 32px; border-radius: 50%; border: 2.5px solid var(--gold); background: #0f0e0c; cursor: pointer; transition: var(--trans); opacity: 0.7; }
         body.light-theme .btn-toggle { background: #f1e7d0; border-width: 4px; }
         .btn-toggle:hover { opacity: 1; }
     
         /* UI Panel Styles */
         .info-panel {
-            width: 100%; max-width: 500px; margin: 15px auto 0;
+            width: 100%; max-width: 500px;
+            margin: 0 auto;
+            padding: 12px 15px;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
             background: rgba(0, 0, 0, 0.4); border: 1px solid var(--grid);
-            border-radius: 12px; padding: 15px; color: var(--gold);
+            border-radius: 12px 12px 0 0;
+            color: var(--gold);
             font-size: 14px; line-height: 1.5; z-index: 10; position: relative;
+            /* 固定高度，內容超出時內部捲動，不影響上方圓盤位置 */
+            flex-shrink: 0;
+            height: 195px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
         }
         body.light-theme .info-panel { background: rgba(255,255,255,0.6); }
         .info-row { margin-bottom: 8px; display: flex; }
@@ -100,6 +119,7 @@
 </head>
 <body class="dark">
 
+<div class="disc-section">
 <div class="clock-wrapper">
     <svg viewBox="0 0 500 500" id="mainSvg">
         <circle cx="250" cy="250" r="230" class="ring-bg" stroke-width="1.2"/>
@@ -135,6 +155,7 @@
 </div>
 
 <div class="theme-switch"><div class="btn-toggle" onclick="toggleTheme(event)"></div></div>
+</div><!-- disc-section -->
 
 <div class="info-panel">
     <div class="info-row"><span class="info-lbl">物理本質：</span><span id="info-nature">-</span></div>
@@ -491,4 +512,3 @@ function changePillarTab(pillarKey) {
 </script>
 </body>
 </html>
-
