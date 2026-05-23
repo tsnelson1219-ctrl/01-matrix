@@ -90,6 +90,7 @@
 </head>
 <body oncontextmenu="return false;">
 
+<div id="zoom-wrapper" style="display:flex; flex-direction:column; align-items:center; width:100%; transform-origin: center top; will-change: transform;">
 <div class="diagram-wrapper">
     <svg viewBox="0 0 800 800">
         <g id="bgArcs"></g>
@@ -119,7 +120,8 @@
 
 <div class="theme-switch">
     <div class="btn-toggle" onclick="toggleTheme()"></div>
-</div>
+</div><!-- theme-switch -->
+</div><!-- zoom-wrapper -->
 
 <script>
     const colors = { wood: 'var(--green)', fire: 'var(--red)', metal: 'var(--metal)', water: 'var(--blue)', earth: 'var(--earth)' };
@@ -346,25 +348,71 @@
     else document.body.classList.remove('light-theme');
     initDiagram();
 
-    // Pinch-to-zoom for SVG
+    // Pinch-to-zoom + pan for entire content
     (function() {
-        const svg = document.querySelector('svg');
+        const wrapper = document.getElementById('zoom-wrapper');
         let scale = 1, tx = 0, ty = 0;
         let pointers = [], initDist = null, initScale = 1;
-        function applyTransform() { svg.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`; svg.style.transformOrigin = 'center center'; }
-        svg.style.touchAction = 'none';
-        svg.addEventListener('pointerdown', e => {
+        let dragStartX = 0, dragStartY = 0, isDragging = false;
+
+        function applyTransform() {
+            wrapper.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+        }
+
+        wrapper.style.touchAction = 'none';
+
+        wrapper.addEventListener('pointerdown', e => {
             pointers.push(e);
-            if (pointers.length === 2) { const [p1,p2]=pointers; initDist=Math.hypot(p2.clientX-p1.clientX,p2.clientY-p1.clientY); initScale=scale; }
+            if (pointers.length === 1) {
+                dragStartX = e.clientX - tx;
+                dragStartY = e.clientY - ty;
+                isDragging = false;
+            }
+            if (pointers.length === 2) {
+                const [p1, p2] = pointers;
+                initDist = Math.hypot(p2.clientX - p1.clientX, p2.clientY - p1.clientY);
+                initScale = scale;
+            }
         });
-        svg.addEventListener('pointermove', e => {
-            const i=pointers.findIndex(p=>p.pointerId===e.pointerId); if(i!==-1) pointers[i]=e;
-            if(pointers.length===2 && initDist) { const [p1,p2]=pointers; const dist=Math.hypot(p2.clientX-p1.clientX,p2.clientY-p1.clientY); scale=Math.max(0.5,Math.min(5,initScale*(dist/initDist))); applyTransform(); }
+
+        wrapper.addEventListener('pointermove', e => {
+            const i = pointers.findIndex(p => p.pointerId === e.pointerId);
+            if (i !== -1) pointers[i] = e;
+
+            if (pointers.length === 2 && initDist) {
+                const [p1, p2] = pointers;
+                const dist = Math.hypot(p2.clientX - p1.clientX, p2.clientY - p1.clientY);
+                scale = Math.max(0.8, Math.min(5, initScale * (dist / initDist)));
+                applyTransform();
+            } else if (pointers.length === 1 && scale > 1.05) {
+                const newTx = e.clientX - dragStartX;
+                const newTy = e.clientY - dragStartY;
+                if (Math.abs(newTx - tx) > 4 || Math.abs(newTy - ty) > 4) isDragging = true;
+                if (isDragging) { tx = newTx; ty = newTy; applyTransform(); }
+            }
         });
-        const removeP = e => { pointers=pointers.filter(p=>p.pointerId!==e.pointerId); initDist=null; };
-        svg.addEventListener('pointerup', removeP); svg.addEventListener('pointercancel', removeP);
-        let lastTap=0;
-        svg.addEventListener('pointerdown', e => { if(pointers.length>1)return; const now=Date.now(); if(now-lastTap<300){scale=1;tx=0;ty=0;applyTransform();} lastTap=now; });
+
+        const removeP = e => {
+            pointers = pointers.filter(p => p.pointerId !== e.pointerId);
+            if (pointers.length < 2) initDist = null;
+            if (pointers.length === 0) setTimeout(() => { isDragging = false; }, 50);
+        };
+        wrapper.addEventListener('pointerup', removeP);
+        wrapper.addEventListener('pointercancel', removeP);
+
+        // 雙擊重置
+        let lastTap = 0;
+        wrapper.addEventListener('pointerdown', e => {
+            if (pointers.length > 1) return;
+            const now = Date.now();
+            if (now - lastTap < 300) { scale = 1; tx = 0; ty = 0; applyTransform(); }
+            lastTap = now;
+        });
+
+        // 拖移中不觸發點擊
+        wrapper.addEventListener('click', e => {
+            if (isDragging) e.stopPropagation();
+        }, true);
     })();
 </script>
 </body>
