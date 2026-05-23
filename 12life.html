@@ -36,12 +36,12 @@
 
         /* 圓盤區：佔滿剩餘空間並內部居中，高度不受下方面板影響 */
         .disc-section {
-            flex: 1;
-            min-height: 0;
+            flex-shrink: 0;  /* 只取圓盤本身需要的高度，不佔用多餘空間 */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            padding-top: 8px;
         }
 
         .clock-wrapper { position: relative; width: min(95vmin, 550px); height: min(95vmin, 550px); z-index: 5; }
@@ -94,9 +94,9 @@
             border-radius: 12px 12px 0 0;
             color: var(--gold);
             font-size: 14px; line-height: 1.5; z-index: 10; position: relative;
-            /* 固定高度，內容超出時內部捲動，不影響上方圓盤位置 */
-            flex-shrink: 0;
-            height: 195px;
+            /* 填滿圓盤以外的剩餘空間，內容可捲動 */
+            flex: 1;
+            min-height: 130px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
