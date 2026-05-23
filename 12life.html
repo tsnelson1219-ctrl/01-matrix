@@ -88,26 +88,50 @@
         .info-panel {
             width: 100%; max-width: 500px;
             margin: 0 auto;
-            padding: 12px 15px;
-            padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+            padding: 0;
             background: rgba(0, 0, 0, 0.4); border: 1px solid var(--grid);
             border-radius: 12px 12px 0 0;
             color: var(--gold);
             font-size: 14px; line-height: 1.5; z-index: 10; position: relative;
-            /* 填滿圓盤以外的剩餘空間，內容可捲動 */
             flex: 1;
             min-height: 130px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;  /* 讓子區塊各自管理捲動 */
             touch-action: pan-y;
         }
         body.light-theme .info-panel { background: rgba(255,255,255,0.6); }
-        .info-row { margin-bottom: 8px; display: flex; }
+
+        /* 上半：物理本質 + 能量特性，固定高度不捲動 */
+        .info-top {
+            flex-shrink: 0;
+            padding: 12px 15px 8px;
+            border-bottom: 1px solid var(--grid);
+        }
+        .info-row { margin-bottom: 6px; display: flex; align-items: flex-start; }
         .info-lbl { font-weight: bold; width: 85px; flex-shrink: 0; color: var(--green); }
-        .info-tabs { display: flex; gap: 8px; margin: 15px 0 10px; border-bottom: 1px solid var(--grid); padding-bottom: 8px; }
+
+        /* 能量特性內容固定四行高 */
+        #info-core {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: calc(1.5em * 4);  /* 4行保底，確保空白時也佔位 */
+        }
+
+        /* 下半：四柱 tabs + 說明，填滿剩餘並可捲動 */
+        .info-bottom {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 0 15px calc(12px + env(safe-area-inset-bottom, 0px));
+        }
+        .info-tabs { display: flex; gap: 8px; margin: 10px 0 8px; border-bottom: 1px solid var(--grid); padding-bottom: 8px; }
         .info-tab { padding: 4px 12px; border-radius: 4px; cursor: pointer; border: 1px solid transparent; opacity: 0.6; transition: var(--trans); }
         .info-tab.active { opacity: 1; border-color: var(--gold); background: rgba(212, 167, 91, 0.1); }
-        .info-desc { min-height: 45px; }
+        .info-desc { min-height: 45px; padding-bottom: 8px; }
 
     
         /* 解除禁止選取，讓使用者可自由複製資訊欄內容 */
@@ -158,15 +182,21 @@
 </div><!-- disc-section -->
 
 <div class="info-panel">
-    <div class="info-row"><span class="info-lbl">物理本質：</span><span id="info-nature">-</span></div>
-    <div class="info-row"><span class="info-lbl">能量特性：</span><span id="info-core">-</span></div>
-    <div class="info-tabs">
-        <div class="info-tab active" data-pillar="year" onclick="changePillarTab('year')">年柱</div>
-        <div class="info-tab" data-pillar="month" onclick="changePillarTab('month')">月柱</div>
-        <div class="info-tab" data-pillar="day" onclick="changePillarTab('day')">日柱</div>
-        <div class="info-tab" data-pillar="hour" onclick="changePillarTab('hour')">時柱</div>
+    <!-- 上半：物理本質 + 能量特性（固定高度） -->
+    <div class="info-top">
+        <div class="info-row"><span class="info-lbl">物理本質：</span><span id="info-nature">-</span></div>
+        <div class="info-row"><span class="info-lbl">能量特性：</span><span id="info-core">-</span></div>
     </div>
-    <div class="info-desc" id="info-pillar-text">請轉動盤面對齊天干與地支...</div>
+    <!-- 下半：四柱說明（填滿剩餘，可捲動） -->
+    <div class="info-bottom">
+        <div class="info-tabs">
+            <div class="info-tab active" data-pillar="year" onclick="changePillarTab('year')">年柱</div>
+            <div class="info-tab" data-pillar="month" onclick="changePillarTab('month')">月柱</div>
+            <div class="info-tab" data-pillar="day" onclick="changePillarTab('day')">日柱</div>
+            <div class="info-tab" data-pillar="hour" onclick="changePillarTab('hour')">時柱</div>
+        </div>
+        <div class="info-desc" id="info-pillar-text">請轉動盤面對齊天干與地支...</div>
+    </div>
 </div>
 
 
