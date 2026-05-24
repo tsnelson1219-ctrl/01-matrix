@@ -280,6 +280,8 @@ function changePillarTab(pillarKey) {
     let dragTarget = null; 
     let startAngle = 0;
     let lastStep = -1;
+let lastGanIndex = -1;
+let lastZhiIndex = -1;
 
     const svg = document.getElementById('mainSvg');
     const ganGroup = document.getElementById('ganGroup');
@@ -466,6 +468,8 @@ function changePillarTab(pillarKey) {
                 zhiGroup.style.transition = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
                 zhiGroup.style.transform = `rotate(${zhiRotation}deg)`;
             }
+            // 卡格確認震動（卡格動畫結束時）
+            if (navigator.vibrate) setTimeout(() => navigator.vibrate(18), 280);
             updateCalculation(false, true);
         };
 
@@ -482,6 +486,13 @@ function changePillarTab(pillarKey) {
         if (nZhiAngle < 0) nZhiAngle += 360;
         const continuousZhiIndex = nZhiAngle / 30;
         const zhiIndex = Math.round(continuousZhiIndex) % 12;
+
+        // 拖動時跨格震動（輕觸感）
+        if (dragging && (ganIndex !== lastGanIndex || zhiIndex !== lastZhiIndex)) {
+            if (navigator.vibrate) navigator.vibrate(8);
+        }
+        lastGanIndex = ganIndex;
+        lastZhiIndex = zhiIndex;
 
         document.querySelectorAll('.gan-text').forEach(el => el.classList.remove('active'));
         document.getElementById(`gan-${ganIndex}`).classList.add('active');
