@@ -104,6 +104,25 @@
             <text class="bazi-sub selectable" id="baziL2" text-anchor="middle" dominant-baseline="middle" font-size="20"></text>
         </g>
     </svg>
+    <!-- 手機端長按選取用透明覆蓋層（SVG text 無法被選取，改用 HTML 鏡像） -->
+    <div id="bazi-overlay" onclick="event.stopPropagation()" style="
+        position: absolute;
+        top: 47%; left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        user-select: text; -webkit-user-select: text;
+        color: rgba(0,0,0,0.01);
+        z-index: 6;
+        padding: 18px 30px;
+        cursor: text;
+        white-space: nowrap;
+        line-height: 1.9;
+        pointer-events: auto;
+    ">
+        <div id="overlay-dm" style="font-size: min(8.5vw, 52px); font-weight: 900;"></div>
+        <div id="overlay-l1" style="font-size: min(2.8vw, 16px); font-weight: 800;"></div>
+        <div id="overlay-l2" style="font-size: min(2.8vw, 16px); font-weight: 800;"></div>
+    </div>
 </div>
 
 <div class="footer">
@@ -213,11 +232,19 @@
         if(!cur) return;
         const d = cur, bG = document.getElementById('bazi-group'), bL1 = document.getElementById('baziL1'), bL2 = document.getElementById('baziL2');
         const extras = document.getElementById('grid-extras'), dm = document.getElementById('dmDisplay');
+
+        // 同步透明覆蓋層文字（供手機端長按選取）
+        function syncOverlay() {
+            document.getElementById('overlay-dm').textContent = dm.textContent;
+            document.getElementById('overlay-l1').textContent = bL1.textContent;
+            document.getElementById('overlay-l2').textContent = bL2.textContent;
+        }
         dm.textContent = d.dg + d.dw; dm.style.fill = `var(--${WX_COLOR[d.dw]})`; extras.innerHTML = '';
         const gridPos = [{x:460, y:240}, {x:630, y:350}, {x:350, y:480}, {x:130, y:350}, {x:350, y:100}];
         if(isGrid) {
             bG.setAttribute("transform", "translate(0, 190)"); 
             bL1.setAttribute("x", 350); bL1.textContent = `${d.year}年 ${d.month}月 ${d.day}日 ${d.time}時`; bL1.setAttribute("font-weight", "800"); bL2.textContent = "";
+            syncOverlay();
             gridPos.forEach((p, i) => {
                 if(i===0) return;
                 const offsets = [[0,0], [135,-15], [-25,75], [-110,-15], [-25,-105]], labels = ["", "我生", "我剋", "剋我", "生我"];
@@ -231,6 +258,7 @@
             bG.setAttribute("transform", "translate(0, 0)");
             bL1.setAttribute("x", 310); bL1.setAttribute("y", 395); bL2.setAttribute("x", 390); bL2.setAttribute("y", 425);
             bL1.textContent = `${d.year}年 ${d.month}月`; bL2.textContent = `${d.day}日 ${d.time}時`; bL1.setAttribute("font-weight", "800"); bL2.setAttribute("font-weight", "800");
+            syncOverlay();
         }
         for(let i=0; i<5; i++) {
             const g = document.getElementById(`node-${i}`), s = g.querySelector('.sector-part'), c = g.querySelector('.card-part');
