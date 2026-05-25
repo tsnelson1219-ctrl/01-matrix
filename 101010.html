@@ -104,24 +104,24 @@
             <text class="bazi-sub selectable" id="baziL2" text-anchor="middle" dominant-baseline="middle" font-size="20"></text>
         </g>
     </svg>
-    <!-- 手機端長按選取用透明覆蓋層（SVG text 無法被選取，改用 HTML 鏡像） -->
+    <!-- 手機端長按選取用覆蓋層（格線模式下取代 SVG 文字顯示，可正常選取） -->
     <div id="bazi-overlay" onclick="event.stopPropagation()" style="
+        display: none;
         position: absolute;
-        top: 47%; left: 50%;
+        top: 84%; left: 50%;
         transform: translate(-50%, -50%);
         text-align: center;
         user-select: text; -webkit-user-select: text;
-        color: rgba(0,0,0,0.01);
+        color: var(--text-main, #c8a96e);
         z-index: 6;
-        padding: 18px 30px;
+        padding: 12px 30px;
         cursor: text;
         white-space: nowrap;
-        line-height: 1.9;
+        font-size: min(2.8vw, 16px);
+        font-weight: 800;
         pointer-events: auto;
     ">
-        <div id="overlay-dm" style="font-size: min(8.5vw, 52px); font-weight: 900;"></div>
-        <div id="overlay-l1" style="font-size: min(2.8vw, 16px); font-weight: 800;"></div>
-        <div id="overlay-l2" style="font-size: min(2.8vw, 16px); font-weight: 800;"></div>
+        <div id="overlay-l1"></div>
     </div>
 </div>
 
@@ -233,11 +233,19 @@
         const d = cur, bG = document.getElementById('bazi-group'), bL1 = document.getElementById('baziL1'), bL2 = document.getElementById('baziL2');
         const extras = document.getElementById('grid-extras'), dm = document.getElementById('dmDisplay');
 
-        // 同步透明覆蓋層文字（供手機端長按選取）
+        // 同步透明覆蓋層文字（供手機端長按選取，僅格線模式顯示）
         function syncOverlay() {
-            document.getElementById('overlay-dm').textContent = dm.textContent;
-            document.getElementById('overlay-l1').textContent = bL1.textContent;
-            document.getElementById('overlay-l2').textContent = bL2.textContent;
+            const overlay = document.getElementById('bazi-overlay');
+            if (isGrid) {
+                document.getElementById('overlay-l1').textContent = bL1.textContent;
+                overlay.style.top = '84%';
+                overlay.style.display = 'block';
+                // 隱藏 SVG 文字，由 HTML 覆蓋層負責顯示，避免選取時重疊
+                bL1.style.opacity = '0';
+            } else {
+                overlay.style.display = 'none';
+                bL1.style.opacity = '1';
+            }
         }
         dm.textContent = d.dg + d.dw; dm.style.fill = `var(--${WX_COLOR[d.dw]})`; extras.innerHTML = '';
         const gridPos = [{x:460, y:240}, {x:630, y:350}, {x:350, y:480}, {x:130, y:350}, {x:350, y:100}];
