@@ -106,11 +106,11 @@
         
         <div class="tab-group">
             <div class="nav-btn active" onclick="switchApp(0)">子午流注</div>
-            <div class="nav-btn" onclick="switchApp(1)">十神五極</div>
-            <div class="nav-btn" onclick="switchApp(2)">地支藏干</div>
-            <div class="nav-btn" onclick="switchApp(3)">九宮飛星</div>
+            <div class="nav-btn" onclick="switchApp(1)">干支曆</div>
+            <div class="nav-btn" onclick="switchApp(2)">十神五極</div>
+            <div class="nav-btn" onclick="switchApp(3)">地支藏干</div>
             <div class="nav-btn" onclick="switchApp(4)">12長生</div>
-            <div class="nav-btn" onclick="switchApp(5)">干支曆</div>
+            <div class="nav-btn" onclick="switchApp(5)">九宮飛星</div>
         </div>
         
         <div class="nav-arrow" onclick="nextApp()">&#10095;</div>
@@ -124,11 +124,11 @@
     // 確保檔案名稱與您資料夾內的完全一致
     const apps = [
         { name: '子午流注', file: 'ZW clock.html' },
+        { name: '干支曆', file: 'cal.html' },
         { name: '十神五極', file: '101010.html' },
         { name: '地支藏干', file: '12 h.html' },
-        { name: '九宮飛星', file: '9P.html' },
         { name: '12長生', file: '12life.html' },
-        { name: '干支曆', file: 'cal.html' }
+        { name: '九宮飛星', file: '9P.html' }
     ];
     
     let currentIndex = 0;
