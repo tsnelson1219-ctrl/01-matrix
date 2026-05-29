@@ -19,7 +19,7 @@ body.light {
   --dimmer:rgba(122,80,32,.25); --green:#3d7a52; --red:#9a3030;
   --border:rgba(122,80,32,.2);
 }
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--gold);font-family:"PingFang TC","Microsoft JhengHei",sans-serif;user-select:none;-webkit-user-select:none;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--gold);font-family:"PingFang TC","Microsoft JhengHei",sans-serif;}
 body{display:flex;flex-direction:column;}
 .header{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:env(safe-area-inset-top,10px) 12px 10px;background:var(--bg);border-bottom:1px solid var(--border);}
 .nav-arrow{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--dim);cursor:pointer;border-radius:50%;transition:var(--trans);flex-shrink:0;}
@@ -34,17 +34,17 @@ body{display:flex;flex-direction:column;}
 .weekday-row{flex-shrink:0;display:grid;grid-template-columns:repeat(7,1fr);padding:6px 4px 4px;border-bottom:1px solid var(--border);}
 .weekday-row span{text-align:center;font-size:11px;color:var(--dim);font-weight:500;}
 .weekday-row span:first-child{color:var(--red);}
-.cal-grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,1fr);padding:3px 4px 4px;gap:3px;}
-.day-cell{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;transition:background .15s;border:1.5px solid transparent;padding:2px 1px;overflow:hidden;min-height:0;}
+.cal-grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,1fr);padding:2px 3px 3px;gap:2px;}
+.day-cell{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;transition:background .15s;border:1.5px solid transparent;padding:1px;overflow:hidden;min-height:0;}
 .day-cell:active{background:var(--gold2);}
 .day-cell.other-month{opacity:.28;}
 .day-cell.today{background:var(--gold2);}
 .day-cell.today .day-num{color:var(--gold);font-weight:800;}
 .day-cell.selected{border-color:var(--gold);background:var(--gold2);box-shadow:0 0 0 1px var(--gold3);}
-.jq-label{position:absolute;top:2px;left:0;right:0;text-align:center;font-size:9px;color:var(--green);font-weight:600;line-height:1;letter-spacing:.5px;}
-.day-num{font-size:clamp(14px,3.8vw,20px);font-weight:600;color:var(--text);line-height:1.1;}
-.day-sub{font-size:clamp(11px,3.2vw,15px);color:var(--text);line-height:1;margin-top:3px;font-weight:700;}
-.note-dot{position:absolute;bottom:2px;right:4px;font-size:7px;color:var(--gold);}
+.jq-label{position:absolute;top:2px;left:0;right:0;text-align:center;font-size:clamp(10px,2.6vw,13px);color:var(--green);font-weight:700;line-height:1;letter-spacing:.3px;}
+.day-num{font-size:clamp(16px,4.8vw,26px);font-weight:600;color:var(--text);line-height:1.05;user-select:text;-webkit-user-select:text;}
+.day-sub{font-size:clamp(13px,3.8vw,18px);color:var(--text);line-height:1;margin-top:2px;font-weight:700;user-select:text;-webkit-user-select:text;}
+.note-dot{position:absolute;bottom:2px;right:3px;font-size:7px;color:var(--gold);}
 .note-bubble{display:none;position:fixed;z-index:200;max-width:180px;min-width:80px;background:var(--bg2);border:1px solid var(--gold3);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--text);line-height:1.4;box-shadow:0 4px 16px rgba(0,0,0,.4);pointer-events:none;word-break:break-all;}
 .note-bubble.bubble-above::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--gold3);border-bottom:none;}
 .note-bubble.bubble-below::after{content:'';position:absolute;top:-6px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-bottom-color:var(--gold3);border-top:none;}
@@ -117,7 +117,7 @@ const GAN_COLOR={'甲':'#7aab8a','乙':'#7aab8a','丙':'#c06060','丁':'#c06060'
 const LM=['','正','二','三','四','五','六','七','八','九','十','冬','臘'];
 const today=new Date();
 let vy=today.getFullYear(),vm=today.getMonth()+1;
-let mode='lunar',selectedKey=null,modalKey=null,pressTimer=null;
+let mode='ganzhi',selectedKey=null,modalKey=null,pressTimer=null;
 
 if(localStorage.getItem('theme')==='light')document.body.classList.add('light');
 
