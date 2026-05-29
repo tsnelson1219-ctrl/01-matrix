@@ -110,6 +110,7 @@
             <div class="nav-btn" onclick="switchApp(2)">地支藏干</div>
             <div class="nav-btn" onclick="switchApp(3)">九宮飛星</div>
             <div class="nav-btn" onclick="switchApp(4)">12長生</div>
+            <div class="nav-btn" onclick="switchApp(5)">干支曆</div>
         </div>
         
         <div class="nav-arrow" onclick="nextApp()">&#10095;</div>
@@ -126,7 +127,8 @@
         { name: '十神五極', file: '101010.html' },
         { name: '地支藏干', file: '12 h.html' },
         { name: '九宮飛星', file: '9P.html' },
-        { name: '12長生', file: '12life.html' }
+        { name: '12長生', file: '12life.html' },
+        { name: '干支曆', file: 'cal.html' }
     ];
     
     let currentIndex = 0;
@@ -178,6 +180,8 @@
 
             if (src.includes('101010')) {
                 body.classList.toggle('dark-theme', !isLight);
+            } else if (src.includes('cal')) {
+                body.classList.toggle('light', isLight);
             } else if (src.includes('12') || src.includes('ZW') || src.includes('clock')) {
                 body.classList.toggle('light-theme', isLight);
             } else {
