@@ -42,8 +42,8 @@ body{display:flex;flex-direction:column;}
 .day-cell.today .day-num{color:var(--gold);font-weight:800;}
 .day-cell.selected{border-color:var(--gold);background:var(--gold2);box-shadow:0 0 0 1px var(--gold3);}
 .jq-label{position:absolute;top:2px;left:0;right:0;text-align:center;font-size:9px;color:var(--green);font-weight:600;line-height:1;letter-spacing:.5px;}
-.day-num{font-size:clamp(15px,4.2vw,22px);font-weight:600;color:var(--text);line-height:1.1;}
-.day-sub{font-size:clamp(9px,2.4vw,13px);color:var(--dim);line-height:1;margin-top:2px;}
+.day-num{font-size:clamp(14px,3.8vw,20px);font-weight:600;color:var(--text);line-height:1.1;}
+.day-sub{font-size:clamp(11px,3.2vw,15px);color:var(--text);line-height:1;margin-top:3px;font-weight:700;}
 .note-dot{position:absolute;bottom:2px;right:4px;font-size:7px;color:var(--gold);}
 .note-bubble{display:none;position:fixed;z-index:200;max-width:180px;min-width:80px;background:var(--bg2);border:1px solid var(--gold3);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--text);line-height:1.4;box-shadow:0 4px 16px rgba(0,0,0,.4);pointer-events:none;word-break:break-all;}
 .note-bubble.bubble-above::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--gold3);border-bottom:none;}
@@ -60,6 +60,15 @@ body.light #note-input{background:rgba(255,255,255,.5);}
 .modal-btns button:nth-child(2){background:transparent;color:var(--red);border-color:rgba(192,96,96,.4);}
 .modal-btns button:nth-child(3){background:transparent;color:var(--dim);}
 .modal-btns button:active{opacity:.7;transform:scale(.97);}
+.menu-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--gold3);background:transparent;color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+.io-modal{background:var(--bg2);border:1px solid var(--gold3);border-radius:16px;padding:20px;width:min(280px,88vw);box-shadow:0 8px 32px rgba(0,0,0,.5);}
+.io-title{font-size:15px;font-weight:700;color:var(--gold);text-align:center;margin-bottom:16px;}
+.io-btns{display:flex;flex-direction:column;gap:10px;}
+.io-btn{padding:12px 0;border-radius:10px;font-size:14px;cursor:pointer;border:1px solid var(--gold3);background:var(--gold2);color:var(--text);font-family:inherit;transition:var(--trans);text-align:center;}
+.io-btn:active{opacity:.7;}
+.io-btn.danger{border-color:rgba(192,96,96,.4);color:var(--red);background:transparent;}
+.io-close{margin-top:12px;padding:10px 0;border-radius:10px;font-size:14px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:inherit;width:100%;}
+
 </style>
 </head>
 <body>
@@ -71,6 +80,7 @@ body.light #note-input{background:rgba(255,255,255,.5);}
   </div>
   <div class="header-right">
     <button class="mode-btn" id="mode-btn" onclick="toggleMode()">農曆</button>
+    <button class="menu-btn" onclick="openIOModal()">⋮</button>
     <button class="theme-btn" onclick="toggleTheme()">◑</button>
   </div>
   <div class="nav-arrow" onclick="changeMonth(1)">&#10095;</div>
@@ -78,6 +88,19 @@ body.light #note-input{background:rgba(255,255,255,.5);}
 <div class="weekday-row"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
 <div class="cal-grid" id="cal-grid"></div>
 <div class="note-bubble" id="note-bubble"></div>
+
+<!-- 備註管理 Modal -->
+<div class="modal-overlay" id="io-overlay" onclick="closeIOModal()">
+  <div class="io-modal" onclick="event.stopPropagation()">
+    <div class="io-title">備註管理</div>
+    <div class="io-btns">
+      <button class="io-btn" onclick="exportNotes()">📤 匯出備註（JSON）</button>
+      <button class="io-btn" onclick="document.getElementById('import-input').click()">📥 匯入備註（JSON）</button>
+    </div>
+    <button class="io-close" onclick="closeIOModal()">取消</button>
+  </div>
+</div>
+<input type="file" id="import-input" accept=".json" style="display:none" onchange="importNotes(this)">
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
   <div class="note-modal" onclick="event.stopPropagation()">
     <div class="modal-date" id="modal-date"></div>
@@ -195,6 +218,44 @@ function deleteNote(){localStorage.removeItem('cal_note_'+modalKey);closeModal()
 function changeMonth(d){vm+=d;if(vm>12){vm=1;vy++;}if(vm<1){vm=12;vy--;}selectedKey=null;render();}
 function toggleMode(){mode=mode==='lunar'?'ganzhi':'lunar';render();}
 function toggleTheme(){const l=document.body.classList.toggle('light');localStorage.setItem('theme',l?'light':'dark');}
+
+// ── 備註管理 ──
+function openIOModal(){document.getElementById('io-overlay').classList.add('open');}
+function closeIOModal(){document.getElementById('io-overlay').classList.remove('open');}
+
+function exportNotes(){
+  const notes={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k.startsWith('cal_note_'))notes[k.replace('cal_note_','')]=localStorage.getItem(k);
+  }
+  if(!Object.keys(notes).length){alert('目前沒有任何備註');return;}
+  const blob=new Blob([JSON.stringify(notes,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='干支曆備註_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();URL.revokeObjectURL(a.href);
+  closeIOModal();
+}
+
+function importNotes(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      let count=0;
+      for(const[date,note] of Object.entries(data)){
+        if(typeof note==='string'&&note.trim()){
+          localStorage.setItem('cal_note_'+date,note);count++;
+        }
+      }
+      input.value='';closeIOModal();render();
+      alert('已匯入 '+count+' 筆備註');
+    }catch{alert('檔案格式錯誤，請選擇正確的 JSON 檔案');}
+  };
+  reader.readAsText(file);
+}
 
 render();
 </script>
