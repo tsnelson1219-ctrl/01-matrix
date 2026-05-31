@@ -17,38 +17,64 @@ body.light{
   --gold3:rgba(122,80,32,.3);--text:#6b4010;--dim:rgba(122,80,32,.5);
   --green:#3d7a52;--red:#9a3030;--border:rgba(122,80,32,.2);
 }
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--gold);font-family:"PingFang TC","Microsoft JhengHei",sans-serif;}
+html,body{
+  height:100%;overflow:hidden;
+  background:var(--bg);color:var(--gold);
+  font-family:"PingFang TC","Microsoft JhengHei",sans-serif;
+}
 body{display:flex;flex-direction:column;}
 
-/* Header */
-.header{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:env(safe-area-inset-top,10px) 12px 10px;background:var(--bg);border-bottom:1px solid var(--border);}
-.title-area{flex:1;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;padding:4px 0;user-select:none;-webkit-user-select:none;}
-.title-area.pressed{opacity:.7;}
-.main-title{font-size:16px;font-weight:700;color:var(--gold);letter-spacing:.5px;white-space:nowrap;cursor:pointer;}
-.ganzhi-year{font-size:13px;color:var(--gold);margin-top:3px;letter-spacing:1.5px;font-weight:700;white-space:nowrap;cursor:pointer;}
+/* ── Header ── */
+.header{
+  flex-shrink:0;display:flex;align-items:center;gap:6px;
+  padding:env(safe-area-inset-top,10px) 12px 10px;
+  background:var(--bg);border-bottom:1px solid var(--border);
+}
+.title-area{
+  flex:1;text-align:center;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;min-width:0;
+  padding:4px 0;cursor:pointer;
+  user-select:none;-webkit-user-select:none;
+}
+.title-area:active{opacity:.7;}
+.main-title{font-size:16px;font-weight:700;color:var(--gold);letter-spacing:.5px;white-space:nowrap;}
+.ganzhi-year{font-size:13px;color:var(--gold);margin-top:3px;letter-spacing:1.5px;font-weight:700;white-space:nowrap;}
 .header-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .mode-btn{padding:5px 12px;font-size:12px;border-radius:20px;border:1px solid var(--gold3);background:transparent;color:var(--text);cursor:pointer;transition:var(--trans);white-space:nowrap;}
 .mode-btn.active{background:var(--gold2);color:var(--gold);border-color:var(--gold);}
 .menu-btn,.theme-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--gold3);background:transparent;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;}
 .menu-btn{font-size:18px;line-height:1;}
 
-/* Weekday */
-.weekday-row{flex-shrink:0;display:grid;grid-template-columns:repeat(7,1fr);padding:6px 4px 4px;border-bottom:1px solid var(--border);}
+/* ── Weekday ── */
+.weekday-row{
+  flex-shrink:0;display:grid;grid-template-columns:repeat(7,1fr);
+  padding:6px 4px 4px;border-bottom:1px solid var(--border);
+}
 .weekday-row span{text-align:center;font-size:11px;color:var(--dim);font-weight:500;}
 .weekday-row span:first-child{color:var(--red);}
 
-/* Viewport */
-.cal-viewport{flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none;}
+/* ── Viewport ── */
+.cal-viewport{
+  flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none;
+  /* 手機底部導覽列：用 padding-bottom 讓內容不被遮蓋 */
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
 
-/* Grid */
-.cal-grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(7,1fr);padding:3px;gap:3px;background:var(--border);}
+/* ── Grid ── */
+.cal-grid{
+  position:absolute;inset:0;
+  display:grid;grid-template-columns:repeat(7,1fr);
+  padding:3px;gap:3px;background:var(--border);
+}
 
-/* Cells */
+/* ── Cells ── */
 .day-cell{
-  position:relative;display:flex;flex-direction:column;
+  position:relative;
+  display:flex;flex-direction:column;
   align-items:center;justify-content:center;
   border-radius:6px;cursor:pointer;border:none;
-  padding:1px 1px 2px;overflow:hidden;background:var(--bg);
+  padding:2px 1px 14px;  /* 底部留給節氣 */
+  overflow:hidden;background:var(--bg);
   transition:background .12s;
   user-select:none;-webkit-user-select:none;
 }
@@ -59,67 +85,53 @@ body{display:flex;flex-direction:column;}
 body.light .day-cell.today{box-shadow:inset 0 0 0 2px var(--red);}
 .day-cell.selected{background:var(--bg);box-shadow:inset 0 0 0 2px var(--gold);}
 
-/* 格頂雙標籤（干支月 + 農曆月） */
+/* ── 格頂標籤（絕對定位貼頂）── */
 .cell-top{
-  display:flex;justify-content:center;align-items:center;gap:2px;
-  width:100%;min-height:14px;margin-bottom:1px;
+  position:absolute;top:2px;left:0;right:0;
+  display:flex;justify-content:center;align-items:center;
+  gap:3px;line-height:1;pointer-events:none;
 }
+/* 干支月：金色 */
 .gz-month-tag{
-  font-size:clamp(8px,2.1vw,11px);
+  font-size:clamp(8px,2vw,10px);
   color:var(--gold);font-weight:700;
-  letter-spacing:.3px;line-height:1;
-  white-space:nowrap;
+  letter-spacing:.2px;white-space:nowrap;
 }
+/* 農曆月：暗金色 */
 .lm-month-tag{
-  font-size:clamp(8px,2.1vw,11px);
+  font-size:clamp(8px,2vw,10px);
   color:var(--dim);font-weight:600;
-  letter-spacing:.3px;line-height:1;
-  white-space:nowrap;
-}
-/* 只有其中一個時置中 */
-.cell-top.single .gz-month-tag,
-.cell-top.single .lm-month-tag{
-  font-size:clamp(9px,2.3vw,12px);
+  letter-spacing:.2px;white-space:nowrap;
 }
 
-/* 節氣標在底部 */
+/* ── 節氣（貼底）── */
 .jq-label{
   position:absolute;bottom:2px;left:0;right:0;
-  text-align:center;font-size:clamp(9px,2.4vw,12px);
+  text-align:center;font-size:clamp(9px,2.3vw,11px);
   color:var(--green);font-weight:700;line-height:1;
+  pointer-events:none;
 }
+/* ── 國曆日 ── */
 .day-num{
   font-size:clamp(15px,4.4vw,24px);font-weight:600;
   color:var(--text);line-height:1.05;
+  /* 允許長按系統選取 */
+  user-select:text;-webkit-user-select:text;
 }
+/* ── 農/干支日 ── */
 .day-sub{
-  font-size:clamp(11px,3.2vw,16px);color:var(--text);
+  font-size:clamp(11px,3.1vw,15px);color:var(--text);
   line-height:1;margin-top:3px;font-weight:700;
+  user-select:text;-webkit-user-select:text;
 }
-.note-dot{position:absolute;bottom:2px;right:3px;font-size:7px;color:var(--gold);}
+.note-dot{position:absolute;bottom:14px;right:3px;font-size:7px;color:var(--gold);pointer-events:none;}
 
-/* Safe area */
-.safe-bottom{flex-shrink:0;height:env(safe-area-inset-bottom,0px);background:var(--bg);}
-
-/* Bubble */
+/* ── Bubble ── */
 .note-bubble{display:none;position:fixed;z-index:200;max-width:180px;min-width:80px;background:var(--bg2);border:1px solid var(--gold3);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--text);line-height:1.4;box-shadow:0 4px 16px rgba(0,0,0,.4);pointer-events:none;word-break:break-all;}
 .note-bubble.bubble-above::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--gold3);border-bottom:none;}
 .note-bubble.bubble-below::after{content:'';position:absolute;top:-6px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-bottom-color:var(--gold3);border-top:none;}
 
-/* Copy toast */
-.copy-toast{
-  display:none;position:fixed;top:50%;left:50%;
-  transform:translate(-50%,-50%) scale(.88);
-  z-index:500;background:var(--bg2);border:1px solid var(--gold3);
-  border-radius:12px;padding:10px 20px;font-size:14px;
-  color:var(--gold);pointer-events:none;
-  box-shadow:0 4px 20px rgba(0,0,0,.5);
-  transition:opacity .25s,transform .25s;
-  opacity:0;
-}
-.copy-toast.show{display:block;opacity:1;transform:translate(-50%,-50%) scale(1);}
-
-/* Modals */
+/* ── Modals ── */
 .modal-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
 .note-modal,.io-modal,.jump-modal{background:var(--bg2);border:1px solid var(--gold3);border-radius:16px;padding:20px;width:min(320px,90vw);box-shadow:0 8px 32px rgba(0,0,0,.5);}
@@ -137,8 +149,6 @@ body.light #note-input{background:rgba(255,255,255,.5);}
 .io-btn{padding:12px 0;border-radius:10px;font-size:14px;cursor:pointer;border:1px solid var(--gold3);background:var(--gold2);color:var(--text);font-family:inherit;transition:var(--trans);text-align:center;}
 .io-btn:active{opacity:.7;}
 .io-close{margin-top:12px;padding:10px 0;border-radius:10px;font-size:14px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:inherit;width:100%;}
-
-/* Jump modal */
 .jump-row{display:flex;gap:10px;margin-bottom:4px;}
 .jump-row input,.jump-row select{flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,.3);color:var(--text);font-size:15px;font-family:inherit;outline:none;text-align:center;}
 body.light .jump-row input,body.light .jump-row select{background:rgba(255,255,255,.5);}
@@ -150,7 +160,7 @@ body.light .jump-row input,body.light .jump-row select{background:rgba(255,255,2
 <body>
 
 <div class="header">
-  <div class="title-area" id="title-area">
+  <div class="title-area" id="title-area" onclick="openJumpModal()">
     <div class="main-title" id="main-title"></div>
     <div class="ganzhi-year" id="ganzhi-year"></div>
   </div>
@@ -161,15 +171,15 @@ body.light .jump-row input,body.light .jump-row select{background:rgba(255,255,2
   </div>
 </div>
 
-<div class="weekday-row"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+<div class="weekday-row">
+  <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+</div>
 
 <div class="cal-viewport" id="cal-viewport">
   <div class="cal-grid" id="cal-grid"></div>
 </div>
 
-<div class="safe-bottom"></div>
 <div class="note-bubble" id="note-bubble"></div>
-<div class="copy-toast" id="copy-toast"></div>
 
 <!-- 備註 Modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
@@ -231,33 +241,28 @@ let isAnimating=false, swipeBlocked=false;
 if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
 
 // ── 農曆輔助 ──
-function lunarOf(dy,dm,dd){
-  return Solar.fromYmd(dy,dm,dd).getLunar();
-}
+function lunarOf(dy,dm,dd){ return Solar.fromYmd(dy,dm,dd).getLunar(); }
 
-// ── 計算一格的「格頂標籤」──
-// showGZ：是否顯示干支月；showLM：是否顯示農曆月
-// 干支月：月柱與上一天不同 → 顯示
-// 農曆月：農曆日=1 → 顯示
+// ── 格頂標籤計算 ──
+// gzLabel：干支月（月柱換月才顯示，始終顯示）
+// lmLabel：農曆月（農曆初一才顯示，只在農曆模式顯示）
 function getCellTopLabels(dy,dm,dd){
-  const lunar = lunarOf(dy,dm,dd);
-  const gz = lunar.getMonthInGanZhi();           // 當天月柱
-  const lDay = lunar.getDay();
-  const lMon = Math.abs(lunar.getMonth());
-  const isLeap = lunar.getMonth()<0;
+  const lunar=lunarOf(dy,dm,dd);
+  const gz=lunar.getMonthInGanZhi();
+  const lDay=lunar.getDay();
+  const lMon=Math.abs(lunar.getMonth());
+  const isLeap=lunar.getMonth()<0;
 
-  // 干支月是否換月（與前一天比較）
-  let gzLabel = null;
-  const prev = new Date(dy,dm-1,dd-1);
-  const pLunar = lunarOf(prev.getFullYear(), prev.getMonth()+1, prev.getDate());
-  if(pLunar.getMonthInGanZhi() !== gz){
-    gzLabel = gz; // 今天月柱與昨天不同 → 顯示
-  }
+  // 干支月換月判斷（與昨天比較）
+  let gzLabel=null;
+  const prev=new Date(dy,dm-1,dd-1);
+  const pLunar=lunarOf(prev.getFullYear(),prev.getMonth()+1,prev.getDate());
+  if(pLunar.getMonthInGanZhi()!==gz) gzLabel=gz+'月';
 
-  // 農曆月首日
-  let lmLabel = null;
-  if(lDay===1){
-    lmLabel = (isLeap?'閏':'')+LM[lMon]+'月';
+  // 農曆月（初一才標，且只在農曆模式）
+  let lmLabel=null;
+  if(lDay===1&&mode==='lunar'){
+    lmLabel=(isLeap?'閏':'')+LM[lMon]+'月';
   }
 
   return {gzLabel, lmLabel};
@@ -286,33 +291,27 @@ function renderGrid(container, y, m){
     cell.className='day-cell'+(isOther?' other-month':'')+(isTdy?' today':'')+(selectedKey===key?' selected':'');
     cell.dataset.date=key;
 
-    // ── 格頂標籤區 ──
-    const {gzLabel, lmLabel} = getCellTopLabels(dy,dm,dd);
+    // ── 格頂標籤（絕對定位，不佔 flex 高度）──
+    const {gzLabel,lmLabel}=getCellTopLabels(dy,dm,dd);
     if(gzLabel||lmLabel){
       const topDiv=document.createElement('div');
-      const hasOne = (gzLabel?1:0)+(lmLabel?1:0)===1;
-      topDiv.className='cell-top'+(hasOne?' single':'');
+      topDiv.className='cell-top';
       if(gzLabel){
-        const gz=document.createElement('span');
-        gz.className='gz-month-tag';
-        gz.textContent=gzLabel;
-        topDiv.appendChild(gz);
+        const s=document.createElement('span');
+        s.className='gz-month-tag';
+        s.textContent=gzLabel;
+        topDiv.appendChild(s);
       }
       if(lmLabel){
-        const lm=document.createElement('span');
-        lm.className='lm-month-tag';
-        lm.textContent=lmLabel;
-        topDiv.appendChild(lm);
+        const s=document.createElement('span');
+        s.className='lm-month-tag';
+        s.textContent=lmLabel;
+        topDiv.appendChild(s);
       }
-      cell.appendChild(topDiv);
-    } else {
-      // 佔位，保持格子高度一致
-      const topDiv=document.createElement('div');
-      topDiv.className='cell-top';
       cell.appendChild(topDiv);
     }
 
-    // ── 節氣（底部）──
+    // ── 節氣（絕對定位貼底）──
     if(jq){
       const el=document.createElement('span');
       el.className='jq-label';
@@ -350,40 +349,41 @@ function renderGrid(container, y, m){
   }
 }
 
-// ── 格子事件（長按開備註，點擊選取）──
+// ── 格子事件 ──
+// 單擊：選取/取消（顯示備註泡泡）
+// 雙擊：開備註輸入框
+// 長按：系統原生文字選取（不攔截）
 function attachCellEvents(cell, key, dy, dm, dd, lunar){
-  let pressTimer=null;
+  let clickTimer=null;
   let moved=false;
   let startX=0, startY=0;
+  const MOVE_THRESHOLD=8;
+  const DBL_INTERVAL=320; // 雙擊最大間隔 ms
 
   cell.addEventListener('pointerdown', e=>{
-    if(swipeBlocked||isDragging) return;
-    moved=false;
-    startX=e.clientX; startY=e.clientY;
-    pressTimer=setTimeout(()=>{
-      pressTimer=null;
-      if(!moved&&!isDragging&&!swipeBlocked){
-        openModal(key,dy,dm,dd,lunar);
-      }
-    },480);
-  });
+    startX=e.clientX; startY=e.clientY; moved=false;
+  },{passive:true});
 
   cell.addEventListener('pointermove', e=>{
-    if(Math.abs(e.clientX-startX)>8||Math.abs(e.clientY-startY)>8){
+    if(Math.abs(e.clientX-startX)>MOVE_THRESHOLD||Math.abs(e.clientY-startY)>MOVE_THRESHOLD){
       moved=true;
-      if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}
     }
-  });
+  },{passive:true});
 
-  const cancelPress=()=>{
-    if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}
-  };
-  cell.addEventListener('pointerup', cancelPress);
-  cell.addEventListener('pointercancel', cancelPress);
-
-  cell.addEventListener('click', ()=>{
-    if(swipeBlocked||moved) return;
-    handleClick(key,cell);
+  cell.addEventListener('click', e=>{
+    if(swipeBlocked||moved||isDragging) return;
+    if(clickTimer){
+      // ── 雙擊 → 開備註 ──
+      clearTimeout(clickTimer); clickTimer=null;
+      openModal(key, dy, dm, dd, lunar);
+    } else {
+      // 等一個間隔，確認是否為雙擊
+      clickTimer=setTimeout(()=>{
+        clickTimer=null;
+        // ── 單擊 → 選取/泡泡 ──
+        handleClick(key, cell);
+      }, DBL_INTERVAL);
+    }
   });
 }
 
@@ -403,7 +403,7 @@ function render(){
   renderGrid(document.getElementById('cal-grid'),vy,vm);
 }
 
-// ── 月份切換動畫（含滑動完成動畫）──
+// ── 月份切換動畫 ──
 function calcAdjacentMonth(delta){
   let ay=vy,am=vm+delta;
   if(am>12){am=1;ay++;}
@@ -418,7 +418,7 @@ function changeMonth(delta){
   selectedKey=null;
   hideBubble();
 
-  const viewport=document.getElementById('cal-viewport');
+  const vp=document.getElementById('cal-viewport');
   const oldGrid=document.getElementById('cal-grid');
   const {ay,am}=calcAdjacentMonth(delta);
   vy=ay; vm=am;
@@ -427,7 +427,7 @@ function changeMonth(delta){
   newGrid.className='cal-grid';
   newGrid.style.cssText=`position:absolute;inset:0;transition:none;transform:translateY(${delta>0?'100%':'-100%'})`;
   renderGrid(newGrid,vy,vm);
-  viewport.appendChild(newGrid);
+  vp.appendChild(newGrid);
   oldGrid.style.cssText='position:absolute;inset:0;';
 
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
@@ -447,7 +447,7 @@ function changeMonth(delta){
   }));
 }
 
-// ── 拖動換月（即時跟手，流暢版）──
+// ── 拖動換月（即時跟手）──
 const viewport=document.getElementById('cal-viewport');
 let dragStartX=0, dragStartY=0;
 let dragPending=false, isDragging=false;
@@ -457,13 +457,11 @@ let lastPointerY=0;
 viewport.addEventListener('pointerdown', e=>{
   if(isAnimating) return;
   dragPending=true;
-  dragStartX=e.clientX;
-  dragStartY=e.clientY;
+  dragStartX=e.clientX; dragStartY=e.clientY;
   lastPointerY=e.clientY;
-  isDragging=false;
-  dragDir=0;
+  isDragging=false; dragDir=0;
   viewport.setPointerCapture(e.pointerId);
-}, {passive:true});
+},{passive:true});
 
 window.addEventListener('pointermove', e=>{
   if(!dragPending||isAnimating) return;
@@ -471,7 +469,6 @@ window.addEventListener('pointermove', e=>{
   const dx=e.clientX-dragStartX;
   lastPointerY=e.clientY;
 
-  // 確定是垂直拖動（超過 10px 且垂直分量>水平1.2倍）
   if(!isDragging&&Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)*1.2){
     isDragging=true;
     dragPending=false;
@@ -479,15 +476,11 @@ window.addEventListener('pointermove', e=>{
 
     const adj=calcAdjacentMonth(dragDir);
     adjVy=adj.ay; adjVm=adj.am;
-
-    // 準備鄰月格子
     adjGrid=document.createElement('div');
     adjGrid.className='cal-grid';
     adjGrid.style.cssText=`position:absolute;inset:0;transform:translateY(${dragDir>0?'100%':'-100%'})`;
     renderGrid(adjGrid,adjVy,adjVm);
     viewport.appendChild(adjGrid);
-
-    // 當前格子固定
     const cur=document.getElementById('cal-grid');
     if(cur) cur.style.cssText='position:absolute;inset:0;';
   }
@@ -499,7 +492,7 @@ window.addEventListener('pointermove', e=>{
     if(cur) cur.style.transform=`translateY(${curDy}px)`;
     if(adjGrid) adjGrid.style.transform=`translateY(${adjStart+curDy}px)`;
   }
-}, {passive:true});
+},{passive:true});
 
 function endDrag(e){
   if(!dragPending&&!isDragging) return;
@@ -508,14 +501,18 @@ function endDrag(e){
   isDragging=false;
 
   const totalDy=(e.clientY??lastPointerY)-dragStartY;
-  // 門檻：超過 22% 高度即切換（比原本 28% 更靈敏）
-  const threshold=viewport.offsetHeight*0.22;
-
   swipeBlocked=true;
   setTimeout(()=>swipeBlocked=false,80);
 
-  if(Math.abs(totalDy)>threshold){
+  // ── 取消門檻：只要滑動方向一致（totalDy 與 dragDir 同向）就切換 ──
+  const movedEnough=Math.abs(totalDy)>2; // 排除誤觸（2px）
+  const sameDir=(dragDir>0&&totalDy<0)||(dragDir<0&&totalDy>0);
+  // dragDir=1 → 往上滑（dy<0）→ 下個月；dragDir=-1 → 往下（dy>0）→ 上個月
+  if(movedEnough&&sameDir){
     completeSlide(dragDir);
+  } else if(movedEnough&&!sameDir){
+    // 反向拉回，snapBack
+    snapBack();
   } else {
     snapBack();
   }
@@ -533,31 +530,27 @@ function completeSlide(dir){
   isAnimating=true;
   vy=adjVy; vm=adjVm;
   const cur=document.getElementById('cal-grid');
-  const t='transform 0.26s cubic-bezier(0.25,0.46,0.45,0.94)';
-  if(cur){ cur.style.transition=t; cur.style.transform=`translateY(${dir>0?'-100%':'100%'})`; }
-  if(adjGrid){ adjGrid.style.transition=t; adjGrid.style.transform='translateY(0)'; }
+  const t='transform 0.24s cubic-bezier(0.25,0.46,0.45,0.94)';
+  if(cur){cur.style.transition=t;cur.style.transform=`translateY(${dir>0?'-100%':'100%'})`;}
+  if(adjGrid){adjGrid.style.transition=t;adjGrid.style.transform='translateY(0)';}
   setTimeout(()=>{
     if(cur) cur.remove();
-    if(adjGrid){
-      adjGrid.id='cal-grid';
-      adjGrid.style.cssText='';
-      adjGrid=null;
-    }
+    if(adjGrid){adjGrid.id='cal-grid';adjGrid.style.cssText='';adjGrid=null;}
     selectedKey=null;
     updateHeader();
     isAnimating=false;
-  },270);
+  },250);
 }
 
 function snapBack(){
   const cur=document.getElementById('cal-grid');
-  const t='transform 0.22s cubic-bezier(0.25,0.46,0.45,0.94)';
-  if(cur){ cur.style.transition=t; cur.style.transform='translateY(0)'; }
-  if(adjGrid){ adjGrid.style.transition=t; adjGrid.style.transform=`translateY(${dragDir>0?'100%':'-100%'})`; }
+  const t='transform 0.2s cubic-bezier(0.25,0.46,0.45,0.94)';
+  if(cur){cur.style.transition=t;cur.style.transform='translateY(0)';}
+  if(adjGrid){adjGrid.style.transition=t;adjGrid.style.transform=`translateY(${dragDir>0?'100%':'-100%'})`;}
   setTimeout(()=>{
     if(cur) cur.removeAttribute('style');
-    if(adjGrid){ adjGrid.remove(); adjGrid=null; }
-  },230);
+    if(adjGrid){adjGrid.remove();adjGrid=null;}
+  },210);
 }
 
 // ── 滾輪 ──
@@ -570,51 +563,11 @@ viewport.addEventListener('wheel', e=>{
   changeMonth(e.deltaY>0?1:-1);
 },{passive:false});
 
-// ── Header 長按複製 ──
-(()=>{
-  const area=document.getElementById('title-area');
-  let hTimer=null;
-
-  function startPress(e){
-    hTimer=setTimeout(()=>{
-      hTimer=null;
-      const text=document.getElementById('ganzhi-year').textContent;
-      copyText(text,'已複製：'+text);
-    },500);
-  }
-  function cancelPress(){
-    if(hTimer){clearTimeout(hTimer);hTimer=null;}
-  }
-
-  area.addEventListener('pointerdown', startPress);
-  area.addEventListener('pointerup', e=>{
-    if(hTimer){ cancelPress(); openJumpModal(); }
-  });
-  area.addEventListener('pointercancel', cancelPress);
-  area.addEventListener('pointermove', cancelPress);
-})();
-
-// ── 複製工具 ──
-function copyText(text, toast){
-  navigator.clipboard.writeText(text).catch(()=>{
-    const ta=document.createElement('textarea');
-    ta.value=text; ta.style.cssText='position:fixed;opacity:0';
-    document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta);
-  });
-  showToast(toast||'已複製');
-}
-function showToast(msg){
-  const t=document.getElementById('copy-toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),1600);
-}
-
 // ── 點擊與泡泡 ──
 function handleClick(key,el){
   hideBubble();
   document.querySelectorAll('.day-cell.selected').forEach(c=>c.classList.remove('selected'));
-  if(selectedKey===key){ selectedKey=null; return; }
+  if(selectedKey===key){selectedKey=null;return;}
   selectedKey=key; el.classList.add('selected');
   const note=localStorage.getItem('cal_note_'+key);
   if(note) showBubble(el,note);
@@ -630,7 +583,7 @@ function showBubble(el,text){
   b.style.top=above?(r.top-bh-8)+'px':(r.bottom+8)+'px';
   b.style.left=Math.max(6,Math.min(window.innerWidth-186,r.left+r.width/2-90))+'px';
 }
-function hideBubble(){ document.getElementById('note-bubble').style.display='none'; }
+function hideBubble(){document.getElementById('note-bubble').style.display='none';}
 
 // ── 備註 Modal ──
 function openModal(key,y,m,d,lunar){
@@ -641,9 +594,9 @@ function openModal(key,y,m,d,lunar){
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(()=>document.getElementById('note-input').focus(),100);
 }
-function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); modalKey=null; }
-function saveNote(){ const v=document.getElementById('note-input').value.trim(); if(v) localStorage.setItem('cal_note_'+modalKey,v); else localStorage.removeItem('cal_note_'+modalKey); closeModal(); render(); }
-function deleteNote(){ localStorage.removeItem('cal_note_'+modalKey); closeModal(); render(); }
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');modalKey=null;}
+function saveNote(){const v=document.getElementById('note-input').value.trim();if(v)localStorage.setItem('cal_note_'+modalKey,v);else localStorage.removeItem('cal_note_'+modalKey);closeModal();render();}
+function deleteNote(){localStorage.removeItem('cal_note_'+modalKey);closeModal();render();}
 
 // ── 跳轉 Modal ──
 function openJumpModal(){
@@ -651,45 +604,45 @@ function openJumpModal(){
   document.getElementById('jump-month').value=vm;
   document.getElementById('jump-overlay').classList.add('open');
 }
-function closeJumpModal(){ document.getElementById('jump-overlay').classList.remove('open'); }
+function closeJumpModal(){document.getElementById('jump-overlay').classList.remove('open');}
 function jumpToDate(){
   const y=parseInt(document.getElementById('jump-year').value);
   const m=parseInt(document.getElementById('jump-month').value);
   if(y>=1900&&y<=2100&&m>=1&&m<=12){
-    vy=y; vm=m; closeJumpModal(); selectedKey=null;
-    updateHeader(); hideBubble();
+    vy=y;vm=m;closeJumpModal();selectedKey=null;
+    updateHeader();hideBubble();
     renderGrid(document.getElementById('cal-grid'),vy,vm);
   }
 }
 function goToToday(){
-  vy=today.getFullYear(); vm=today.getMonth()+1;
-  selectedKey=null; closeJumpModal();
-  updateHeader(); hideBubble();
+  vy=today.getFullYear();vm=today.getMonth()+1;
+  selectedKey=null;closeJumpModal();
+  updateHeader();hideBubble();
   renderGrid(document.getElementById('cal-grid'),vy,vm);
 }
 
 // ── IO Modal ──
-function openIOModal(){ document.getElementById('io-overlay').classList.add('open'); }
-function closeIOModal(){ document.getElementById('io-overlay').classList.remove('open'); }
+function openIOModal(){document.getElementById('io-overlay').classList.add('open');}
+function closeIOModal(){document.getElementById('io-overlay').classList.remove('open');}
 function exportNotes(){
   const notes={};
-  for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k.startsWith('cal_note_')) notes[k.replace('cal_note_','')]=localStorage.getItem(k); }
-  if(!Object.keys(notes).length){ alert('目前沒有任何備註'); return; }
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('cal_note_'))notes[k.replace('cal_note_','')]=localStorage.getItem(k);}
+  if(!Object.keys(notes).length){alert('目前沒有任何備註');return;}
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([JSON.stringify(notes,null,2)],{type:'application/json'}));
   a.download='干支曆備註_'+new Date().toISOString().slice(0,10)+'.json';
-  a.click(); URL.revokeObjectURL(a.href); closeIOModal();
+  a.click();URL.revokeObjectURL(a.href);closeIOModal();
 }
 function importNotes(input){
-  const file=input.files[0]; if(!file) return;
+  const file=input.files[0];if(!file)return;
   const r=new FileReader();
-  r.onload=e=>{ try{ const d=JSON.parse(e.target.result); let n=0; for(const[k,v] of Object.entries(d)) if(typeof v==='string'&&v.trim()){ localStorage.setItem('cal_note_'+k,v); n++; } input.value=''; closeIOModal(); render(); alert('已匯入 '+n+' 筆備註'); }catch{ alert('檔案格式錯誤'); } };
+  r.onload=e=>{try{const d=JSON.parse(e.target.result);let n=0;for(const[k,v]of Object.entries(d))if(typeof v==='string'&&v.trim()){localStorage.setItem('cal_note_'+k,v);n++;}input.value='';closeIOModal();render();alert('已匯入 '+n+' 筆備註');}catch{alert('檔案格式錯誤');}};
   r.readAsText(file);
 }
 
 // ── 主題 / 模式 ──
-function toggleMode(){ mode=mode==='lunar'?'ganzhi':'lunar'; render(); }
-function toggleTheme(){ const l=document.body.classList.toggle('light'); localStorage.setItem('theme',l?'light':'dark'); }
+function toggleMode(){mode=mode==='lunar'?'ganzhi':'lunar';render();}
+function toggleTheme(){const l=document.body.classList.toggle('light');localStorage.setItem('theme',l?'light':'dark');}
 
 render();
 </script>
