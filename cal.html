@@ -48,21 +48,28 @@ body{display:flex;flex-direction:column;}
 /* ── Weekday ── */
 .weekday-row{
   flex-shrink:0;display:grid;grid-template-columns:repeat(7,1fr);
-  padding:6px 4px 4px;border-bottom:1px solid var(--border);
+  padding:6px 4px 5px;border-bottom:1px solid var(--border);
 }
-.weekday-row span{text-align:center;font-size:11px;color:var(--dim);font-weight:500;}
+/* [1] 星期列加強：用 --text 顏色 + 加粗 + 放大 */
+.weekday-row span{
+  text-align:center;font-size:13px;
+  color:var(--text);font-weight:700;letter-spacing:.5px;
+}
 .weekday-row span:first-child{color:var(--red);}
 
 /* ── Viewport ── */
 .cal-viewport{
   flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none;
-  /* 手機底部導覽列：用 padding-bottom 讓內容不被遮蓋 */
-  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 
-/* ── Grid ── */
+/* ── Grid ──
+   [6] 手機底部：grid 本身加 padding-bottom，
+   讓最底排的格子不被系統導覽列遮住。
+   inset:0 改成手動設定 top/left/right=0，bottom 用 safe-area。 */
 .cal-grid{
-  position:absolute;inset:0;
+  position:absolute;
+  top:0;left:0;right:0;
+  bottom:env(safe-area-inset-bottom,0px);
   display:grid;grid-template-columns:repeat(7,1fr);
   padding:3px;gap:3px;background:var(--border);
 }
@@ -73,7 +80,7 @@ body{display:flex;flex-direction:column;}
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
   border-radius:6px;cursor:pointer;border:none;
-  padding:2px 1px 14px;  /* 底部留給節氣 */
+  padding:2px 1px 14px;
   overflow:hidden;background:var(--bg);
   transition:background .12s;
   user-select:none;-webkit-user-select:none;
@@ -91,23 +98,25 @@ body.light .day-cell.today{box-shadow:inset 0 0 0 2px var(--red);}
   display:flex;justify-content:center;align-items:center;
   gap:3px;line-height:1;pointer-events:none;
 }
-/* 干支月：金色 */
+/* [4] 電腦端字放大：手機用 clamp 小值，桌機 @media 覆蓋 */
+/* 干支月：金色，與農曆月同樣大小清晰度 */
 .gz-month-tag{
-  font-size:clamp(8px,2vw,10px);
+  font-size:clamp(9px,2.2vw,11px);
   color:var(--gold);font-weight:700;
-  letter-spacing:.2px;white-space:nowrap;
+  letter-spacing:.3px;white-space:nowrap;
 }
-/* 農曆月：暗金色 */
+/* [2] 農曆月：同金色、同大小，與干支月視覺一致 */
 .lm-month-tag{
-  font-size:clamp(8px,2vw,10px);
-  color:var(--dim);font-weight:600;
-  letter-spacing:.2px;white-space:nowrap;
+  font-size:clamp(9px,2.2vw,11px);
+  color:var(--gold);font-weight:700;
+  letter-spacing:.3px;white-space:nowrap;
 }
 
 /* ── 節氣（貼底）── */
 .jq-label{
   position:absolute;bottom:2px;left:0;right:0;
-  text-align:center;font-size:clamp(9px,2.3vw,11px);
+  text-align:center;
+  font-size:clamp(9px,2.3vw,11px);
   color:var(--green);font-weight:700;line-height:1;
   pointer-events:none;
 }
@@ -115,7 +124,6 @@ body.light .day-cell.today{box-shadow:inset 0 0 0 2px var(--red);}
 .day-num{
   font-size:clamp(15px,4.4vw,24px);font-weight:600;
   color:var(--text);line-height:1.05;
-  /* 允許長按系統選取 */
   user-select:text;-webkit-user-select:text;
 }
 /* ── 農/干支日 ── */
@@ -125,6 +133,15 @@ body.light .day-cell.today{box-shadow:inset 0 0 0 2px var(--red);}
   user-select:text;-webkit-user-select:text;
 }
 .note-dot{position:absolute;bottom:14px;right:3px;font-size:7px;color:var(--gold);pointer-events:none;}
+
+/* [4] 電腦端（寬螢幕）所有小字放大 */
+@media(min-width:600px){
+  .gz-month-tag,.lm-month-tag{ font-size:13px; }
+  .jq-label{ font-size:12px; }
+  .day-num{ font-size:clamp(18px,2.4vw,30px); }
+  .day-sub{ font-size:clamp(13px,1.6vw,18px); }
+  .weekday-row span{ font-size:14px; }
+}
 
 /* ── Bubble ── */
 .note-bubble{display:none;position:fixed;z-index:200;max-width:180px;min-width:80px;background:var(--bg2);border:1px solid var(--gold3);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--text);line-height:1.4;box-shadow:0 4px 16px rgba(0,0,0,.4);pointer-events:none;word-break:break-all;}
@@ -244,8 +261,8 @@ if(localStorage.getItem('theme')==='light') document.body.classList.add('light')
 function lunarOf(dy,dm,dd){ return Solar.fromYmd(dy,dm,dd).getLunar(); }
 
 // ── 格頂標籤計算 ──
-// gzLabel：干支月（月柱換月才顯示，始終顯示）
-// lmLabel：農曆月（農曆初一才顯示，只在農曆模式顯示）
+// [3] 干支月：只在干支模式顯示（換月日）
+// [2] 農曆月：只在農曆模式顯示（初一）；初一的下方格子顯示「初一」
 function getCellTopLabels(dy,dm,dd){
   const lunar=lunarOf(dy,dm,dd);
   const gz=lunar.getMonthInGanZhi();
@@ -253,13 +270,15 @@ function getCellTopLabels(dy,dm,dd){
   const lMon=Math.abs(lunar.getMonth());
   const isLeap=lunar.getMonth()<0;
 
-  // 干支月換月判斷（與昨天比較）
+  // [3] 干支月只在干支模式（換月才顯示）
   let gzLabel=null;
-  const prev=new Date(dy,dm-1,dd-1);
-  const pLunar=lunarOf(prev.getFullYear(),prev.getMonth()+1,prev.getDate());
-  if(pLunar.getMonthInGanZhi()!==gz) gzLabel=gz+'月';
+  if(mode==='ganzhi'){
+    const prev=new Date(dy,dm-1,dd-1);
+    const pLunar=lunarOf(prev.getFullYear(),prev.getMonth()+1,prev.getDate());
+    if(pLunar.getMonthInGanZhi()!==gz) gzLabel=gz+'月';
+  }
 
-  // 農曆月（初一才標，且只在農曆模式）
+  // 農曆月（初一才標，只在農曆模式）
   let lmLabel=null;
   if(lDay===1&&mode==='lunar'){
     lmLabel=(isLeap?'閏':'')+LM[lMon]+'月';
@@ -291,7 +310,7 @@ function renderGrid(container, y, m){
     cell.className='day-cell'+(isOther?' other-month':'')+(isTdy?' today':'')+(selectedKey===key?' selected':'');
     cell.dataset.date=key;
 
-    // ── 格頂標籤（絕對定位，不佔 flex 高度）──
+    // ── 格頂標籤 ──
     const {gzLabel,lmLabel}=getCellTopLabels(dy,dm,dd);
     if(gzLabel||lmLabel){
       const topDiv=document.createElement('div');
@@ -311,7 +330,7 @@ function renderGrid(container, y, m){
       cell.appendChild(topDiv);
     }
 
-    // ── 節氣（絕對定位貼底）──
+    // ── 節氣（貼底）──
     if(jq){
       const el=document.createElement('span');
       el.className='jq-label';
@@ -327,11 +346,11 @@ function renderGrid(container, y, m){
     cell.appendChild(numEl);
 
     // ── 農曆日 / 干支日 ──
+    // [2] 農曆模式：初一顯示「初一」（不顯示月份，月份已在格頂）
     const subEl=document.createElement('span');
     subEl.className='day-sub';
     if(mode==='lunar'){
-      const ld=lunar.getDay(),lm2=Math.abs(lunar.getMonth());
-      subEl.textContent=ld===1?(lunar.getMonth()<0?'閏':'')+LM[lm2]+'月':lunar.getDayInChinese();
+      subEl.textContent=lunar.getDayInChinese(); // 初一就是「初一」，不再特判顯示月
     } else {
       const gz=lunar.getDayInGanZhi();
       subEl.textContent=gz;
@@ -343,46 +362,57 @@ function renderGrid(container, y, m){
       const dot=document.createElement('span');dot.className='note-dot';dot.textContent='●';cell.appendChild(dot);
     }
 
-    // ── 事件 ──
     attachCellEvents(cell, key, dy, dm, dd, lunar);
     container.appendChild(cell);
   }
 }
 
 // ── 格子事件 ──
-// 單擊：選取/取消（顯示備註泡泡）
-// 雙擊：開備註輸入框
-// 長按：系統原生文字選取（不攔截）
+// [5] 電腦端用原生 dblclick 事件（可靠），手機端用計時雙擊
+// 判斷是否為觸控設備：pointer type
 function attachCellEvents(cell, key, dy, dm, dd, lunar){
   let clickTimer=null;
   let moved=false;
   let startX=0, startY=0;
-  const MOVE_THRESHOLD=8;
-  const DBL_INTERVAL=320; // 雙擊最大間隔 ms
+  const MOVE_THR=8;
+  const DBL_MS=340;
 
   cell.addEventListener('pointerdown', e=>{
     startX=e.clientX; startY=e.clientY; moved=false;
   },{passive:true});
 
   cell.addEventListener('pointermove', e=>{
-    if(Math.abs(e.clientX-startX)>MOVE_THRESHOLD||Math.abs(e.clientY-startY)>MOVE_THRESHOLD){
-      moved=true;
-    }
+    if(Math.abs(e.clientX-startX)>MOVE_THR||Math.abs(e.clientY-startY)>MOVE_THR) moved=true;
   },{passive:true});
+
+  // [5] 電腦端：直接用 dblclick（最可靠）
+  cell.addEventListener('dblclick', e=>{
+    if(swipeBlocked||isDragging) return;
+    // 取消掉可能在等的單擊 timer
+    if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}
+    openModal(key, dy, dm, dd, lunar);
+  });
 
   cell.addEventListener('click', e=>{
     if(swipeBlocked||moved||isDragging) return;
+
+    // [5] 手機端觸控：pointerType==='touch' → 計時雙擊
+    // 電腦端：pointerType==='mouse' → 單擊就選取，雙擊由 dblclick 處理
+    if(e.pointerType==='mouse'||e.pointerType==='pen'){
+      // 電腦端單擊 → 選取/泡泡
+      handleClick(key, cell);
+      return;
+    }
+
+    // 手機觸控：計時雙擊
     if(clickTimer){
-      // ── 雙擊 → 開備註 ──
       clearTimeout(clickTimer); clickTimer=null;
       openModal(key, dy, dm, dd, lunar);
     } else {
-      // 等一個間隔，確認是否為雙擊
       clickTimer=setTimeout(()=>{
         clickTimer=null;
-        // ── 單擊 → 選取/泡泡 ──
         handleClick(key, cell);
-      }, DBL_INTERVAL);
+      }, DBL_MS);
     }
   });
 }
@@ -425,10 +455,10 @@ function changeMonth(delta){
 
   const newGrid=document.createElement('div');
   newGrid.className='cal-grid';
-  newGrid.style.cssText=`position:absolute;inset:0;transition:none;transform:translateY(${delta>0?'100%':'-100%'})`;
+  newGrid.style.cssText=`position:absolute;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);transition:none;transform:translateY(${delta>0?'100%':'-100%'})`;
   renderGrid(newGrid,vy,vm);
   vp.appendChild(newGrid);
-  oldGrid.style.cssText='position:absolute;inset:0;';
+  oldGrid.style.cssText='position:absolute;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);';
 
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     const t='transform 0.34s cubic-bezier(0.25,0.46,0.45,0.94)';
@@ -478,11 +508,11 @@ window.addEventListener('pointermove', e=>{
     adjVy=adj.ay; adjVm=adj.am;
     adjGrid=document.createElement('div');
     adjGrid.className='cal-grid';
-    adjGrid.style.cssText=`position:absolute;inset:0;transform:translateY(${dragDir>0?'100%':'-100%'})`;
+    adjGrid.style.cssText=`position:absolute;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);transform:translateY(${dragDir>0?'100%':'-100%'})`;
     renderGrid(adjGrid,adjVy,adjVm);
     viewport.appendChild(adjGrid);
     const cur=document.getElementById('cal-grid');
-    if(cur) cur.style.cssText='position:absolute;inset:0;';
+    if(cur) cur.style.cssText='position:absolute;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);';
   }
 
   if(isDragging){
@@ -504,18 +534,10 @@ function endDrag(e){
   swipeBlocked=true;
   setTimeout(()=>swipeBlocked=false,80);
 
-  // ── 取消門檻：只要滑動方向一致（totalDy 與 dragDir 同向）就切換 ──
-  const movedEnough=Math.abs(totalDy)>2; // 排除誤觸（2px）
+  const movedEnough=Math.abs(totalDy)>2;
   const sameDir=(dragDir>0&&totalDy<0)||(dragDir<0&&totalDy>0);
-  // dragDir=1 → 往上滑（dy<0）→ 下個月；dragDir=-1 → 往下（dy>0）→ 上個月
-  if(movedEnough&&sameDir){
-    completeSlide(dragDir);
-  } else if(movedEnough&&!sameDir){
-    // 反向拉回，snapBack
-    snapBack();
-  } else {
-    snapBack();
-  }
+  if(movedEnough&&sameDir) completeSlide(dragDir);
+  else snapBack();
 }
 
 window.addEventListener('pointerup', endDrag);
