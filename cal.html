@@ -52,6 +52,15 @@ body{
 .mode-btn.active{background:var(--gold2);color:var(--gold);border-color:var(--gold);}
 .menu-btn,.theme-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--gold3);background:transparent;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;}
 .menu-btn{font-size:18px;line-height:1;}
+/* 月份切換三角按鈕 */
+.month-nav-btn{
+  width:32px;height:32px;border-radius:50%;border:1px solid var(--gold3);
+  background:transparent;color:var(--gold);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;flex-shrink:0;transition:var(--trans);
+  user-select:none;-webkit-user-select:none;
+}
+.month-nav-btn:active{background:var(--gold2);transform:scale(.88);}
 
 /* ── Weekday ── */
 .weekday-row{
@@ -188,10 +197,12 @@ body.light .jump-row input,body.light .jump-row select{background:rgba(255,255,2
 <body>
 
 <div class="header">
+  <button class="month-nav-btn" onclick="changeMonth(-1)" title="上個月">▲</button>
   <div class="title-area" id="title-area" onclick="openJumpModal()">
     <div class="main-title" id="main-title"></div>
     <div class="ganzhi-year" id="ganzhi-year"></div>
   </div>
+  <button class="month-nav-btn" onclick="changeMonth(1)" title="下個月">▼</button>
   <div class="header-right">
     <button class="mode-btn" id="mode-btn" onclick="toggleMode()">農曆</button>
     <button class="menu-btn" onclick="openIOModal()">⋮</button>
@@ -499,10 +510,13 @@ let lastPointerY=0;
 
 viewport.addEventListener('pointerdown', e=>{
   if(isAnimating) return;
+  // 桌機滑鼠不啟動拖動邏輯（靠滾輪換月即可），避免 setPointerCapture 干擾點擊
+  if(e.pointerType==='mouse') return;
   dragPending=true;
   dragStartX=e.clientX; dragStartY=e.clientY;
   lastPointerY=e.clientY;
   isDragging=false; dragDir=0;
+  // setPointerCapture 只在觸控時使用，避免攔截桌機 click/dblclick
   viewport.setPointerCapture(e.pointerId);
 },{passive:true});
 
