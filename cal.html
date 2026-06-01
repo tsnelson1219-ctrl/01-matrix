@@ -379,46 +379,53 @@ function renderGrid(container, y, m){
 }
 
 // ── 格子事件 ──
-// 單擊：選取/取消（顯示備註泡泡）
-// 雙擊：開備註（dblclick 涵蓋桌機；手機觸控用計時雙擊補充）
+// 【桌機滑鼠】單擊=選取/泡泡，雙擊=開備註
+// 【手機觸控】單擊=選取/泡泡，快速雙擊（350ms內）=開備註
 function attachCellEvents(cell, key, dy, dm, dd, lunar){
-  let clickTimer=null;
-  let moved=false;
+  let pointerType='';
   let startX=0, startY=0;
-  const MOVE_THR=8;
+  let movedTouch=false;
+  let touchClickTimer=null;
   const DBL_MS=350;
 
   cell.addEventListener('pointerdown', e=>{
-    startX=e.clientX; startY=e.clientY; moved=false;
+    pointerType=e.pointerType;
+    startX=e.clientX; startY=e.clientY;
+    movedTouch=false;
   },{passive:true});
 
   cell.addEventListener('pointermove', e=>{
-    if(Math.abs(e.clientX-startX)>MOVE_THR||Math.abs(e.clientY-startY)>MOVE_THR) moved=true;
+    if(pointerType==='touch'){
+      if(Math.abs(e.clientX-startX)>10||Math.abs(e.clientY-startY)>10)
+        movedTouch=true;
+    }
   },{passive:true});
 
-  // 桌機原生雙擊：最可靠，直接觸發
+  // 桌機雙擊 → 開備註
   cell.addEventListener('dblclick', e=>{
+    if(isDragging) return;
     e.preventDefault();
-    if(swipeBlocked||isDragging) return;
-    if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}
     openModal(key, dy, dm, dd, lunar);
   });
 
+  // click：桌機單擊直接選取；觸控計時雙擊
   cell.addEventListener('click', e=>{
-    if(swipeBlocked||moved||isDragging) return;
+    if(isDragging||swipeBlocked) return;
 
-    if(clickTimer){
-      // 手機觸控計時雙擊
-      clearTimeout(clickTimer); clickTimer=null;
-      openModal(key, dy, dm, dd, lunar);
+    if(pointerType==='touch'){
+      if(movedTouch) return;
+      if(touchClickTimer){
+        clearTimeout(touchClickTimer); touchClickTimer=null;
+        openModal(key, dy, dm, dd, lunar);
+      } else {
+        touchClickTimer=setTimeout(()=>{
+          touchClickTimer=null;
+          handleClick(key, cell);
+        }, DBL_MS);
+      }
     } else {
-      clickTimer=setTimeout(()=>{
-        clickTimer=null;
-        // 單擊 → 選取/泡泡
-        // （桌機的第一下 click 會走到這裡，但第二下會先觸發 dblclick，
-        //   dblclick 已清掉 timer，所以不會誤開 modal）
-        handleClick(key, cell);
-      }, DBL_MS);
+      // 桌機：單擊選取，雙擊由 dblclick 獨立處理
+      handleClick(key, cell);
     }
   });
 }
