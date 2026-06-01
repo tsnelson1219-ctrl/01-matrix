@@ -58,18 +58,21 @@ body{display:flex;flex-direction:column;}
 .weekday-row span:first-child{color:var(--red);}
 
 /* ── Viewport ── */
+/* 手機底部：viewport 自己留出 safe-area padding，
+   overflow:visible 讓 grid 的 padding-bottom 真正生效；
+   clip 改用 clip-path 避免 overflow:hidden 吃掉 padding。   */
 .cal-viewport{
-  flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none;
+  flex:1;min-height:0;position:relative;touch-action:none;
+  overflow:hidden;
+  /* 關鍵：把底部 safe area 空間留在 viewport 裡 */
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 
-/* ── Grid ──
-   [6] 手機底部：grid 本身加 padding-bottom，
-   讓最底排的格子不被系統導覽列遮住。
-   inset:0 改成手動設定 top/left/right=0，bottom 用 safe-area。 */
+/* ── Grid ── */
+/* grid 填滿 viewport（含 padding），inset:0 = top/right/bottom/left 都是 0，
+   這樣 bottom:0 就等於 viewport 的 padding-bottom 邊緣，不會被導覽列蓋住。 */
 .cal-grid{
-  position:absolute;
-  top:0;left:0;right:0;
-  bottom:env(safe-area-inset-bottom,0px);
+  position:absolute;inset:0;
   display:grid;grid-template-columns:repeat(7,1fr);
   padding:3px;gap:3px;background:var(--border);
 }
@@ -368,14 +371,14 @@ function renderGrid(container, y, m){
 }
 
 // ── 格子事件 ──
-// [5] 電腦端用原生 dblclick 事件（可靠），手機端用計時雙擊
-// 判斷是否為觸控設備：pointer type
+// 單擊：選取/取消（顯示備註泡泡）
+// 雙擊：開備註（dblclick 涵蓋桌機；手機觸控用計時雙擊補充）
 function attachCellEvents(cell, key, dy, dm, dd, lunar){
   let clickTimer=null;
   let moved=false;
   let startX=0, startY=0;
   const MOVE_THR=8;
-  const DBL_MS=340;
+  const DBL_MS=350;
 
   cell.addEventListener('pointerdown', e=>{
     startX=e.clientX; startY=e.clientY; moved=false;
@@ -385,10 +388,10 @@ function attachCellEvents(cell, key, dy, dm, dd, lunar){
     if(Math.abs(e.clientX-startX)>MOVE_THR||Math.abs(e.clientY-startY)>MOVE_THR) moved=true;
   },{passive:true});
 
-  // [5] 電腦端：直接用 dblclick（最可靠）
+  // 桌機原生雙擊：最可靠，直接觸發
   cell.addEventListener('dblclick', e=>{
+    e.preventDefault();
     if(swipeBlocked||isDragging) return;
-    // 取消掉可能在等的單擊 timer
     if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}
     openModal(key, dy, dm, dd, lunar);
   });
@@ -396,21 +399,16 @@ function attachCellEvents(cell, key, dy, dm, dd, lunar){
   cell.addEventListener('click', e=>{
     if(swipeBlocked||moved||isDragging) return;
 
-    // [5] 手機端觸控：pointerType==='touch' → 計時雙擊
-    // 電腦端：pointerType==='mouse' → 單擊就選取，雙擊由 dblclick 處理
-    if(e.pointerType==='mouse'||e.pointerType==='pen'){
-      // 電腦端單擊 → 選取/泡泡
-      handleClick(key, cell);
-      return;
-    }
-
-    // 手機觸控：計時雙擊
     if(clickTimer){
+      // 手機觸控計時雙擊
       clearTimeout(clickTimer); clickTimer=null;
       openModal(key, dy, dm, dd, lunar);
     } else {
       clickTimer=setTimeout(()=>{
         clickTimer=null;
+        // 單擊 → 選取/泡泡
+        // （桌機的第一下 click 會走到這裡，但第二下會先觸發 dblclick，
+        //   dblclick 已清掉 timer，所以不會誤開 modal）
         handleClick(key, cell);
       }, DBL_MS);
     }
@@ -455,10 +453,10 @@ function changeMonth(delta){
 
   const newGrid=document.createElement('div');
   newGrid.className='cal-grid';
-  newGrid.style.cssText=`position:absolute;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);transition:none;transform:translateY(${delta>0?'100%':'-100%'})`;
+  newGrid.style.cssText=`position:absolute;inset:0;transition:none;transform:translateY(${delta>0?'100%':'-100%'})`;
   renderGrid(newGrid,vy,vm);
   vp.appendChild(newGrid);
-  oldGrid.style.cssText='position:absolute;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);';
+  oldGrid.style.cssText='position:absolute;inset:0;';
 
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     const t='transform 0.34s cubic-bezier(0.25,0.46,0.45,0.94)';
@@ -508,11 +506,11 @@ window.addEventListener('pointermove', e=>{
     adjVy=adj.ay; adjVm=adj.am;
     adjGrid=document.createElement('div');
     adjGrid.className='cal-grid';
-    adjGrid.style.cssText=`position:absolute;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);transform:translateY(${dragDir>0?'100%':'-100%'})`;
+    adjGrid.style.cssText=`position:absolute;inset:0;transform:translateY(${dragDir>0?'100%':'-100%'})`;
     renderGrid(adjGrid,adjVy,adjVm);
     viewport.appendChild(adjGrid);
     const cur=document.getElementById('cal-grid');
-    if(cur) cur.style.cssText='position:absolute;top:0;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);';
+    if(cur) cur.style.cssText='position:absolute;inset:0;';
   }
 
   if(isDragging){
