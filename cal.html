@@ -17,12 +17,20 @@ body.light{
   --gold3:rgba(122,80,32,.3);--text:#6b4010;--dim:rgba(122,80,32,.5);
   --green:#3d7a52;--red:#9a3030;--border:rgba(122,80,32,.2);
 }
-html,body{
-  height:100%;overflow:hidden;
+html{
+  /* dvh = dynamic viewport height，自動扣除手機導覽列高度 */
+  height:100dvh;
+  min-height:-webkit-fill-available;
+  overflow:hidden;
+}
+body{
+  height:100dvh;
+  min-height:-webkit-fill-available;
+  overflow:hidden;
   background:var(--bg);color:var(--gold);
   font-family:"PingFang TC","Microsoft JhengHei",sans-serif;
+  display:flex;flex-direction:column;
 }
-body{display:flex;flex-direction:column;}
 
 /* ── Header ── */
 .header{
