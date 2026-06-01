@@ -7,10 +7,18 @@
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
+        html {
+            /* dvh 自動扣除手機瀏覽器底部導覽列 */
+            height: 100dvh;
+            min-height: -webkit-fill-available;
+        }
         body { 
             margin: 0; padding: 0; background: #0f0e0c; color: #d4a75b; 
             font-family: "PingFang TC", sans-serif; display: flex; 
-            flex-direction: column; height: 100vh; overflow: hidden; 
+            flex-direction: column;
+            height: 100dvh;
+            min-height: -webkit-fill-available;
+            overflow: hidden; 
         }
         
         /* 導覽列：極簡高度設計，確保不擠壓下方內容 */
@@ -91,10 +99,12 @@
             flex-shrink: 0;
         }
 
-        /* iframe 填滿剩餘空間 */
+        /* iframe 填滿剩餘空間，底部留出手機導覽列安全區 */
         iframe { 
             flex: 1; width: 100%; border: none; background: #0f0e0c; 
-            display: block; /* 消除底邊縫隙 */
+            display: block;
+            /* 關鍵：讓 iframe 底部不被手機導覽列遮住 */
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
     </style>
 </head>
