@@ -149,8 +149,10 @@ body.light .day-cell.today{box-shadow:inset 0 0 0 2px var(--red);}
 /* ── 農/干支日 ── */
 .day-sub{
   font-size:clamp(11px,3.1vw,15px);color:var(--text);
-  line-height:1;margin-top:3px;font-weight:700;
+  line-height:1;margin-top:6px;font-weight:700;
   user-select:text;-webkit-user-select:text;
+  /* 追蹤框的 outline 空間預留 */
+  padding:2px 4px;border-radius:3px;
 }
 .note-dot{position:absolute;bottom:14px;right:3px;font-size:7px;color:var(--gold);pointer-events:none;}
 
@@ -192,6 +194,90 @@ body.light .jump-row input,body.light .jump-row select{background:rgba(255,255,2
 .jump-row select option{background:var(--bg2);color:var(--text);}
 .jump-today{width:100%;margin-top:10px;padding:11px 0;border-radius:10px;font-size:14px;cursor:pointer;border:1px solid var(--gold3);background:var(--gold2);color:var(--gold);font-family:inherit;font-weight:600;}
 .jump-today:active{opacity:.7;}
+
+/* ── 干支追蹤 ── */
+/* 追蹤的格子：外框高亮 */
+.day-cell.gz-tracked .day-sub{
+  outline:2px solid var(--gold);
+  outline-offset:0;
+}
+/* 追蹤管理 modal */
+.gz-modal{background:var(--bg2);border:1px solid var(--gold3);border-radius:16px;padding:20px;width:min(340px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.5);max-height:80vh;display:flex;flex-direction:column;}
+.gz-input-row{display:flex;gap:8px;margin-bottom:14px;}
+.gz-input-row input{
+  flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(0,0,0,.3);color:var(--text);font-size:16px;
+  font-family:inherit;outline:none;text-align:center;letter-spacing:3px;
+}
+body.light .gz-input-row input{background:rgba(255,255,255,.5);}
+.gz-add-btn{
+  padding:10px 16px;border-radius:8px;border:1px solid var(--gold3);
+  background:var(--gold);color:var(--bg);font-size:14px;font-weight:700;
+  cursor:pointer;font-family:inherit;white-space:nowrap;
+}
+.gz-add-btn:active{opacity:.7;}
+.gz-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;min-height:0;}
+.gz-tag{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-radius:10px;
+  border:1px solid var(--gold3);background:var(--gold2);
+}
+.gz-tag-text{font-size:15px;font-weight:700;color:var(--gold);letter-spacing:2px;}
+.gz-tag-del{
+  width:26px;height:26px;border-radius:50%;border:1px solid rgba(192,96,96,.4);
+  background:transparent;color:var(--red);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.gz-tag-del:active{opacity:.6;}
+.gz-empty{text-align:center;color:var(--dim);font-size:13px;padding:20px 0;}
+
+/* ── 農曆提醒 ── */
+/* 農曆提醒的格子：綠色外框 */
+.day-cell.lm-remind .day-sub{
+  outline:2px solid var(--green);
+  outline-offset:0;
+}
+/* 提醒文字：在 day-sub 下方，有明顯間距 */
+.remind-label{
+  font-size:clamp(9px,2vw,10px);
+  color:var(--green);font-weight:600;
+  line-height:1;margin-top:10px;
+  text-align:center;
+  max-width:90%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  pointer-events:none;
+}
+@media(min-width:600px){
+  .remind-label{ font-size:11px; }
+}
+/* Modal 內分隔線 */
+.gz-section-title{
+  font-size:12px;color:var(--dim);font-weight:600;
+  letter-spacing:1px;padding:10px 0 6px;
+  border-top:1px solid var(--border);margin-top:10px;
+  text-align:center;
+}
+/* 農曆提醒輸入：兩行，與干支追蹤等寬對齊 */
+.lm-input-block{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+/* 第一行：月選單 + 日選單 */
+.lm-row1{display:flex;gap:8px;align-items:center;}
+/* 第二行：標籤 + 加入按鈕 */
+.lm-row2{display:flex;gap:8px;align-items:center;}
+.lm-select{
+  flex:1;padding:9px 8px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(0,0,0,.3);color:var(--text);font-size:14px;
+  font-family:inherit;outline:none;text-align:center;cursor:pointer;
+  -webkit-appearance:none;appearance:none;
+}
+body.light .lm-select{background:rgba(255,255,255,.5);}
+.lm-select option{background:var(--bg2);color:var(--text);}
+.lm-label-input{
+  flex:1;padding:9px 10px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(0,0,0,.3);color:var(--text);font-size:14px;
+  font-family:inherit;outline:none;
+}
+body.light .lm-label-input{background:rgba(255,255,255,.5);}
+.lm-sep{color:var(--dim);font-size:13px;flex-shrink:0;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -205,6 +291,7 @@ body.light .jump-row input,body.light .jump-row select{background:rgba(255,255,2
   <button class="month-nav-btn" onclick="changeMonth(1)" title="下個月">▼</button>
   <div class="header-right">
     <button class="mode-btn" id="mode-btn" onclick="toggleMode()">農曆</button>
+    <button class="menu-btn" id="gz-track-btn" onclick="openGzModal()" title="干支追蹤">☯</button>
     <button class="menu-btn" onclick="openIOModal()">⋮</button>
     <button class="theme-btn" onclick="toggleTheme()">◑</button>
   </div>
@@ -246,6 +333,64 @@ body.light .jump-row input,body.light .jump-row select{background:rgba(255,255,2
 </div>
 <input type="file" id="import-input" accept=".json" style="display:none" onchange="importNotes(this)">
 
+<!-- 干支追蹤 Modal -->
+<div class="modal-overlay" id="gz-overlay" onclick="closeGzModal()">
+  <div class="gz-modal" onclick="event.stopPropagation()">
+    <div class="modal-title">干支追蹤</div>
+    <div class="gz-input-row">
+      <select id="gz-gan" class="lm-select">
+        <option value="">天干</option>
+        <option>甲</option><option>乙</option><option>丙</option><option>丁</option><option>戊</option>
+        <option>己</option><option>庚</option><option>辛</option><option>壬</option><option>癸</option>
+      </select>
+      <select id="gz-zhi" class="lm-select">
+        <option value="">地支</option>
+        <option>子</option><option>丑</option><option>寅</option><option>卯</option><option>辰</option><option>巳</option>
+        <option>午</option><option>未</option><option>申</option><option>酉</option><option>戌</option><option>亥</option>
+      </select>
+      <button class="gz-add-btn" onclick="addGzTrack()">追蹤</button>
+    </div>
+    <div class="gz-list" id="gz-list"></div>
+
+    <!-- 農曆提醒區塊 -->
+    <div class="gz-section-title">農曆重複提醒</div>
+    <div class="lm-input-block">
+      <div class="lm-row1">
+        <select id="lm-mon" class="lm-select">
+          <option value="">月</option>
+          <option value="1">正月</option><option value="2">二月</option><option value="3">三月</option>
+          <option value="4">四月</option><option value="5">五月</option><option value="6">六月</option>
+          <option value="7">七月</option><option value="8">八月</option><option value="9">九月</option>
+          <option value="10">十月</option><option value="11">十一月</option><option value="12">十二月</option>
+        </select>
+        <span class="lm-sep">月</span>
+        <select id="lm-day" class="lm-select">
+          <option value="">日</option>
+          <option value="1">初一</option><option value="2">初二</option><option value="3">初三</option>
+          <option value="4">初四</option><option value="5">初五</option><option value="6">初六</option>
+          <option value="7">初七</option><option value="8">初八</option><option value="9">初九</option>
+          <option value="10">初十</option><option value="11">十一</option><option value="12">十二</option>
+          <option value="13">十三</option><option value="14">十四</option><option value="15">十五</option>
+          <option value="16">十六</option><option value="17">十七</option><option value="18">十八</option>
+          <option value="19">十九</option><option value="20">二十</option><option value="21">廿一</option>
+          <option value="22">廿二</option><option value="23">廿三</option><option value="24">廿四</option>
+          <option value="25">廿五</option><option value="26">廿六</option><option value="27">廿七</option>
+          <option value="28">廿八</option><option value="29">廿九</option><option value="30">三十</option>
+        </select>
+        <span class="lm-sep">日</span>
+        <select id="lm-since" class="lm-select" style="flex:1.2;">
+          <option value="">無</option>
+        </select>
+      </div>
+      <div class="lm-row2">
+        <input type="text" id="lm-label" class="lm-label-input" placeholder="標籤（如：媽媽生日）" maxlength="12" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="gz-add-btn" onclick="addLmRemind()">加入</button>
+      </div>
+    </div>
+    <div class="gz-list" id="lm-list"></div>
+  </div>
+</div>
+
 <!-- 跳轉 Modal -->
 <div class="modal-overlay" id="jump-overlay" onclick="closeJumpModal()">
   <div class="jump-modal" onclick="event.stopPropagation()">
@@ -270,12 +415,36 @@ body.light .jump-row input,body.light .jump-row select{background:rgba(255,255,2
 <script>
 // ── 常數 ──
 const GAN_COLOR={'甲':'#7aab8a','乙':'#7aab8a','丙':'#c06060','丁':'#c06060','戊':'#d4a75b','己':'#d4a75b','庚':'#a0b8c8','辛':'#a0b8c8','壬':'#6a9ab8','癸':'#6a9ab8'};
-const LM=['','正','二','三','四','五','六','七','八','九','十','冬','臘'];
+const LM=['','正','二','三','四','五','六','七','八','九','十','十一','十二'];
 
 const today=new Date();
 let vy=today.getFullYear(), vm=today.getMonth()+1;
 let mode='ganzhi', selectedKey=null, modalKey=null;
 let isAnimating=false, swipeBlocked=false;
+
+// ── 干支追蹤 ──
+let gzTracked=new Set(JSON.parse(localStorage.getItem('gz_tracked')||'[]'));
+function saveGzTracked(){ localStorage.setItem('gz_tracked', JSON.stringify([...gzTracked])); }
+
+// ── 農曆提醒 ──
+// 資料格式：{ '8-15': { label:'媽媽生日', since:1980 }, '1-1': { label:'農曆新年', since:null } }
+function loadLmReminds(){
+  const raw=JSON.parse(localStorage.getItem('lm_reminds')||'{}');
+  // 向下相容：舊格式 value 為字串
+  const out={};
+  for(const[k,v] of Object.entries(raw)){
+    out[k]=typeof v==='string'?{label:v,since:null}:v;
+  }
+  return out;
+}
+let lmReminds=loadLmReminds();
+function saveLmReminds(){ localStorage.setItem('lm_reminds', JSON.stringify(lmReminds)); }
+// 取得某天的農曆提醒物件（月日匹配即觸發，不管閏月）
+function getLmRemind(lunar){
+  const m=Math.abs(lunar.getMonth());
+  const d=lunar.getDay();
+  return lmReminds[m+'-'+d]||null;
+}
 
 if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
 
@@ -329,7 +498,12 @@ function renderGrid(container, y, m){
     const jq=lunar.getJieQi();
 
     const cell=document.createElement('div');
-    cell.className='day-cell'+(isOther?' other-month':'')+(isTdy?' today':'')+(selectedKey===key?' selected':'');
+    const dayGz=lunar.getDayInGanZhi();
+    const isTracked=mode==='ganzhi'&&gzTracked.has(dayGz);
+    const _remind=getLmRemind(lunar);
+    const remindLabel=_remind?_remind.label:null; // 兩種模式都顯示農曆提醒
+    const isLmRemind=remindLabel&&mode==='lunar'; // 綠框只在農曆模式
+    cell.className='day-cell'+(isOther?' other-month':'')+(isTdy?' today':'')+(selectedKey===key?' selected':'')+(isTracked?' gz-tracked':'')+(isLmRemind?' lm-remind':'');
     cell.dataset.date=key;
 
     // ── 格頂標籤 ──
@@ -379,6 +553,20 @@ function renderGrid(container, y, m){
       subEl.style.color=GAN_COLOR[gz[0]]||'var(--dim)';
     }
     cell.appendChild(subEl);
+
+    // ── 農曆提醒文字（在 day-sub 下方）──
+    if(remindLabel){
+      const remind=lmReminds[Object.keys(lmReminds).find(k=>{
+        const[km,kd]=k.split('-').map(Number);
+        return km===Math.abs(lunar.getMonth())&&kd===lunar.getDay();
+      })];
+      const since=remind&&remind.since!=null?remind.since:null;
+      const yearCount=since!=null?` (${vy-since})`:'';
+      const rl=document.createElement('span');
+      rl.className='remind-label';
+      rl.textContent=remindLabel+yearCount;
+      cell.appendChild(rl);
+    }
 
     if(localStorage.getItem('cal_note_'+key)){
       const dot=document.createElement('span');dot.className='note-dot';dot.textContent='●';cell.appendChild(dot);
@@ -692,6 +880,161 @@ function importNotes(input){
 // ── 主題 / 模式 ──
 function toggleMode(){mode=mode==='lunar'?'ganzhi':'lunar';render();}
 function toggleTheme(){const l=document.body.classList.toggle('light');localStorage.setItem('theme',l?'light':'dark');}
+
+// ── 干支追蹤 Modal ──
+const GAN_ALL='甲乙丙丁戊己庚辛壬癸';
+const ZHI_ALL='子丑寅卯辰巳午未申酉戌亥';
+
+function openGzModal(){
+  renderGzList();
+  renderLmList();
+  document.getElementById('gz-overlay').classList.add('open');
+  // 填入起始年選單（1900 ~ 今年）
+  const sinceEl=document.getElementById('lm-since');
+  if(sinceEl.options.length<=1){
+    const thisYear=new Date().getFullYear();
+    for(let y=thisYear;y>=1900;y--){
+      const o=document.createElement('option');
+      o.value=y; o.textContent=y;
+      sinceEl.appendChild(o);
+    }
+  }
+  setTimeout(()=>{
+    document.getElementById('gz-gan').focus();
+    document.getElementById('lm-label').onkeydown=e=>{ if(e.key==='Enter') addLmRemind(); };
+  },100);
+}
+function closeGzModal(){
+  document.getElementById('gz-overlay').classList.remove('open');
+  document.getElementById('gz-gan').selectedIndex=0;
+  document.getElementById('gz-zhi').selectedIndex=0;
+  document.getElementById('lm-mon').selectedIndex=0;
+  document.getElementById('lm-day').selectedIndex=0;
+  document.getElementById('lm-label').value='';
+  document.getElementById('lm-since').selectedIndex=0;
+}
+function addGzTrack(){
+  const gan=document.getElementById('gz-gan').value;
+  const zhi=document.getElementById('gz-zhi').value;
+  if(!gan||!zhi){
+    ['gz-gan','gz-zhi'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el.value){ el.style.outline='2px solid var(--red)'; setTimeout(()=>el.style.outline='',800); }
+    });
+    return;
+  }
+  gzTracked.add(gan+zhi);
+  saveGzTracked();
+  document.getElementById('gz-gan').selectedIndex=0;
+  document.getElementById('gz-zhi').selectedIndex=0;
+  renderGzList();
+  render();
+}
+function removeGzTrack(gz){
+  gzTracked.delete(gz);
+  saveGzTracked();
+  renderGzList();
+  render();
+}
+function renderGzList(){
+  const list=document.getElementById('gz-list');
+  list.innerHTML='';
+  if(gzTracked.size===0){
+    list.innerHTML='<div class="gz-empty">尚未追蹤任何干支<br><span style="font-size:12px;opacity:.7">干支模式下，被追蹤的日柱會加框顯示</span></div>';
+    return;
+  }
+  [...gzTracked].forEach(gz=>{
+    const row=document.createElement('div');
+    row.className='gz-tag';
+    row.innerHTML=`<span class="gz-tag-text">${gz}</span><button class="gz-tag-del" onclick="removeGzTrack('${gz}')">✕</button>`;
+    list.appendChild(row);
+  });
+}
+
+// ── 農曆提醒 CRUD ──
+function addLmRemind(){
+  const m=parseInt(document.getElementById('lm-mon').value);
+  const d=parseInt(document.getElementById('lm-day').value);
+  const label=document.getElementById('lm-label').value.trim();
+  if(!m||!d||!label){
+    ['lm-mon','lm-day','lm-label'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el.value.trim()){ el.style.outline='2px solid var(--red)'; setTimeout(()=>el.style.outline='',800); }
+    });
+    return;
+  }
+  const sinceVal=document.getElementById('lm-since').value;
+  const since=sinceVal?parseInt(sinceVal):null;
+  lmReminds[m+'-'+d]={label, since};
+  saveLmReminds();
+  document.getElementById('lm-mon').selectedIndex=0;
+  document.getElementById('lm-day').selectedIndex=0;
+  document.getElementById('lm-label').value='';
+  document.getElementById('lm-since').selectedIndex=0;
+  renderLmList();
+  render();
+}
+function removeLmRemind(key){
+  delete lmReminds[key];
+  saveLmReminds();
+  renderLmList();
+  render();
+}
+function buildYearOptions(selectedVal){
+  const thisYear=new Date().getFullYear();
+  let opts='<option value="">無</option>';
+  for(let y=thisYear;y>=1900;y--){
+    opts+=`<option value="${y}"${selectedVal===y?' selected':''}>${y}</option>`;
+  }
+  return opts;
+}
+function renderLmList(){
+  const list=document.getElementById('lm-list');
+  list.innerHTML='';
+  const keys=Object.keys(lmReminds);
+  if(keys.length===0){
+    list.innerHTML='<div class="gz-empty">尚未設定農曆提醒<br><span style="font-size:12px;opacity:.7">農曆模式下，符合月日的格子會加綠框顯示</span></div>';
+    return;
+  }
+  keys.sort((a,b)=>{
+    const[am,ad]=a.split('-').map(Number);
+    const[bm,bd]=b.split('-').map(Number);
+    return am!==bm?am-bm:ad-bd;
+  }).forEach(k=>{
+    const[m,d]=k.split('-');
+    const item=lmReminds[k];
+    const label=item.label||item;
+    const since=item.since!=null?item.since:null;
+    const yearCount=since!=null?` (${new Date().getFullYear()-since})`:'';
+    const row=document.createElement('div');
+    row.className='gz-tag';
+    row.style.cssText='flex-direction:column;align-items:stretch;gap:6px;';
+    row.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span class="gz-tag-text" style="font-size:13px;letter-spacing:1px;">
+          農曆${LM[+m]}月${d}日
+          <span style="color:var(--green);font-weight:600;"> ${label}</span>
+          ${since!=null?`<span style="color:var(--dim);font-size:12px;">${yearCount}</span>`:''}
+        </span>
+        <button class="gz-tag-del" onclick="removeLmRemind('${k}')">✕</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--dim);white-space:nowrap;">起始年</span>
+        <select class="lm-select" style="flex:1;padding:5px 6px;font-size:12px;"
+          onchange="updateLmSince('${k}',this.value)">
+          ${buildYearOptions(since)}
+        </select>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+function updateLmSince(key, val){
+  if(!lmReminds[key]) return;
+  lmReminds[key].since=val?parseInt(val):null;
+  saveLmReminds();
+  render();
+  // 不重繪列表，避免選單閃爍
+}
 
 render();
 </script>
