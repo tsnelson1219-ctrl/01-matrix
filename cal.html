@@ -233,10 +233,16 @@ body.light .gz-input-row input{background:rgba(255,255,255,.5);}
 
 /* ── 農曆提醒 ── */
 /* 所有提醒框統一金色 */
-.day-cell.lm-remind .day-sub,
-.day-cell.sol-remind .day-sub{
+/* 農曆提醒框：框農曆日文字 */
+.day-cell.lm-remind .day-sub{
   outline:2px solid var(--gold);
   outline-offset:0;
+}
+/* 國曆提醒框：框國曆數字 */
+.day-cell.sol-remind .day-num{
+  outline:2px solid var(--gold);
+  outline-offset:2px;
+  border-radius:3px;
 }
 /* 提醒文字共用樣式 */
 .remind-label{
