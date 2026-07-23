@@ -232,12 +232,13 @@ body.light .gz-input-row input{background:rgba(255,255,255,.5);}
 .gz-empty{text-align:center;color:var(--dim);font-size:13px;padding:20px 0;}
 
 /* ── 農曆提醒 ── */
-/* 農曆提醒的格子：綠色外框 */
-.day-cell.lm-remind .day-sub{
-  outline:2px solid var(--green);
+/* 所有提醒框統一金色 */
+.day-cell.lm-remind .day-sub,
+.day-cell.sol-remind .day-sub{
+  outline:2px solid var(--gold);
   outline-offset:0;
 }
-/* 提醒文字：在 day-sub 下方，有明顯間距 */
+/* 提醒文字共用樣式 */
 .remind-label{
   font-size:clamp(9px,2vw,10px);
   color:var(--green);font-weight:600;
@@ -247,8 +248,17 @@ body.light .gz-input-row input{background:rgba(255,255,255,.5);}
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   pointer-events:none;
 }
+.sol-remind-label{
+  font-size:clamp(9px,2vw,10px);
+  color:var(--text);font-weight:600;
+  line-height:1;margin-top:4px;
+  text-align:center;
+  max-width:90%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  pointer-events:none;
+}
 @media(min-width:600px){
-  .remind-label{ font-size:11px; }
+  .remind-label,.sol-remind-label{ font-size:11px; }
 }
 /* Modal 內分隔線 */
 .gz-section-title{
@@ -388,6 +398,31 @@ body.light .lm-label-input{background:rgba(255,255,255,.5);}
       </div>
     </div>
     <div class="gz-list" id="lm-list"></div>
+
+    <!-- 國曆提醒區塊 -->
+    <div class="gz-section-title">國曆重複提醒</div>
+    <div class="lm-input-block">
+      <div class="lm-row1">
+        <select id="sol-mon" class="lm-select">
+          <option value="">月</option>
+          <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+        </select>
+        <span class="lm-sep">月</span>
+        <select id="sol-day" class="lm-select">
+          <option value="">日</option>
+          <option value="1">1日</option><option value="2">2日</option><option value="3">3日</option><option value="4">4日</option><option value="5">5日</option><option value="6">6日</option><option value="7">7日</option><option value="8">8日</option><option value="9">9日</option><option value="10">10日</option><option value="11">11日</option><option value="12">12日</option><option value="13">13日</option><option value="14">14日</option><option value="15">15日</option><option value="16">16日</option><option value="17">17日</option><option value="18">18日</option><option value="19">19日</option><option value="20">20日</option><option value="21">21日</option><option value="22">22日</option><option value="23">23日</option><option value="24">24日</option><option value="25">25日</option><option value="26">26日</option><option value="27">27日</option><option value="28">28日</option><option value="29">29日</option><option value="30">30日</option><option value="31">31日</option>
+        </select>
+        <span class="lm-sep">日</span>
+        <select id="sol-since" class="lm-select" style="flex:1.2;">
+          <option value="">無</option>
+        </select>
+      </div>
+      <div class="lm-row2">
+        <input type="text" id="sol-label" class="lm-label-input" placeholder="標籤（如：元旦）" maxlength="12" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="gz-add-btn" onclick="addSolRemind()">加入</button>
+      </div>
+    </div>
+    <div class="gz-list" id="sol-list"></div>
   </div>
 </div>
 
@@ -446,6 +481,21 @@ function getLmRemind(lunar){
   return lmReminds[m+'-'+d]||null;
 }
 
+// ── 國曆提醒 ── key='M-D'，value={ label, since }
+function loadSolReminds(){
+  const raw=JSON.parse(localStorage.getItem('sol_reminds')||'{}');
+  const out={};
+  for(const[k,v] of Object.entries(raw)){
+    out[k]=typeof v==='string'?{label:v,since:null}:v;
+  }
+  return out;
+}
+let solReminds=loadSolReminds();
+function saveSolReminds(){ localStorage.setItem('sol_reminds', JSON.stringify(solReminds)); }
+function getSolRemind(dm,dd){
+  return solReminds[dm+'-'+dd]||null;
+}
+
 if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
 
 // ── 農曆輔助 ──
@@ -501,9 +551,12 @@ function renderGrid(container, y, m){
     const dayGz=lunar.getDayInGanZhi();
     const isTracked=mode==='ganzhi'&&gzTracked.has(dayGz);
     const _remind=getLmRemind(lunar);
-    const remindLabel=_remind?_remind.label:null; // 兩種模式都顯示農曆提醒
-    const isLmRemind=remindLabel&&mode==='lunar'; // 綠框只在農曆模式
-    cell.className='day-cell'+(isOther?' other-month':'')+(isTdy?' today':'')+(selectedKey===key?' selected':'')+(isTracked?' gz-tracked':'')+(isLmRemind?' lm-remind':'');
+    const remindLabel=_remind?_remind.label:null;
+    const isLmRemind=remindLabel&&mode==='lunar'; // 農曆框只在農曆模式
+    const _solRemind=getSolRemind(dm,dd);
+    const solRemindLabel=_solRemind?_solRemind.label:null;
+    const isSolRemind=!!solRemindLabel; // 國曆框兩種模式都顯示
+    cell.className='day-cell'+(isOther?' other-month':'')+(isTdy?' today':'')+(selectedKey===key?' selected':'')+(isTracked?' gz-tracked':'')+(isLmRemind?' lm-remind':'')+(isSolRemind&&!isTracked&&!isLmRemind?' sol-remind':'');
     cell.dataset.date=key;
 
     // ── 格頂標籤 ──
@@ -566,6 +619,16 @@ function renderGrid(container, y, m){
       rl.className='remind-label';
       rl.textContent=remindLabel+yearCount;
       cell.appendChild(rl);
+    }
+
+    // ── 國曆提醒文字 ──
+    if(solRemindLabel){
+      const since=_solRemind.since!=null?_solRemind.since:null;
+      const yearCount=since!=null?` (${vy-since})`:'';
+      const sl=document.createElement('span');
+      sl.className='sol-remind-label';
+      sl.textContent=solRemindLabel+yearCount;
+      cell.appendChild(sl);
     }
 
     if(localStorage.getItem('cal_note_'+key)){
@@ -888,17 +951,20 @@ const ZHI_ALL='子丑寅卯辰巳午未申酉戌亥';
 function openGzModal(){
   renderGzList();
   renderLmList();
+  renderSolList();
   document.getElementById('gz-overlay').classList.add('open');
   // 填入起始年選單（1900 ~ 今年）
-  const sinceEl=document.getElementById('lm-since');
-  if(sinceEl.options.length<=1){
-    const thisYear=new Date().getFullYear();
-    for(let y=thisYear;y>=1900;y--){
-      const o=document.createElement('option');
-      o.value=y; o.textContent=y;
-      sinceEl.appendChild(o);
+  const thisYear=new Date().getFullYear();
+  ['lm-since','sol-since'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el.options.length<=1){
+      for(let y=thisYear;y>=1900;y--){
+        const o=document.createElement('option');
+        o.value=y; o.textContent=y;
+        el.appendChild(o);
+      }
     }
-  }
+  });
   setTimeout(()=>{
     document.getElementById('gz-gan').focus();
     document.getElementById('lm-label').onkeydown=e=>{ if(e.key==='Enter') addLmRemind(); };
@@ -912,6 +978,10 @@ function closeGzModal(){
   document.getElementById('lm-day').selectedIndex=0;
   document.getElementById('lm-label').value='';
   document.getElementById('lm-since').selectedIndex=0;
+  document.getElementById('sol-mon').selectedIndex=0;
+  document.getElementById('sol-day').selectedIndex=0;
+  document.getElementById('sol-label').value='';
+  document.getElementById('sol-since').selectedIndex=0;
 }
 function addGzTrack(){
   const gan=document.getElementById('gz-gan').value;
@@ -1034,6 +1104,81 @@ function updateLmSince(key, val){
   saveLmReminds();
   render();
   // 不重繪列表，避免選單閃爍
+}
+
+// ── 國曆提醒 CRUD ──
+function addSolRemind(){
+  const m=parseInt(document.getElementById('sol-mon').value);
+  const d=parseInt(document.getElementById('sol-day').value);
+  const label=document.getElementById('sol-label').value.trim();
+  if(!m||!d||!label){
+    ['sol-mon','sol-day','sol-label'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el.value.trim()){ el.style.outline='2px solid var(--red)'; setTimeout(()=>el.style.outline='',800); }
+    });
+    return;
+  }
+  const sinceVal=document.getElementById('sol-since').value;
+  const since=sinceVal?parseInt(sinceVal):null;
+  solReminds[m+'-'+d]={label,since};
+  saveSolReminds();
+  document.getElementById('sol-mon').selectedIndex=0;
+  document.getElementById('sol-day').selectedIndex=0;
+  document.getElementById('sol-label').value='';
+  document.getElementById('sol-since').selectedIndex=0;
+  renderSolList();
+  render();
+}
+function removeSolRemind(key){
+  delete solReminds[key];
+  saveSolReminds();
+  renderSolList();
+  render();
+}
+function updateSolSince(key,val){
+  if(!solReminds[key]) return;
+  solReminds[key].since=val?parseInt(val):null;
+  saveSolReminds();
+  render();
+}
+function renderSolList(){
+  const list=document.getElementById('sol-list');
+  list.innerHTML='';
+  const keys=Object.keys(solReminds);
+  if(keys.length===0){
+    list.innerHTML='<div class="gz-empty">尚未設定國曆提醒<br><span style="font-size:12px;opacity:.7">符合月日的格子會加框顯示</span></div>';
+    return;
+  }
+  keys.sort((a,b)=>{
+    const[am,ad]=a.split('-').map(Number);
+    const[bm,bd]=b.split('-').map(Number);
+    return am!==bm?am-bm:ad-bd;
+  }).forEach(k=>{
+    const[m,d]=k.split('-');
+    const item=solReminds[k];
+    const since=item.since!=null?item.since:null;
+    const yearCount=since!=null?` (${new Date().getFullYear()-since})`:'';
+    const row=document.createElement('div');
+    row.className='gz-tag';
+    row.style.cssText='flex-direction:column;align-items:stretch;gap:6px;';
+    row.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span class="gz-tag-text" style="font-size:13px;letter-spacing:1px;">
+          ${m}月${d}日
+          <span style="color:var(--text);font-weight:600;"> ${item.label}</span>
+          ${since!=null?`<span style="color:var(--dim);font-size:12px;">${yearCount}</span>`:''}
+        </span>
+        <button class="gz-tag-del" onclick="removeSolRemind('${k}')">✕</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--dim);white-space:nowrap;">起始年</span>
+        <select class="lm-select" style="flex:1;padding:5px 6px;font-size:12px;"
+          onchange="updateSolSince('${k}',this.value)">
+          ${buildYearOptions(since)}
+        </select>
+      </div>`;
+    list.appendChild(row);
+  });
 }
 
 render();
