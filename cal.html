@@ -97,13 +97,19 @@ body{
 /* ── Cells ── */
 .day-cell{
   position:relative;
-  display:flex;flex-direction:column;
+  display:flex;flex-direction:row;
   align-items:center;justify-content:center;
   border-radius:6px;cursor:pointer;border:none;
-  padding:2px 1px 14px;
+  padding:2px 2px 2px 2px;
   overflow:hidden;background:var(--bg);
   transition:background .12s;
   user-select:none;-webkit-user-select:none;
+}
+/* 左欄：數字＋農曆/干支＋提醒文字 */
+.cell-left{
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  flex:1;min-width:0;
 }
 .day-cell:active{background:var(--gold2);}
 .day-cell.other-month{opacity:.28;}
@@ -135,18 +141,26 @@ body.light .day-cell.today{box-shadow:inset 0 0 0 2px var(--red);}
   border:1px solid var(--gold3);
 }
 
-/* ── 節氣膠囊（貼底）── */
+/* ── 節氣：右欄直向膠囊 ── */
 .jq-label{
-  position:absolute;bottom:2px;left:0;right:0;
-  display:flex;justify-content:center;align-items:center;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  flex-shrink:0;
   pointer-events:none;
+  /* 寬度跟一個字差不多 */
+  width:clamp(12px,3vw,18px);
 }
 .jq-inner{
-  font-size:clamp(8px,2.1vw,10px);
-  color:var(--green);font-weight:700;line-height:1.6;
-  padding:1px 5px;border-radius:20px;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  font-size:clamp(7px,1.8vw,9px);
+  color:var(--green);font-weight:700;line-height:1.4;
+  padding:3px 2px;border-radius:20px;
   background:rgba(122,171,138,.15);
   border:1px solid rgba(122,171,138,.35);
+  writing-mode:vertical-rl;
+  text-orientation:upright;
+  letter-spacing:1px;
   white-space:nowrap;
 }
 /* ── 國曆日 ── */
@@ -163,12 +177,13 @@ body.light .day-cell.today{box-shadow:inset 0 0 0 2px var(--red);}
   /* 追蹤框的 outline 空間預留 */
   padding:2px 4px;border-radius:3px;
 }
-.note-dot{position:absolute;bottom:14px;right:3px;font-size:7px;color:var(--gold);pointer-events:none;}
+.note-dot{position:absolute;bottom:2px;right:2px;font-size:7px;color:var(--gold);pointer-events:none;}
 
 /* [4] 電腦端（寬螢幕）所有小字放大 */
 @media(min-width:600px){
   .gz-month-tag,.lm-month-tag{ font-size:12px; }
   .jq-inner{ font-size:11px; }
+  .jq-label{ width:20px; }
   .day-num{ font-size:clamp(18px,2.4vw,30px); }
   .day-sub{ font-size:clamp(13px,1.6vw,18px); }
   .weekday-row span{ font-size:14px; }
@@ -239,6 +254,19 @@ body.light .gz-input-row input{background:rgba(255,255,255,.5);}
 }
 .gz-tag-del:active{opacity:.6;}
 .gz-empty{text-align:center;color:var(--dim);font-size:13px;padding:20px 0;}
+/* 列表內 inline 編輯 */
+.tag-edit-input{
+  background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:6px;
+  color:var(--text);font-size:13px;font-family:inherit;outline:none;
+  padding:3px 7px;width:100%;max-width:140px;
+}
+body.light .tag-edit-input{background:rgba(255,255,255,.5);}
+.tag-edit-select{
+  background:rgba(0,0,0,.3);border:1px solid var(--gold3);border-radius:6px;
+  color:var(--text);font-size:12px;font-family:inherit;outline:none;
+  padding:3px 4px;
+}
+body.light .tag-edit-select{background:rgba(255,255,255,.5);}
 
 /* ── 農曆提醒 ── */
 /* 所有提醒框統一金色 */
@@ -594,38 +622,30 @@ function renderGrid(container, y, m){
       cell.appendChild(topDiv);
     }
 
-    // ── 節氣（貼底）──
-    if(jq){
-      const el=document.createElement('div');
-      el.className='jq-label';
-      const inner=document.createElement('span');
-      inner.className='jq-inner';
-      inner.textContent=jq;
-      el.appendChild(inner);
-      cell.appendChild(el);
-    }
+    // ── 左欄容器 ──
+    const cellLeft=document.createElement('div');
+    cellLeft.className='cell-left';
 
     // ── 國曆日 ──
     const numEl=document.createElement('span');
     numEl.className='day-num';
     numEl.textContent=dd;
     if(dow===0) numEl.style.color='var(--red)';
-    cell.appendChild(numEl);
+    cellLeft.appendChild(numEl);
 
     // ── 農曆日 / 干支日 ──
-    // [2] 農曆模式：初一顯示「初一」（不顯示月份，月份已在格頂）
     const subEl=document.createElement('span');
     subEl.className='day-sub';
     if(mode==='lunar'){
-      subEl.textContent=lunar.getDayInChinese(); // 初一就是「初一」，不再特判顯示月
+      subEl.textContent=lunar.getDayInChinese();
     } else {
       const gz=lunar.getDayInGanZhi();
       subEl.textContent=gz;
       subEl.style.color=GAN_COLOR[gz[0]]||'var(--dim)';
     }
-    cell.appendChild(subEl);
+    cellLeft.appendChild(subEl);
 
-    // ── 農曆提醒文字（在 day-sub 下方）──
+    // ── 農曆提醒文字 ──
     if(remindLabel){
       const remind=lmReminds[Object.keys(lmReminds).find(k=>{
         const[km,kd]=k.split('-').map(Number);
@@ -636,7 +656,7 @@ function renderGrid(container, y, m){
       const rl=document.createElement('span');
       rl.className='remind-label';
       rl.textContent=remindLabel+yearCount;
-      cell.appendChild(rl);
+      cellLeft.appendChild(rl);
     }
 
     // ── 國曆提醒文字 ──
@@ -646,11 +666,23 @@ function renderGrid(container, y, m){
       const sl=document.createElement('span');
       sl.className='sol-remind-label';
       sl.textContent=solRemindLabel+yearCount;
-      cell.appendChild(sl);
+      cellLeft.appendChild(sl);
     }
 
     if(localStorage.getItem('cal_note_'+key)){
       const dot=document.createElement('span');dot.className='note-dot';dot.textContent='●';cell.appendChild(dot);
+    }
+
+    // ── 組裝左欄 + 右欄節氣 ──
+    cell.appendChild(cellLeft);
+    if(jq){
+      const jqEl=document.createElement('div');
+      jqEl.className='jq-label';
+      const jqInner=document.createElement('span');
+      jqInner.className='jq-inner';
+      jqInner.textContent=jq;
+      jqEl.appendChild(jqInner);
+      cell.appendChild(jqEl);
     }
 
     attachCellEvents(cell, key, dy, dm, dd, lunar);
@@ -1031,10 +1063,66 @@ function renderGzList(){
     list.innerHTML='<div class="gz-empty">尚未追蹤任何干支<br><span style="font-size:12px;opacity:.7">干支模式下，被追蹤的日柱會加框顯示</span></div>';
     return;
   }
+  const GAN='甲乙丙丁戊己庚辛壬癸';
+  const ZHI='子丑寅卯辰巳午未申酉戌亥';
   [...gzTracked].forEach(gz=>{
     const row=document.createElement('div');
     row.className='gz-tag';
-    row.innerHTML=`<span class="gz-tag-text">${gz}</span><button class="gz-tag-del" onclick="removeGzTrack('${gz}')">✕</button>`;
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:6px;';
+
+    // 文字模式
+    const textSpan=document.createElement('span');
+    textSpan.className='gz-tag-text';
+    textSpan.textContent=gz;
+    textSpan.style.cssText='cursor:pointer;flex:1;';
+    textSpan.title='點擊修改';
+
+    // 編輯模式（初始隱藏）
+    const editWrap=document.createElement('span');
+    editWrap.style.cssText='display:none;flex:1;gap:4px;align-items:center;display:none;';
+
+    const ganSel=document.createElement('select');
+    ganSel.className='tag-edit-select';
+    GAN.split('').forEach(g=>{ const o=document.createElement('option'); o.value=g; o.textContent=g; if(g===gz[0]) o.selected=true; ganSel.appendChild(o); });
+
+    const zhiSel=document.createElement('select');
+    zhiSel.className='tag-edit-select';
+    ZHI.split('').forEach(z=>{ const o=document.createElement('option'); o.value=z; o.textContent=z; if(z===gz[1]) o.selected=true; zhiSel.appendChild(o); });
+
+    editWrap.appendChild(ganSel);
+    editWrap.appendChild(zhiSel);
+
+    function startEdit(){
+      textSpan.style.display='none';
+      editWrap.style.display='flex';
+      ganSel.focus();
+    }
+    function saveEdit(){
+      const newGz=ganSel.value+zhiSel.value;
+      if(newGz!==gz){
+        gzTracked.delete(gz);
+        gzTracked.add(newGz);
+        saveGzTracked();
+        renderGzList();
+        render();
+      } else {
+        textSpan.style.display='';
+        editWrap.style.display='none';
+      }
+    }
+    textSpan.addEventListener('click', startEdit);
+    ganSel.addEventListener('change', saveEdit);
+    zhiSel.addEventListener('change', saveEdit);
+    ganSel.addEventListener('blur', ()=>setTimeout(()=>{ if(document.activeElement!==zhiSel) saveEdit(); },100));
+
+    const delBtn=document.createElement('button');
+    delBtn.className='gz-tag-del';
+    delBtn.textContent='✕';
+    delBtn.onclick=()=>{ gzTracked.delete(gz); saveGzTracked(); renderGzList(); render(); };
+
+    row.appendChild(textSpan);
+    row.appendChild(editWrap);
+    row.appendChild(delBtn);
     list.appendChild(row);
   });
 }
@@ -1068,6 +1156,36 @@ function removeLmRemind(key){
   renderLmList();
   render();
 }
+// 讓列表裡的標籤文字可點擊編輯
+function makeLabelEditable(span, key, dataObj, saveFn, rerenderFn){
+  span.style.cursor='pointer';
+  span.title='點擊修改標籤';
+  span.addEventListener('click', ()=>{
+    const inp=document.createElement('input');
+    inp.type='text';
+    inp.className='tag-edit-input';
+    inp.value=dataObj[key].label||dataObj[key];
+    inp.maxLength=12;
+    span.replaceWith(inp);
+    inp.focus();
+    inp.select();
+    function commit(){
+      const v=inp.value.trim();
+      if(v&&v!==(dataObj[key].label||dataObj[key])){
+        if(typeof dataObj[key]==='object') dataObj[key].label=v;
+        else dataObj[key]=v;
+        saveFn();
+        rerenderFn();
+        render();
+      } else {
+        rerenderFn();
+      }
+    }
+    inp.addEventListener('blur', commit);
+    inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ inp.blur(); } if(e.key==='Escape'){ rerenderFn(); } });
+  });
+}
+
 function buildYearOptions(selectedVal){
   const thisYear=new Date().getFullYear();
   let opts='<option value="">無</option>';
@@ -1091,28 +1209,45 @@ function renderLmList(){
   }).forEach(k=>{
     const[m,d]=k.split('-');
     const item=lmReminds[k];
-    const label=item.label||item;
+    const label=typeof item==='object'?item.label:item;
     const since=item.since!=null?item.since:null;
     const yearCount=since!=null?` (${new Date().getFullYear()-since})`:'';
+
     const row=document.createElement('div');
     row.className='gz-tag';
     row.style.cssText='flex-direction:column;align-items:stretch;gap:6px;';
-    row.innerHTML=`
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <span class="gz-tag-text" style="font-size:13px;letter-spacing:1px;">
-          農曆${LM[+m]}月${d}日
-          <span style="color:var(--green);font-weight:600;"> ${label}</span>
-          ${since!=null?`<span style="color:var(--dim);font-size:12px;">${yearCount}</span>`:''}
-        </span>
-        <button class="gz-tag-del" onclick="removeLmRemind('${k}')">✕</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:11px;color:var(--dim);white-space:nowrap;">起始年</span>
-        <select class="lm-select" style="flex:1;padding:5px 6px;font-size:12px;"
-          onchange="updateLmSince('${k}',this.value)">
-          ${buildYearOptions(since)}
-        </select>
-      </div>`;
+
+    // 第一行：日期 + 可編輯標籤 + 刪除
+    const line1=document.createElement('div');
+    line1.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:6px;';
+
+    const dateSpan=document.createElement('span');
+    dateSpan.style.cssText='font-size:12px;color:var(--dim);white-space:nowrap;';
+    dateSpan.textContent=`農曆${LM[+m]}月${d}日`;
+
+    const labelSpan=document.createElement('span');
+    labelSpan.className='gz-tag-text';
+    labelSpan.style.cssText='font-size:13px;color:var(--green);flex:1;margin-left:6px;';
+    labelSpan.textContent=label+(since!=null?` (${new Date().getFullYear()-since})`:'');
+    makeLabelEditable(labelSpan, k, lmReminds, saveLmReminds, renderLmList);
+
+    const delBtn=document.createElement('button');
+    delBtn.className='gz-tag-del';
+    delBtn.textContent='✕';
+    delBtn.onclick=()=>removeLmRemind(k);
+
+    line1.appendChild(dateSpan);
+    line1.appendChild(labelSpan);
+    line1.appendChild(delBtn);
+
+    // 第二行：起始年
+    const line2=document.createElement('div');
+    line2.style.cssText='display:flex;align-items:center;gap:6px;';
+    line2.innerHTML=`<span style="font-size:11px;color:var(--dim);white-space:nowrap;">起始年</span>
+      <select class="lm-select" style="flex:1;padding:5px 6px;font-size:12px;" onchange="updateLmSince('${k}',this.value)">${buildYearOptions(since)}</select>`;
+
+    row.appendChild(line1);
+    row.appendChild(line2);
     list.appendChild(row);
   });
 }
@@ -1175,26 +1310,40 @@ function renderSolList(){
     const[m,d]=k.split('-');
     const item=solReminds[k];
     const since=item.since!=null?item.since:null;
-    const yearCount=since!=null?` (${new Date().getFullYear()-since})`:'';
+
     const row=document.createElement('div');
     row.className='gz-tag';
     row.style.cssText='flex-direction:column;align-items:stretch;gap:6px;';
-    row.innerHTML=`
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <span class="gz-tag-text" style="font-size:13px;letter-spacing:1px;">
-          ${m}月${d}日
-          <span style="color:var(--text);font-weight:600;"> ${item.label}</span>
-          ${since!=null?`<span style="color:var(--dim);font-size:12px;">${yearCount}</span>`:''}
-        </span>
-        <button class="gz-tag-del" onclick="removeSolRemind('${k}')">✕</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:11px;color:var(--dim);white-space:nowrap;">起始年</span>
-        <select class="lm-select" style="flex:1;padding:5px 6px;font-size:12px;"
-          onchange="updateSolSince('${k}',this.value)">
-          ${buildYearOptions(since)}
-        </select>
-      </div>`;
+
+    const line1=document.createElement('div');
+    line1.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:6px;';
+
+    const dateSpan=document.createElement('span');
+    dateSpan.style.cssText='font-size:12px;color:var(--dim);white-space:nowrap;';
+    dateSpan.textContent=`${m}月${d}日`;
+
+    const labelSpan=document.createElement('span');
+    labelSpan.className='gz-tag-text';
+    labelSpan.style.cssText='font-size:13px;flex:1;margin-left:6px;';
+    labelSpan.textContent=item.label+(since!=null?` (${new Date().getFullYear()-since})`:'');
+    makeLabelEditable(labelSpan, k, solReminds, saveSolReminds, renderSolList);
+
+    const delBtn=document.createElement('button');
+    delBtn.className='gz-tag-del';
+    delBtn.textContent='✕';
+    delBtn.onclick=()=>removeSolRemind(k);
+
+    line1.appendChild(dateSpan);
+    line1.appendChild(labelSpan);
+    line1.appendChild(delBtn);
+
+    const line2=document.createElement('div');
+    line2.style.cssText='display:flex;align-items:center;gap:6px;';
+    line2.innerHTML=`<span style="font-size:11px;color:var(--dim);white-space:nowrap;">起始年</span>
+      <select class="lm-select" style="flex:1;padding:5px 6px;font-size:12px;" onchange="updateSolSince('${k}',this.value)">${buildYearOptions(since)}</select>`;
+
+    row.appendChild(line1);
+    row.appendChild(line2);
     list.appendChild(row);
   });
 }
