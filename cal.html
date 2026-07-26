@@ -97,7 +97,7 @@ body{
 /* ── Cells ── */
 .day-cell{
   position:relative;
-  display:flex;flex-direction:row;
+  display:flex;flex-direction:column;
   align-items:center;justify-content:center;
   border-radius:6px;cursor:pointer;border:none;
   padding:2px 2px 2px 2px;
@@ -105,11 +105,17 @@ body{
   transition:background .12s;
   user-select:none;-webkit-user-select:none;
 }
-/* 左欄：數字＋農曆/干支＋提醒文字 */
+/* 中間橫排：左欄(數字+農曆) + 節氣膠囊，整體置中 */
+.cell-mid{
+  display:flex;flex-direction:row;
+  align-items:center;justify-content:center;
+  gap:4px;
+}
+/* 左欄：國曆數字 + 農曆/干支，垂直排 */
 .cell-left{
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  flex:1;min-width:0;
+  gap:2px;
 }
 .day-cell:active{background:var(--gold2);}
 .day-cell.other-month{opacity:.28;}
@@ -141,20 +147,18 @@ body.light .day-cell.today{box-shadow:inset 0 0 0 2px var(--red);}
   border:1px solid var(--gold3);
 }
 
-/* ── 節氣：右欄直向膠囊 ── */
+/* ── 節氣：數字旁直向膠囊 ── */
 .jq-label{
-  display:flex;flex-direction:column;
+  display:flex;
   align-items:center;justify-content:center;
   flex-shrink:0;
   pointer-events:none;
-  /* 寬度跟一個字差不多 */
-  width:clamp(12px,3vw,18px);
 }
 .jq-inner{
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  font-size:clamp(7px,1.8vw,9px);
-  color:var(--green);font-weight:700;line-height:1.4;
+  font-size:clamp(10px,2.6vw,14px);
+  color:var(--green);font-weight:700;line-height:1.35;
   padding:3px 2px;border-radius:20px;
   background:rgba(122,171,138,.15);
   border:1px solid rgba(122,171,138,.35);
@@ -182,8 +186,7 @@ body.light .day-cell.today{box-shadow:inset 0 0 0 2px var(--red);}
 /* [4] 電腦端（寬螢幕）所有小字放大 */
 @media(min-width:600px){
   .gz-month-tag,.lm-month-tag{ font-size:12px; }
-  .jq-inner{ font-size:11px; }
-  .jq-label{ width:20px; }
+  .jq-inner{ font-size:15px; }
   .day-num{ font-size:clamp(18px,2.4vw,30px); }
   .day-sub{ font-size:clamp(13px,1.6vw,18px); }
   .weekday-row span{ font-size:14px; }
@@ -622,18 +625,16 @@ function renderGrid(container, y, m){
       cell.appendChild(topDiv);
     }
 
-    // ── 左欄容器 ──
+    // ── 左欄：數字 + 農曆/干支 ──
     const cellLeft=document.createElement('div');
     cellLeft.className='cell-left';
 
-    // ── 國曆日 ──
     const numEl=document.createElement('span');
     numEl.className='day-num';
     numEl.textContent=dd;
     if(dow===0) numEl.style.color='var(--red)';
     cellLeft.appendChild(numEl);
 
-    // ── 農曆日 / 干支日 ──
     const subEl=document.createElement('span');
     subEl.className='day-sub';
     if(mode==='lunar'){
@@ -644,6 +645,11 @@ function renderGrid(container, y, m){
       subEl.style.color=GAN_COLOR[gz[0]]||'var(--dim)';
     }
     cellLeft.appendChild(subEl);
+
+    // ── 中間橫排容器（左欄 + 節氣） ──
+    const cellMid=document.createElement('div');
+    cellMid.className='cell-mid';
+    cellMid.appendChild(cellLeft);  // 先放左欄，節氣後面加
 
     // ── 農曆提醒文字 ──
     if(remindLabel){
@@ -656,7 +662,7 @@ function renderGrid(container, y, m){
       const rl=document.createElement('span');
       rl.className='remind-label';
       rl.textContent=remindLabel+yearCount;
-      cellLeft.appendChild(rl);
+      cell.appendChild(rl);
     }
 
     // ── 國曆提醒文字 ──
@@ -666,15 +672,14 @@ function renderGrid(container, y, m){
       const sl=document.createElement('span');
       sl.className='sol-remind-label';
       sl.textContent=solRemindLabel+yearCount;
-      cellLeft.appendChild(sl);
+      cell.appendChild(sl);
     }
 
     if(localStorage.getItem('cal_note_'+key)){
       const dot=document.createElement('span');dot.className='note-dot';dot.textContent='●';cell.appendChild(dot);
     }
 
-    // ── 組裝左欄 + 右欄節氣 ──
-    cell.appendChild(cellLeft);
+    // ── 組裝：cellMid = cellLeft + jq（節氣） ──
     if(jq){
       const jqEl=document.createElement('div');
       jqEl.className='jq-label';
@@ -682,8 +687,9 @@ function renderGrid(container, y, m){
       jqInner.className='jq-inner';
       jqInner.textContent=jq;
       jqEl.appendChild(jqInner);
-      cell.appendChild(jqEl);
+      cellMid.appendChild(jqEl);  // 節氣放左欄右邊
     }
+    cell.appendChild(cellMid);   // cellMid 整體置中
 
     attachCellEvents(cell, key, dy, dm, dd, lunar);
     container.appendChild(cell);
