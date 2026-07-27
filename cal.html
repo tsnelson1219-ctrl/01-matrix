@@ -334,6 +334,24 @@ body.light .lm-select{background:rgba(255,255,255,.5);}
 }
 body.light .lm-label-input{background:rgba(255,255,255,.5);}
 .lm-sep{color:var(--dim);font-size:13px;flex-shrink:0;white-space:nowrap;}
+
+/* ── 宜忌區塊 ── */
+.yi-ji-block{
+  margin-bottom:10px;border-radius:10px;
+  border:1px solid var(--border);
+  overflow:hidden;
+}
+.yi-row,.ji-row{
+  display:flex;align-items:baseline;
+  gap:6px;padding:7px 12px;
+  font-size:13px;line-height:1.5;
+}
+.yi-row{background:rgba(122,171,138,.08);}
+.ji-row{background:rgba(192,96,96,.07);}
+.yi-label{color:var(--green);font-weight:700;flex-shrink:0;font-size:13px;}
+.ji-label{color:var(--red);font-weight:700;flex-shrink:0;font-size:13px;}
+.yi-text{color:var(--text);font-size:12px;flex:1;}
+.ji-text{color:var(--text);font-size:12px;flex:1;}
 </style>
 </head>
 <body>
@@ -367,6 +385,16 @@ body.light .lm-label-input{background:rgba(255,255,255,.5);}
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
   <div class="note-modal" onclick="event.stopPropagation()">
     <div class="modal-date" id="modal-date"></div>
+    <div class="yi-ji-block" id="yi-ji-block">
+      <div class="yi-row">
+        <span class="yi-label">宜</span>
+        <span class="yi-text" id="yi-text"></span>
+      </div>
+      <div class="ji-row">
+        <span class="ji-label">忌</span>
+        <span class="ji-text" id="ji-text"></span>
+      </div>
+    </div>
     <textarea id="note-input" placeholder="新增備註…"></textarea>
     <div class="modal-btns">
       <button onclick="saveNote()">儲存</button>
@@ -945,6 +973,18 @@ function openModal(key,y,m,d,lunar){
   modalKey=key; hideBubble();
   const gz=lunar.getDayInGanZhi();
   document.getElementById('modal-date').textContent=`${y}年${m}月${d}日　${LM[Math.abs(lunar.getMonth())]}月${lunar.getDayInChinese()}　${gz}`;
+
+  // ── 宜忌 ──
+  try{
+    const yi=lunar.getDayYi();
+    const ji=lunar.getDayJi();
+    document.getElementById('yi-text').textContent=yi.length?yi.join('　'):'－';
+    document.getElementById('ji-text').textContent=ji.length?ji.join('　'):'－';
+    document.getElementById('yi-ji-block').style.display='';
+  } catch(e){
+    document.getElementById('yi-ji-block').style.display='none';
+  }
+
   document.getElementById('note-input').value=localStorage.getItem('cal_note_'+key)||'';
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(()=>document.getElementById('note-input').focus(),100);
