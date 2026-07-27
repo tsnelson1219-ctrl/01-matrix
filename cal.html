@@ -229,7 +229,7 @@ body.light .jump-row input,body.light .jump-row select{background:rgba(255,255,2
   outline-offset:0;
 }
 /* 追蹤管理 modal */
-.gz-modal{background:var(--bg2);border:1px solid var(--gold3);border-radius:16px;padding:20px;width:min(340px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.5);max-height:80vh;display:flex;flex-direction:column;}
+.gz-modal{background:var(--bg2);border:1px solid var(--gold3);border-radius:16px;padding:20px;width:min(340px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.5);max-height:88dvh;display:flex;flex-direction:column;overflow-y:auto;}
 .gz-input-row{display:flex;gap:8px;margin-bottom:14px;}
 .gz-input-row input{
   flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);
@@ -243,7 +243,7 @@ body.light .gz-input-row input{background:rgba(255,255,255,.5);}
   cursor:pointer;font-family:inherit;white-space:nowrap;
 }
 .gz-add-btn:active{opacity:.7;}
-.gz-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;min-height:0;}
+.gz-list{display:flex;flex-direction:column;gap:8px;}
 .gz-tag{
   display:flex;align-items:center;justify-content:space-between;
   padding:10px 14px;border-radius:10px;
@@ -381,8 +381,8 @@ body.light .lm-label-input{background:rgba(255,255,255,.5);}
   <div class="io-modal" onclick="event.stopPropagation()">
     <div class="modal-title">備註管理</div>
     <div class="io-btns">
-      <button class="io-btn" onclick="exportNotes()">📤 匯出備註（JSON）</button>
-      <button class="io-btn" onclick="document.getElementById('import-input').click()">📥 匯入備註（JSON）</button>
+      <button class="io-btn" onclick="exportNotes()">📤 匯出完整備份（JSON）</button>
+      <button class="io-btn" onclick="document.getElementById('import-input').click()">📥 匯入備份（疊加合併）</button>
     </div>
     <button class="io-close" onclick="closeIOModal()">取消</button>
   </div>
@@ -651,7 +651,19 @@ function renderGrid(container, y, m){
     cellMid.className='cell-mid';
     cellMid.appendChild(cellLeft);  // 先放左欄，節氣後面加
 
-    // ── 農曆提醒文字 ──
+    // ── 節氣加進 cellMid ──
+    if(jq){
+      const jqEl=document.createElement('div');
+      jqEl.className='jq-label';
+      const jqInner=document.createElement('span');
+      jqInner.className='jq-inner';
+      jqInner.textContent=jq;
+      jqEl.appendChild(jqInner);
+      cellMid.appendChild(jqEl);
+    }
+    // ── 正確 DOM 順序：cellMid → 提醒文字 → note-dot ──
+    cell.appendChild(cellMid);
+
     if(remindLabel){
       const remind=lmReminds[Object.keys(lmReminds).find(k=>{
         const[km,kd]=k.split('-').map(Number);
@@ -665,7 +677,6 @@ function renderGrid(container, y, m){
       cell.appendChild(rl);
     }
 
-    // ── 國曆提醒文字 ──
     if(solRemindLabel){
       const since=_solRemind.since!=null?_solRemind.since:null;
       const yearCount=since!=null?` (${vy-since})`:'';
@@ -678,18 +689,6 @@ function renderGrid(container, y, m){
     if(localStorage.getItem('cal_note_'+key)){
       const dot=document.createElement('span');dot.className='note-dot';dot.textContent='●';cell.appendChild(dot);
     }
-
-    // ── 組裝：cellMid = cellLeft + jq（節氣） ──
-    if(jq){
-      const jqEl=document.createElement('div');
-      jqEl.className='jq-label';
-      const jqInner=document.createElement('span');
-      jqInner.className='jq-inner';
-      jqInner.textContent=jq;
-      jqEl.appendChild(jqInner);
-      cellMid.appendChild(jqEl);  // 節氣放左欄右邊
-    }
-    cell.appendChild(cellMid);   // cellMid 整體置中
 
     attachCellEvents(cell, key, dy, dm, dd, lunar);
     container.appendChild(cell);
@@ -981,18 +980,71 @@ function goToToday(){
 function openIOModal(){document.getElementById('io-overlay').classList.add('open');}
 function closeIOModal(){document.getElementById('io-overlay').classList.remove('open');}
 function exportNotes(){
+  // 完整備份：備註 + 干支追蹤 + 農曆提醒 + 國曆提醒
   const notes={};
-  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('cal_note_'))notes[k.replace('cal_note_','')]=localStorage.getItem(k);}
-  if(!Object.keys(notes).length){alert('目前沒有任何備註');return;}
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k.startsWith('cal_note_')) notes[k.replace('cal_note_','')]=localStorage.getItem(k);
+  }
+  const backup={
+    version:1,
+    exported:new Date().toISOString(),
+    notes,                          // 日期備註
+    gz_tracked:[...gzTracked],      // 干支追蹤
+    lm_reminds:lmReminds,           // 農曆提醒
+    sol_reminds:solReminds,         // 國曆提醒
+  };
+  const hasData=Object.keys(notes).length||gzTracked.size||
+    Object.keys(lmReminds).length||Object.keys(solReminds).length;
+  if(!hasData){alert('目前沒有任何資料可匯出');return;}
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(notes,null,2)],{type:'application/json'}));
-  a.download='干支曆備註_'+new Date().toISOString().slice(0,10)+'.json';
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}));
+  a.download='干支曆備份_'+new Date().toISOString().slice(0,10)+'.json';
   a.click();URL.revokeObjectURL(a.href);closeIOModal();
 }
 function importNotes(input){
   const file=input.files[0];if(!file)return;
   const r=new FileReader();
-  r.onload=e=>{try{const d=JSON.parse(e.target.result);let n=0;for(const[k,v]of Object.entries(d))if(typeof v==='string'&&v.trim()){localStorage.setItem('cal_note_'+k,v);n++;}input.value='';closeIOModal();render();alert('已匯入 '+n+' 筆備註');}catch{alert('檔案格式錯誤');}};
+  r.onload=e=>{
+    try{
+      const raw=JSON.parse(e.target.result);
+      let noteCount=0, gzCount=0, lmCount=0, solCount=0;
+
+      // 相容舊格式（只有備註的 JSON）和新格式
+      const data=raw.version===1?raw:{notes:raw};
+
+      // 疊加備註
+      if(data.notes){
+        for(const[k,v] of Object.entries(data.notes)){
+          if(typeof v==='string'&&v.trim()){
+            localStorage.setItem('cal_note_'+k,v); noteCount++;
+          }
+        }
+      }
+      // 疊加干支追蹤
+      if(Array.isArray(data.gz_tracked)){
+        data.gz_tracked.forEach(gz=>{ gzTracked.add(gz); gzCount++; });
+        saveGzTracked();
+      }
+      // 疊加農曆提醒
+      if(data.lm_reminds){
+        for(const[k,v] of Object.entries(data.lm_reminds)){
+          lmReminds[k]=typeof v==='string'?{label:v,since:null}:v; lmCount++;
+        }
+        saveLmReminds();
+      }
+      // 疊加國曆提醒
+      if(data.sol_reminds){
+        for(const[k,v] of Object.entries(data.sol_reminds)){
+          solReminds[k]=typeof v==='string'?{label:v,since:null}:v; solCount++;
+        }
+        saveSolReminds();
+      }
+
+      input.value='';closeIOModal();render();
+      alert(`匯入完成（疊加）\n備註：${noteCount} 筆\n干支追蹤：${gzCount} 筆\n農曆提醒：${lmCount} 筆\n國曆提醒：${solCount} 筆`);
+    }catch{ alert('檔案格式錯誤，請確認是否為本應用匯出的 JSON'); }
+  };
   r.readAsText(file);
 }
 
@@ -1227,13 +1279,34 @@ function renderLmList(){
     const line1=document.createElement('div');
     line1.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:6px;';
 
-    const dateSpan=document.createElement('span');
-    dateSpan.style.cssText='font-size:12px;color:var(--dim);white-space:nowrap;';
-    dateSpan.textContent=`農曆${LM[+m]}月${d}日`;
+    // 月選單
+    const monSel=document.createElement('select');
+    monSel.className='lm-select';
+    monSel.style.cssText='flex:1;padding:4px;font-size:12px;';
+    ['月','正','二','三','四','五','六','七','八','九','十','十一','十二'].forEach((name,i)=>{
+      const o=document.createElement('option');
+      o.value=i===0?'':i; o.textContent=name;
+      if(String(i)===m) o.selected=true;
+      monSel.appendChild(o);
+    });
+    monSel.addEventListener('change',()=>updateLmMonDay(k, monSel.value, daySel.value));
+
+    // 日選單
+    const dayNames=['日','初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+    const daySel=document.createElement('select');
+    daySel.className='lm-select';
+    daySel.style.cssText='flex:1;padding:4px;font-size:12px;';
+    dayNames.forEach((name,i)=>{
+      const o=document.createElement('option');
+      o.value=i===0?'':i; o.textContent=name;
+      if(String(i)===d) o.selected=true;
+      daySel.appendChild(o);
+    });
+    daySel.addEventListener('change',()=>updateLmMonDay(k, monSel.value, daySel.value));
 
     const labelSpan=document.createElement('span');
     labelSpan.className='gz-tag-text';
-    labelSpan.style.cssText='font-size:13px;color:var(--green);flex:1;margin-left:6px;';
+    labelSpan.style.cssText='font-size:13px;color:var(--green);flex:1;margin-left:4px;cursor:pointer;';
     labelSpan.textContent=label+(since!=null?` (${new Date().getFullYear()-since})`:'');
     makeLabelEditable(labelSpan, k, lmReminds, saveLmReminds, renderLmList);
 
@@ -1242,7 +1315,10 @@ function renderLmList(){
     delBtn.textContent='✕';
     delBtn.onclick=()=>removeLmRemind(k);
 
-    line1.appendChild(dateSpan);
+    line1.appendChild(monSel);
+    line1.appendChild(document.createTextNode('月'));
+    line1.appendChild(daySel);
+    line1.appendChild(document.createTextNode('日'));
     line1.appendChild(labelSpan);
     line1.appendChild(delBtn);
 
@@ -1256,6 +1332,16 @@ function renderLmList(){
     row.appendChild(line2);
     list.appendChild(row);
   });
+}
+function updateLmMonDay(oldKey, newM, newD){
+  if(!newM||!newD) return;
+  const newKey=newM+'-'+newD;
+  if(newKey===oldKey) return;
+  lmReminds[newKey]=lmReminds[oldKey];
+  delete lmReminds[oldKey];
+  saveLmReminds();
+  renderLmList();
+  render();
 }
 function updateLmSince(key, val){
   if(!lmReminds[key]) return;
@@ -1294,6 +1380,16 @@ function removeSolRemind(key){
   renderSolList();
   render();
 }
+function updateSolMonDay(oldKey, newM, newD){
+  if(!newM||!newD) return;
+  const newKey=newM+'-'+newD;
+  if(newKey===oldKey) return;
+  solReminds[newKey]=solReminds[oldKey];
+  delete solReminds[oldKey];
+  saveSolReminds();
+  renderSolList();
+  render();
+}
 function updateSolSince(key,val){
   if(!solReminds[key]) return;
   solReminds[key].since=val?parseInt(val):null;
@@ -1322,15 +1418,35 @@ function renderSolList(){
     row.style.cssText='flex-direction:column;align-items:stretch;gap:6px;';
 
     const line1=document.createElement('div');
-    line1.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:6px;';
+    line1.style.cssText='display:flex;align-items:center;gap:4px;flex-wrap:wrap;';
 
-    const dateSpan=document.createElement('span');
-    dateSpan.style.cssText='font-size:12px;color:var(--dim);white-space:nowrap;';
-    dateSpan.textContent=`${m}月${d}日`;
+    // 月選單（1-12）
+    const solMonSel=document.createElement('select');
+    solMonSel.className='lm-select';
+    solMonSel.style.cssText='flex:1;min-width:48px;padding:4px;font-size:12px;';
+    [{v:'',t:'月'},...Array.from({length:12},(_,i)=>({v:i+1,t:`${i+1}月`}))].forEach(({v,t})=>{
+      const o=document.createElement('option');
+      o.value=v; o.textContent=t;
+      if(String(v)===m) o.selected=true;
+      solMonSel.appendChild(o);
+    });
+    solMonSel.addEventListener('change',()=>updateSolMonDay(k, solMonSel.value, solDaySel.value));
+
+    // 日選單（1-31）
+    const solDaySel=document.createElement('select');
+    solDaySel.className='lm-select';
+    solDaySel.style.cssText='flex:1;min-width:48px;padding:4px;font-size:12px;';
+    [{v:'',t:'日'},...Array.from({length:31},(_,i)=>({v:i+1,t:`${i+1}日`}))].forEach(({v,t})=>{
+      const o=document.createElement('option');
+      o.value=v; o.textContent=t;
+      if(String(v)===d) o.selected=true;
+      solDaySel.appendChild(o);
+    });
+    solDaySel.addEventListener('change',()=>updateSolMonDay(k, solMonSel.value, solDaySel.value));
 
     const labelSpan=document.createElement('span');
     labelSpan.className='gz-tag-text';
-    labelSpan.style.cssText='font-size:13px;flex:1;margin-left:6px;';
+    labelSpan.style.cssText='font-size:13px;flex:1;cursor:pointer;';
     labelSpan.textContent=item.label+(since!=null?` (${new Date().getFullYear()-since})`:'');
     makeLabelEditable(labelSpan, k, solReminds, saveSolReminds, renderSolList);
 
@@ -1339,7 +1455,8 @@ function renderSolList(){
     delBtn.textContent='✕';
     delBtn.onclick=()=>removeSolRemind(k);
 
-    line1.appendChild(dateSpan);
+    line1.appendChild(solMonSel);
+    line1.appendChild(solDaySel);
     line1.appendChild(labelSpan);
     line1.appendChild(delBtn);
 
