@@ -150,7 +150,7 @@
         <circle cx="250" cy="250" r="180" class="ring-bg" stroke-width="1.2"/>
         <circle cx="250" cy="250" r="160" class="ring-bg" stroke-width="1.5"/>
         <circle cx="250" cy="250" r="110" class="ring-bg" stroke-width="1.5"/>
-        <circle cx="250" cy="250" r="95" class="ring-bg" stroke-width="2" stroke-dasharray="4,4"/>
+        <circle cx="250" cy="250" r="95" id="lockRing" class="ring-bg" stroke-width="2" stroke-dasharray="4,4" style="transition:stroke 0.2s,fill 0.2s;"/>
 
         <path id="activeGanSector" class="active-sector-gan" />
         <path id="activeZhiSector" class="active-sector-zhi" />
@@ -168,6 +168,11 @@
         </g>
 
         <g id="coreHub">
+            <!-- 鎖定按鈕：透明點擊區，視覺效果在 lockRing 虛線圓上 -->
+            <circle id="lockBtn" cx="250" cy="250" r="48"
+                fill="transparent" stroke="none"
+                style="cursor:pointer;"
+                onclick="toggleLock(event)"/>
             <text id="stageText" x="250" y="200" class="core-text">--</text>
             <line id="baseLine" class="axis-line" />
             <path id="sineWave" class="wave-path" />
@@ -277,6 +282,7 @@ function changePillarTab(pillarKey) {
     let ganRotation = 0;
     let zhiRotation = 0; 
     let isDragging = false;
+    let isLocked = false;
     let dragTarget = null; 
     let startAngle = 0;
     let lastStep = -1;
@@ -425,6 +431,7 @@ let lastZhiIndex = -1;
 
     function setupDragEvents() {
         // 處理按下事件
+        // ── 鎖定同步 ──
         const handleDown = (target, groupEl) => (e) => {
             isDragging = true;
             dragTarget = target;
@@ -438,17 +445,31 @@ let lastZhiIndex = -1;
         // 綁定於 document 級別，防止手指滑出 SVG 範圍導致脫鉤 (Lost tracking)
         document.addEventListener('pointermove', (e) => {
             if (!isDragging) return;
-            e.preventDefault(); // 絕對阻斷邊緣滑動等原生行為
+            e.preventDefault();
             
             const currentAngle = getPointerAngle(e) - startAngle;
             if (dragTarget === 'gan') {
+                const delta = currentAngle - ganRotation;
                 ganRotation = currentAngle;
                 ganGroup.style.transform = `rotate(${ganRotation}deg)`;
                 ganGroup.style.transformOrigin = "250px 250px";
+                if (isLocked) {
+                    // 格數同步：天干轉幾格（36°），地支跟著轉幾格（30°）
+                    zhiRotation += delta * (30 / 36);
+                    zhiGroup.style.transform = `rotate(${zhiRotation}deg)`;
+                    zhiGroup.style.transformOrigin = "250px 250px";
+                }
             } else {
+                const delta = currentAngle - zhiRotation;
                 zhiRotation = currentAngle;
                 zhiGroup.style.transform = `rotate(${zhiRotation}deg)`;
                 zhiGroup.style.transformOrigin = "250px 250px";
+                if (isLocked) {
+                    // 格數同步：地支轉幾格（30°），天干跟著轉幾格（36°）
+                    ganRotation += delta * (36 / 30);
+                    ganGroup.style.transform = `rotate(${ganRotation}deg)`;
+                    ganGroup.style.transformOrigin = "250px 250px";
+                }
             }
             updateCalculation(true, false);
         }, { passive: false });
@@ -458,17 +479,27 @@ let lastZhiIndex = -1;
             isDragging = false;
             const target = dragTarget;
             dragTarget = null;
+            const t = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
             
             if (target === 'gan') {
                 ganRotation = Math.round(ganRotation / 36) * 36;
-                ganGroup.style.transition = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
+                ganGroup.style.transition = t;
                 ganGroup.style.transform = `rotate(${ganRotation}deg)`;
+                if (isLocked) {
+                    zhiRotation = Math.round(zhiRotation / 30) * 30;
+                    zhiGroup.style.transition = t;
+                    zhiGroup.style.transform = `rotate(${zhiRotation}deg)`;
+                }
             } else if (target === 'zhi') {
                 zhiRotation = Math.round(zhiRotation / 30) * 30;
-                zhiGroup.style.transition = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
+                zhiGroup.style.transition = t;
                 zhiGroup.style.transform = `rotate(${zhiRotation}deg)`;
+                if (isLocked) {
+                    ganRotation = Math.round(ganRotation / 36) * 36;
+                    ganGroup.style.transition = t;
+                    ganGroup.style.transform = `rotate(${ganRotation}deg)`;
+                }
             }
-            // 卡格確認震動（卡格動畫結束時）
             if (navigator.vibrate) setTimeout(() => navigator.vibrate(18), 280);
             updateCalculation(false, true);
         };
@@ -540,6 +571,25 @@ let lastZhiIndex = -1;
         dot.setAttribute("cy", coords.y);
         
         lastStep = cStep;
+    }
+
+    function toggleLock(e) {
+        if(e) e.stopPropagation();
+        isLocked = !isLocked;
+        const ring = document.getElementById('lockRing');
+        if (isLocked) {
+            ring.setAttribute('stroke-dasharray', '0');
+            ring.setAttribute('stroke-width', '2.5');
+            ring.style.stroke = 'rgba(212,167,91,0.9)';
+            ring.style.fill = 'rgba(212,167,91,0.06)';
+            if (navigator.vibrate) navigator.vibrate([12, 30, 12]);
+        } else {
+            ring.setAttribute('stroke-dasharray', '4,4');
+            ring.setAttribute('stroke-width', '2');
+            ring.style.stroke = '';
+            ring.style.fill = '';
+            if (navigator.vibrate) navigator.vibrate(8);
+        }
     }
 
     function toggleTheme(e) { 
