@@ -76,6 +76,11 @@
         body.minimal-mode #centerDot { opacity: 1 !important; visibility: visible !important; }
         #hourOrbit { opacity: 0; visibility: hidden; transition: var(--trans); }
         body.minimal-mode #hourOrbit { opacity: 0.8; visibility: visible; }
+        @media (max-height: 500px) {
+            .clock-wrapper { width: min(95vmin, calc(100dvh - 130px)); height: min(95vmin, calc(100dvh - 130px)); }
+            .footer-container { margin-top: 12px; }
+            .theme-switch { margin-top: 10px; }
+        }
     </style>
 </head>
 <body class="dark">

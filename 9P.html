@@ -28,7 +28,7 @@
         .btn:active { transform: scale(0.95); }
         .btn-danger { border-color: var(--red); color: var(--red); }
         .year-input { background: transparent; border: 1px solid var(--gold); border-radius: 6px; color: var(--gold); text-align: center; font-size: 16px; width: 70px; padding: 7px; outline: none; }
-        .workspace { position: relative; flex: 1; width: 100vw; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
+        .workspace { container-type: size; position: relative; flex: 1; width: 100vw; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
         
         #floorPlan { 
             position: absolute; 
@@ -39,7 +39,7 @@
             opacity: 0.6; 
         }
         
-        #compassSvg { position: absolute; width: 85vmin; height: 85vmin; max-width: 700px; max-height: 700px; pointer-events: none; transition: opacity 0.3s, transform 0.05s linear; overflow: visible; transform-origin: center center; transform: translateY(-8vh); }
+        #compassSvg { position: absolute; --compass-size: min(85vmin, calc(100cqh - 16px), 700px); --compass-offset: max(-8vh, calc((var(--compass-size) - 100cqh) / 2 + 8px)); width: var(--compass-size); height: var(--compass-size); max-width: 700px; max-height: 700px; pointer-events: none; transition: opacity 0.3s, transform 0.05s linear; overflow: visible; transform-origin: center center; transform: translateY(var(--compass-offset, -8vh)); }
         .theme-toggle { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--gold); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gold); font-size: 18px; }
         #fileInput { display: none; }
     </style>
@@ -102,7 +102,7 @@
             state.compassRot = 0; document.getElementById('compassGroup').setAttribute('transform', `rotate(0, 300, 300)`); 
             resetTimeout = setTimeout(() => resetClickCount = 0, 400); 
         } else { 
-            state.compassScale = 1; document.getElementById('compassSvg').style.transform = `translateY(-8vh) scale(1)`; 
+            state.compassScale = 1; document.getElementById('compassSvg').style.transform = `translateY(var(--compass-offset, -8vh)) scale(1)`; 
             clearTimeout(resetTimeout); resetClickCount = 0; 
         }
     };
@@ -185,7 +185,7 @@
         } else if (pointers.length === 2) {
             let p1 = pointers[0], p2 = pointers[1], dist = Math.hypot(p2.clientX - p1.clientX, p2.clientY - p1.clientY);
             if (state.mode === 'map') { state.map.scale = Math.max(0.1, initialMapScale * (dist / initialPinchDist)); state.map.rot = initialMapRot + (Math.atan2(p2.clientY - p1.clientY, p2.clientX - p1.clientX) * 180 / Math.PI - initialPinchAngle); updateMap(); }
-            else if (e.pointerType === 'touch') { state.compassScale = Math.max(0.5, Math.min(3, initialCompassScale * (dist / initialPinchDist))); document.getElementById('compassSvg').style.transform = `translateY(-8vh) scale(${state.compassScale})`; }
+            else if (e.pointerType === 'touch') { state.compassScale = Math.max(0.5, Math.min(3, initialCompassScale * (dist / initialPinchDist))); document.getElementById('compassSvg').style.transform = `translateY(var(--compass-offset, -8vh)) scale(${state.compassScale})`; }
         }
     });
     

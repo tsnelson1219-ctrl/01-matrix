@@ -86,6 +86,12 @@
         .ring-line { fill: none; stroke: var(--grid); stroke-width: 2.5; } 
         #activeSector { transition: d 0.3s cubic-bezier(0.4, 0, 0.2, 1), fill 0.3s; pointer-events: none; }
         .interactive-sector { fill: transparent; cursor: pointer; }
+        @media (max-height: 500px) {
+            .diagram-wrapper { width: min(92vw, calc(100dvh - 115px)); height: min(92vw, calc(100dvh - 115px)); margin-top: 0; }
+        }
+        @media (max-height: 500px) and (max-width: 767px) {
+            .diagram-wrapper { width: min(92vw, calc(100dvh - 155px)); height: min(92vw, calc(100dvh - 155px)); }
+        }
     </style>
 </head>
 <body oncontextmenu="return false;">
