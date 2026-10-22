@@ -190,6 +190,8 @@
     }
 
     function update() {
+        // 分頁保留在背景時停止繪製與曆法計算，返回時立即更新。
+        if (document.hidden || (window.frameElement && window.frameElement.hidden)) return;
         const realNow = new Date();
         const displayDate = new Date(); displayDate.setDate(realNow.getDate() + offsetDays);
         const h = realNow.getHours(), m = realNow.getMinutes(), s = realNow.getSeconds(), ms = realNow.getMilliseconds();
@@ -251,6 +253,8 @@
         document.getElementById('activeSector').setAttribute("d", `M ${pS4.x} ${pS4.y} L ${pS1.x} ${pS1.y} A 230 230 0 0 1 ${pS2.x} ${pS2.y} L ${pS3.x} ${pS3.y} A 175 175 0 0 0 ${pS4.x} ${pS4.y}`);
     }
     init(); setInterval(update, 50); update();
+    window.addEventListener('matrix:activate', update);
+    document.addEventListener('visibilitychange', update);
 
     // Pinch-to-zoom + pan for entire content
     (function() {

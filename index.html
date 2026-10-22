@@ -100,6 +100,7 @@
         }
 
         /* iframe 填滿剩餘空間，底部留出手機導覽列安全區 */
+        iframe[hidden] { display: none !important; }
         iframe { 
             flex: 1; width: 100%; border: none; background: #0f0e0c; 
             display: block;
@@ -128,7 +129,7 @@
     </div>
 </div>
 
-<iframe id="main-frame" src="ZW clock.html"></iframe>
+<iframe id="main-frame" src="ZW clock.html" title="子午流注"></iframe>
 
 <script>
     // 明確對應各頁既有主題，不以完整網址猜測頁型。
@@ -142,8 +143,12 @@
     ];
 
     let currentIndex = 0;
+    // 分頁首次開啟才載入，之後保留原本文件與操作狀態。
+    const appFrames = [document.getElementById('main-frame')];
+    appFrames[0].dataset.appIndex = '0';
 
     function switchApp(index) {
+        if (!Number.isInteger(index) || index < 0 || index >= apps.length) return;
         currentIndex = index;
         updateUI();
     }
@@ -159,9 +164,20 @@
     }
 
     function updateUI() {
-        const frame = document.getElementById('main-frame');
+        let frame = appFrames[currentIndex];
+        if (!frame) {
+            frame = document.createElement('iframe');
+            frame.id = 'app-frame-' + currentIndex;
+            frame.dataset.appIndex = String(currentIndex);
+            frame.title = apps[currentIndex].name;
+            frame.addEventListener('load', () => prepareFrame(frame));
+            appFrames[currentIndex] = frame;
+            frame.src = apps[currentIndex].file;
+            document.body.appendChild(frame);
+        }
+        appFrames.forEach((item, i) => { item.hidden = i !== currentIndex; });
+        prepareFrame(frame);
         const btns = document.querySelectorAll('.nav-btn');
-        frame.src = apps[currentIndex].file;
         btns.forEach((btn, i) => {
             const isActive = (i === currentIndex);
             btn.classList.toggle('active', isActive);
@@ -181,7 +197,7 @@
     function applyThemeToFrame(frame) {
         const doc = frame.contentDocument;
         if (!doc || !doc.body) return;
-        const app = apps[currentIndex];
+        const app = apps[Number(frame.dataset.appIndex)];
         doc.body.classList.toggle(app.themeClass,
             app.darkClass ? currentTheme === 'dark' : currentTheme === 'light');
 
@@ -195,12 +211,19 @@
         style.textContent = app.themeControl + ' { visibility: hidden !important; pointer-events: none !important; }';
     }
 
+    function prepareFrame(frame) {
+        applyThemeToFrame(frame);
+        if (!frame.hidden && frame.contentWindow) {
+            frame.contentWindow.dispatchEvent(new frame.contentWindow.Event('matrix:activate'));
+        }
+    }
+
     function applyTheme() {
         document.body.classList.toggle('light-mode', currentTheme === 'light');
         const button = document.querySelector('.theme-btn');
         button.setAttribute('aria-pressed', String(currentTheme === 'light'));
         button.setAttribute('aria-label', currentTheme === 'light' ? '切換為深色主題' : '切換為淺色主題');
-        applyThemeToFrame(document.getElementById('main-frame'));
+        appFrames.forEach(applyThemeToFrame);
     }
 
     function toggleTheme() {
@@ -211,7 +234,7 @@
     }
 
     // 先綁定載入事件，切換後套用目前選擇；不依賴網址內容。
-    document.getElementById('main-frame').addEventListener('load', applyTheme);
+    appFrames[0].addEventListener('load', () => prepareFrame(appFrames[0]));
     // 另一個同源視窗的獨立分頁切換主題時，也同步整合頁。
     window.addEventListener('storage', event => {
         if (event.key === 'theme' || event.key === null) {
