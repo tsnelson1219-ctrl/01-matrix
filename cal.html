@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>干支月曆</title>
-<script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.7.7/lunar.min.js"></script>
+<script src="lunar.min.js"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
 :root{
@@ -765,7 +765,8 @@ function attachCellEvents(cell, key, dy, dm, dd, lunar){
 // ── Header ──
 function updateHeader(){
   document.getElementById('main-title').textContent=`${vy}年 ${vm}月`;
-  const mid=Solar.fromYmd(vy,vm,15).getLunar();
+  const date=firstWeek?addDays(topDate(),6):new Date(vy,vm-1,1);
+  const mid=Solar.fromYmd(date.getFullYear(),date.getMonth()+1,date.getDate()).getLunar();
   document.getElementById('ganzhi-year').textContent=mid.getYearInGanZhiByLiChun()+'年';
   const btn=document.getElementById('mode-btn');
   if(mode==='ganzhi'){btn.textContent='干支';btn.classList.add('active');}
