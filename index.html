@@ -98,9 +98,12 @@
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
+        .theme-btn.offline-ready { border-width: 3px; }
 
         /* iframe 填滿剩餘空間，底部留出手機導覽列安全區 */
         iframe[hidden] { display: none !important; }
+        .offline-status { flex-shrink: 0; text-align: center; font-size: 11px; line-height: 1.5; padding: 2px 8px; color: inherit; }
+        .offline-status button { margin-left: 6px; font: inherit; color: inherit; background: transparent; border: 1px solid currentColor; border-radius: 4px; padding: 0 6px; cursor: pointer; }
         iframe { 
             flex: 1; width: 100%; border: none; background: #0f0e0c; 
             display: block;
@@ -129,7 +132,9 @@
     </div>
 </div>
 
+<div class="offline-status" id="offline-update-status" role="status" hidden><span>新版已準備好</span><button id="offline-update">更新並重新載入</button></div>
 <iframe id="main-frame" src="ZW clock.html" title="子午流注"></iframe>
+<script src="offline.js" defer></script>
 
 <script>
     // 明確對應各頁既有主題，不以完整網址猜測頁型。
