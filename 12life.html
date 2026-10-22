@@ -24,7 +24,7 @@
         }
 
         html, body {
-            touch-action: none; 
+            touch-action: pan-y; 
             overscroll-behavior: none; 
             background: var(--bg); color: var(--gold); 
             display: flex; flex-direction: column; align-items: center; 
@@ -33,6 +33,9 @@
             overflow: hidden; 
             user-select: none; -webkit-user-select: none;
         }
+        /* 頁面背景鋪滿 iframe，避免 body 被根元素的 flex 置中縮窄。 */
+        html { display: block; }
+        body { width: 100%; }
 
         /* 圓盤區：佔滿剩餘空間並內部居中，高度不受下方面板影響 */
         .disc-section {
@@ -138,6 +141,15 @@
         .info-panel, .info-panel * {
             user-select: text !important;
             -webkit-user-select: text !important;
+        }
+        @media (max-height: 600px) {
+            .clock-wrapper { width: min(95vmin, calc(100dvh - 250px)); height: min(95vmin, calc(100dvh - 250px)); }
+        }
+        @media (max-height: 500px) and (min-width: 480px) {
+            body { flex-direction: row; align-items: stretch; }
+            .disc-section { width: 42%; padding-top: 0; }
+            .clock-wrapper { width: min(40vw, calc(100dvh - 16px)); height: min(40vw, calc(100dvh - 16px)); }
+            .info-panel { width: 58%; max-width: none; min-height: 0; height: 100%; border-radius: 12px 0 0 12px; }
         }
     </style>
 </head>

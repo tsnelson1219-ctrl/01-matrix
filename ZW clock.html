@@ -7,7 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="./icon.png">
-    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
+    <script src="lunar.min.js"></script>
     <title>子午流注-合於日月</title>
     <style>
         :root {
@@ -76,6 +76,11 @@
         body.minimal-mode #centerDot { opacity: 1 !important; visibility: visible !important; }
         #hourOrbit { opacity: 0; visibility: hidden; transition: var(--trans); }
         body.minimal-mode #hourOrbit { opacity: 0.8; visibility: visible; }
+        @media (max-height: 500px) {
+            .clock-wrapper { width: min(95vmin, calc(100dvh - 130px)); height: min(95vmin, calc(100dvh - 130px)); }
+            .footer-container { margin-top: 12px; }
+            .theme-switch { margin-top: 10px; }
+        }
     </style>
 </head>
 <body class="dark">
@@ -117,10 +122,12 @@
         if (offsetDays === 0) return; if (e) e.stopPropagation(); 
         const cur = new Date(); cur.setHours(0,0,0,0);
         const dis = new Date(); dis.setDate(cur.getDate() + offsetDays);
-        const input = prompt("跳轉日期 (YYYY-MM-DD):", dis.toISOString().split('T')[0]);
+        const input = prompt("跳轉日期 (YYYY-MM-DD):", [dis.getFullYear(), String(dis.getMonth()+1).padStart(2,'0'), String(dis.getDate()).padStart(2,'0')].join('-'));
         if (input) {
-            const target = new Date(input);
-            if (!isNaN(target.getTime())) {
+            const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(input);
+            const target = parts ? new Date(Number(parts[1]), Number(parts[2])-1, Number(parts[3])) : new Date(NaN);
+            const valid = parts && target.getFullYear() === Number(parts[1]) && target.getMonth()+1 === Number(parts[2]) && target.getDate() === Number(parts[3]);
+            if (valid) {
                 const targetMid = new Date(target).setHours(0,0,0,0);
                 offsetDays = Math.round((targetMid - cur.getTime()) / 86400000);
                 shiftDate(null, 0); 
@@ -188,6 +195,8 @@
     }
 
     function update() {
+        // 分頁保留在背景時停止繪製與曆法計算，返回時立即更新。
+        if (document.hidden || (window.frameElement && window.frameElement.hidden)) return;
         const realNow = new Date();
         const displayDate = new Date(); displayDate.setDate(realNow.getDate() + offsetDays);
         const h = realNow.getHours(), m = realNow.getMinutes(), s = realNow.getSeconds(), ms = realNow.getMilliseconds();
@@ -199,13 +208,13 @@
                 const sObj = Solar.fromDate(displayDate); const l = sObj.getLunar();
                 const colorMap = {'甲':'青','乙':'青','丙':'赤','丁':'赤','戊':'黃','己':'黃','庚':'白','辛':'白','壬':'黑','癸':'黑'};
                 const animalMap = {'子':'鼠','丑':'牛','寅':'虎','卯':'兔','辰':'龍','巳':'蛇','午':'馬','未':'羊','申':'猴','酉':'雞','戌':'狗','亥':'豬'};
-                const yA = (colorMap[l.getYearGanByLiChun()]||'') + (animalMap[l.getYearZhiByLiChun()]||'');
+                const yA = (colorMap[l.getYearGanExact()]||'') + (animalMap[l.getYearZhiExact()]||'');
                 
                 const newCd = `${displayDate.getFullYear()}年${displayDate.getMonth()+1}月${displayDate.getDate()}日`;
                 const elCd = document.getElementById('cd');
                 if (elCd.innerText !== newCd) elCd.innerText = newCd;
 
-                const newCg = `${l.getYearInGanZhi()}年 ${l.getMonthInGanZhi()}月 ${l.getDayInGanZhi()}日`;
+                const newCg = `${l.getYearInGanZhiExact()}年 ${l.getMonthInGanZhiExact()}月 ${l.getDayInGanZhiExact2()}日`;
                 const elCg = document.getElementById('cg');
                 if (elCg.innerText !== newCg) elCg.innerText = newCg;
 
@@ -249,6 +258,8 @@
         document.getElementById('activeSector').setAttribute("d", `M ${pS4.x} ${pS4.y} L ${pS1.x} ${pS1.y} A 230 230 0 0 1 ${pS2.x} ${pS2.y} L ${pS3.x} ${pS3.y} A 175 175 0 0 0 ${pS4.x} ${pS4.y}`);
     }
     init(); setInterval(update, 50); update();
+    window.addEventListener('matrix:activate', update);
+    document.addEventListener('visibilitychange', update);
 
     // Pinch-to-zoom + pan for entire content
     (function() {

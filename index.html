@@ -100,6 +100,7 @@
         }
 
         /* iframe 填滿剩餘空間，底部留出手機導覽列安全區 */
+        iframe[hidden] { display: none !important; }
         iframe { 
             flex: 1; width: 100%; border: none; background: #0f0e0c; 
             display: block;
@@ -124,26 +125,30 @@
         </div>
         
         <div class="nav-arrow" onclick="nextApp()">&#10095;</div>
-        <button class="theme-btn" onclick="toggleTheme()">◑</button>
+        <button class="theme-btn" onclick="toggleTheme()" aria-label="切換深淺色主題" aria-pressed="false">◑</button>
     </div>
 </div>
 
-<iframe id="main-frame" src="ZW clock.html"></iframe>
+<iframe id="main-frame" src="ZW clock.html" title="子午流注"></iframe>
 
 <script>
-    // 確保檔案名稱與您資料夾內的完全一致
+    // 明確對應各頁既有主題，不以完整網址猜測頁型。
     const apps = [
-        { name: '子午流注', file: 'ZW clock.html' },
-        { name: '干支曆', file: 'cal.html' },
-        { name: '十神五極', file: '101010.html' },
-        { name: '地支藏干', file: '12 h.html' },
-        { name: '12長生', file: '12life.html' },
-        { name: '九宮飛星', file: '9P.html' }
+        {"name":"子午流注","file":"ZW clock.html","themeClass":"light-theme","darkClass":false,"themeControl":".theme-switch"},
+        {"name":"干支曆","file":"cal.html","themeClass":"light","darkClass":false,"themeControl":".theme-btn"},
+        {"name":"十神五極","file":"101010.html","themeClass":"dark-theme","darkClass":true,"themeControl":".theme-btn"},
+        {"name":"地支藏干","file":"12 h.html","themeClass":"light-theme","darkClass":false,"themeControl":".theme-switch"},
+        {"name":"12長生","file":"12life.html","themeClass":"light-theme","darkClass":false,"themeControl":".theme-switch"},
+        {"name":"九宮飛星","file":"9P.html","themeClass":"light-mode","darkClass":false,"themeControl":".theme-toggle"}
     ];
-    
+
     let currentIndex = 0;
+    // 分頁首次開啟才載入，之後保留原本文件與操作狀態。
+    const appFrames = [document.getElementById('main-frame')];
+    appFrames[0].dataset.appIndex = '0';
 
     function switchApp(index) {
+        if (!Number.isInteger(index) || index < 0 || index >= apps.length) return;
         currentIndex = index;
         updateUI();
     }
@@ -159,11 +164,20 @@
     }
 
     function updateUI() {
-        const frame = document.getElementById('main-frame');
+        let frame = appFrames[currentIndex];
+        if (!frame) {
+            frame = document.createElement('iframe');
+            frame.id = 'app-frame-' + currentIndex;
+            frame.dataset.appIndex = String(currentIndex);
+            frame.title = apps[currentIndex].name;
+            frame.addEventListener('load', () => prepareFrame(frame));
+            appFrames[currentIndex] = frame;
+            frame.src = apps[currentIndex].file;
+            document.body.appendChild(frame);
+        }
+        appFrames.forEach((item, i) => { item.hidden = i !== currentIndex; });
+        prepareFrame(frame);
         const btns = document.querySelectorAll('.nav-btn');
-        frame.src = apps[currentIndex].file;
-        // 切換後等頁面載入，再把主題注入
-        frame.onload = () => applyThemeToFrame(frame);
         btns.forEach((btn, i) => {
             const isActive = (i === currentIndex);
             btn.classList.toggle('active', isActive);
@@ -173,54 +187,62 @@
         });
     }
 
-    // 主題同步：用 localStorage 記住狀態，每次載入 iframe 時注入
-    function applyThemeToFrame(frame) {
-        const isLight = localStorage.getItem('theme') === 'light';
-        try {
-            const doc = frame.contentDocument || frame.contentWindow.document;
-            const body = doc.body;
-            // 各頁面 class 名稱對應
-            const lightClasses = ['light-mode', 'light-theme', 'light-theme', 'light-theme'];
-            const darkClasses  = ['', '', '', 'dark-theme'];
-            // 用檔名判斷要用哪個 class
-            const src = frame.src;
-            let lightClass = 'light-mode', darkClass = '';
-            if (src.includes('101010')) { lightClass = ''; darkClass = 'dark-theme'; }
-            else if (src.includes('12') || src.includes('ZW') || src.includes('clock')) { lightClass = 'light-theme'; darkClass = ''; }
+    // 儲存不可用時，仍可在目前頁面切換主題。
+    function readTheme() {
+        try { return localStorage.getItem('theme') === 'light' ? 'light' : 'dark'; }
+        catch (error) { return 'dark'; }
+    }
+    let currentTheme = readTheme();
 
-            if (src.includes('101010')) {
-                body.classList.toggle('dark-theme', !isLight);
-            } else if (src.includes('cal')) {
-                body.classList.toggle('light', isLight);
-            } else if (src.includes('12') || src.includes('ZW') || src.includes('clock')) {
-                body.classList.toggle('light-theme', isLight);
-            } else {
-                body.classList.toggle('light-mode', isLight);
-            }
-        } catch(e) {}
+    function applyThemeToFrame(frame) {
+        const doc = frame.contentDocument;
+        if (!doc || !doc.body) return;
+        const app = apps[Number(frame.dataset.appIndex)];
+        doc.body.classList.toggle(app.themeClass,
+            app.darkClass ? currentTheme === 'dark' : currentTheme === 'light');
+
+        // 只影響嵌入頁面，保留按鈕原本空間與各頁的獨立開啟行為。
+        let style = doc.getElementById('matrix-embedded-theme');
+        if (!style) {
+            style = doc.createElement('style');
+            style.id = 'matrix-embedded-theme';
+            doc.head.appendChild(style);
+        }
+        style.textContent = app.themeControl + ' { visibility: hidden !important; pointer-events: none !important; }';
+    }
+
+    function prepareFrame(frame) {
+        applyThemeToFrame(frame);
+        if (!frame.hidden && frame.contentWindow) {
+            frame.contentWindow.dispatchEvent(new frame.contentWindow.Event('matrix:activate'));
+        }
+    }
+
+    function applyTheme() {
+        document.body.classList.toggle('light-mode', currentTheme === 'light');
+        const button = document.querySelector('.theme-btn');
+        button.setAttribute('aria-pressed', String(currentTheme === 'light'));
+        button.setAttribute('aria-label', currentTheme === 'light' ? '切換為深色主題' : '切換為淺色主題');
+        appFrames.forEach(applyThemeToFrame);
     }
 
     function toggleTheme() {
-        const isLight = localStorage.getItem('theme') === 'light';
-        const newTheme = isLight ? 'dark' : 'light';
-        localStorage.setItem('theme', newTheme);
-        // 更新導覽列本身的主題
-        document.body.classList.toggle('light-mode', newTheme === 'light');
-        const frame = document.getElementById('main-frame');
-        applyThemeToFrame(frame);
+        currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+        try { localStorage.setItem('theme', currentTheme); }
+        catch (error) { /* 目前頁面仍套用主題。 */ }
+        applyTheme();
     }
 
-    // 頁面載入時，套用已儲存的主題到導覽列
-    (function initTheme() {
-        if (localStorage.getItem('theme') === 'light') {
-            document.body.classList.add('light-mode');
+    // 先綁定載入事件，切換後套用目前選擇；不依賴網址內容。
+    appFrames[0].addEventListener('load', () => prepareFrame(appFrames[0]));
+    // 另一個同源視窗的獨立分頁切換主題時，也同步整合頁。
+    window.addEventListener('storage', event => {
+        if (event.key === 'theme' || event.key === null) {
+            currentTheme = readTheme();
+            applyTheme();
         }
-    })();
-
-    // 頁面初次載入也注入主題
-    document.getElementById('main-frame').onload = function() {
-        applyThemeToFrame(this);
-    };
+    });
+    applyTheme();
 </script>
 </body>
 </html>
