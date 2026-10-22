@@ -74,24 +74,18 @@ body{
 }
 .weekday-row span:first-child{color:var(--red);}
 
-/* ── Viewport ── */
-/* 手機底部：viewport 自己留出 safe-area padding，
-   overflow:visible 讓 grid 的 padding-bottom 真正生效；
-   clip 改用 clip-path 避免 overflow:hidden 吃掉 padding。   */
+/* 連續週列：使用瀏覽器原生捲動與慣性，不吸附月份。 */
 .cal-viewport{
-  flex:1;min-height:0;position:relative;touch-action:none;
-  overflow:hidden;
-  /* 關鍵：把底部 safe area 空間留在 viewport 裡 */
+  flex:1;min-height:0;position:relative;touch-action:pan-y;
+  overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;
+  overflow-anchor:none;scrollbar-width:none;
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
-
-/* ── Grid ── */
-/* grid 填滿 viewport（含 padding），inset:0 = top/right/bottom/left 都是 0，
-   這樣 bottom:0 就等於 viewport 的 padding-bottom 邊緣，不會被導覽列蓋住。 */
-.cal-grid{
-  position:absolute;inset:0;
-  display:grid;grid-template-columns:repeat(7,1fr);
-  padding:3px;gap:3px;background:var(--border);
+.cal-viewport::-webkit-scrollbar{display:none;}
+.cal-grid{background:var(--border);padding:0 3px;}
+.cal-week{
+  display:grid;grid-template-columns:repeat(7,minmax(0,1fr));
+  height:var(--week-height,100px);gap:3px;padding-bottom:3px;
 }
 
 /* ── Cells ── */
@@ -529,7 +523,7 @@ const LM=['','正','二','三','四','五','六','七','八','九','十','十一
 const today=new Date();
 let vy=today.getFullYear(), vm=today.getMonth()+1;
 let mode='ganzhi', selectedKey=null, modalKey=null;
-let isAnimating=false, swipeBlocked=false;
+let swipeBlocked=false;
 
 // ── 干支追蹤 ──
 let gzTracked=new Set(JSON.parse(localStorage.getItem('gz_tracked')||'[]'));
@@ -603,18 +597,11 @@ function getCellTopLabels(dy,dm,dd){
 }
 
 // ── 渲染格子 ──
-function renderGrid(container, y, m){
+function renderWeek(container, weekStart){
   container.innerHTML='';
-  const firstDow=new Date(y,m-1,1).getDay();
-  const daysInMonth=new Date(y,m,0).getDate();
-  const total=Math.ceil((firstDow+daysInMonth)/7)*7;
-  container.style.gridTemplateRows=`repeat(${total/7},1fr)`;
-
-  for(let i=0;i<total;i++){
-    const offset=i-firstDow;
-    const date=new Date(y,m-1,1+offset);
+  for(let i=0;i<7;i++){
+    const date=addDays(weekStart,i);
     const dy=date.getFullYear(),dm=date.getMonth()+1,dd=date.getDate();
-    const isOther=dm!==m;
     const isTdy=dy===today.getFullYear()&&dm===today.getMonth()+1&&dd===today.getDate();
     const key=`${dy}-${String(dm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
     const dow=date.getDay();
@@ -630,7 +617,7 @@ function renderGrid(container, y, m){
     const _solRemind=getSolRemind(dm,dd);
     const solRemindLabel=_solRemind?_solRemind.label:null;
     const isSolRemind=!!solRemindLabel; // 國曆框兩種模式都顯示
-    cell.className='day-cell'+(isOther?' other-month':'')+(isTdy?' today':'')+(selectedKey===key?' selected':'')+(isTracked?' gz-tracked':'')+(isLmRemind?' lm-remind':'')+(isSolRemind&&!isTracked&&!isLmRemind?' sol-remind':'');
+    cell.className='day-cell'+(isTdy?' today':'')+(selectedKey===key?' selected':'')+(isTracked?' gz-tracked':'')+(isLmRemind?' lm-remind':'')+(isSolRemind&&!isTracked&&!isLmRemind?' sol-remind':'');
     cell.dataset.date=key;
 
     // ── 格頂標籤 ──
@@ -659,7 +646,7 @@ function renderGrid(container, y, m){
 
     const numEl=document.createElement('span');
     numEl.className='day-num';
-    numEl.textContent=dd;
+    numEl.textContent=dd===1?dm+"/1":dd;
     if(dow===0) numEl.style.color='var(--red)';
     cellLeft.appendChild(numEl);
 
@@ -698,7 +685,7 @@ function renderGrid(container, y, m){
         return km===Math.abs(lunar.getMonth())&&kd===lunar.getDay();
       })];
       const since=remind&&remind.since!=null?remind.since:null;
-      const yearCount=since!=null?` (${vy-since})`:'';
+      const yearCount=since!=null?` (${dy-since})`:'';
       const rl=document.createElement('span');
       rl.className='remind-label';
       rl.textContent=remindLabel+yearCount;
@@ -707,7 +694,7 @@ function renderGrid(container, y, m){
 
     if(solRemindLabel){
       const since=_solRemind.since!=null?_solRemind.since:null;
-      const yearCount=since!=null?` (${vy-since})`:'';
+      const yearCount=since!=null?` (${dy-since})`:'';
       const sl=document.createElement('span');
       sl.className='sol-remind-label';
       sl.textContent=solRemindLabel+yearCount;
@@ -748,14 +735,14 @@ function attachCellEvents(cell, key, dy, dm, dd, lunar){
 
   // 桌機雙擊 → 開備註
   cell.addEventListener('dblclick', e=>{
-    if(isDragging) return;
+    if(swipeBlocked) return;
     e.preventDefault();
     openModal(key, dy, dm, dd, lunar);
   });
 
   // click：桌機單擊直接選取；觸控計時雙擊
   cell.addEventListener('click', e=>{
-    if(isDragging||swipeBlocked) return;
+    if(swipeBlocked) return;
 
     if(pointerType==='touch'){
       if(movedTouch) return;
@@ -765,7 +752,7 @@ function attachCellEvents(cell, key, dy, dm, dd, lunar){
       } else {
         touchClickTimer=setTimeout(()=>{
           touchClickTimer=null;
-          handleClick(key, cell);
+          if(!swipeBlocked&&cell.isConnected) handleClick(key, cell);
         }, DBL_MS);
       }
     } else {
@@ -785,166 +772,101 @@ function updateHeader(){
   else{btn.textContent='農曆';btn.classList.remove('active');}
 }
 
-function render(){
-  updateHeader();
-  hideBubble();
-  renderGrid(document.getElementById('cal-grid'),vy,vm);
-}
-
-// ── 月份切換動畫 ──
-function calcAdjacentMonth(delta){
-  let ay=vy,am=vm+delta;
-  if(am>12){am=1;ay++;}
-  if(am<1){am=12;ay--;}
-  return {ay,am};
-}
-
-function changeMonth(delta){
-  if(isAnimating) return;
-  isAnimating=true;
-  swipeBlocked=true;
-  selectedKey=null;
-  hideBubble();
-
-  const vp=document.getElementById('cal-viewport');
-  const oldGrid=document.getElementById('cal-grid');
-  const {ay,am}=calcAdjacentMonth(delta);
-  vy=ay; vm=am;
-
-  const newGrid=document.createElement('div');
-  newGrid.className='cal-grid';
-  newGrid.style.cssText=`position:absolute;inset:0;transition:none;transform:translateY(${delta>0?'100%':'-100%'})`;
-  renderGrid(newGrid,vy,vm);
-  vp.appendChild(newGrid);
-  oldGrid.style.cssText='position:absolute;inset:0;';
-
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    const t='transform 0.34s cubic-bezier(0.25,0.46,0.45,0.94)';
-    newGrid.style.transition=t;
-    oldGrid.style.transition=t;
-    newGrid.style.transform='translateY(0)';
-    oldGrid.style.transform=`translateY(${delta>0?'-100%':'100%'})`;
-    setTimeout(()=>{
-      oldGrid.remove();
-      newGrid.id='cal-grid';
-      newGrid.style.cssText='';
-      updateHeader();
-      isAnimating=false;
-      setTimeout(()=>swipeBlocked=false,40);
-    },350);
-  }));
-}
-
-// ── 拖動換月（即時跟手）──
+// 只保留畫面附近的週列；補入前方日期時補償捲動位置。
 const viewport=document.getElementById('cal-viewport');
-let dragStartX=0, dragStartY=0;
-let dragPending=false, isDragging=false;
-let dragDir=0, adjGrid=null, adjVy=0, adjVm=0;
-let lastPointerY=0;
+const calendarGrid=document.getElementById('cal-grid');
+let firstWeek=null, weekHeight=100, weekCount=0;
+let scrollFrame=0, scrollEndTimer=null;
+const BUFFER_WEEKS=8, INITIAL_WEEKS=25, MAX_WEEKS=41;
 
-viewport.addEventListener('pointerdown', e=>{
-  if(isAnimating) return;
-  // 桌機滑鼠不啟動拖動邏輯（靠滾輪換月即可），避免 setPointerCapture 干擾點擊
-  if(e.pointerType==='mouse') return;
-  dragPending=true;
-  dragStartX=e.clientX; dragStartY=e.clientY;
-  lastPointerY=e.clientY;
-  isDragging=false; dragDir=0;
-  // setPointerCapture 只在觸控時使用，避免攔截桌機 click/dblclick
-  viewport.setPointerCapture(e.pointerId);
-},{passive:true});
-
-window.addEventListener('pointermove', e=>{
-  if(!dragPending||isAnimating) return;
-  const dy=e.clientY-dragStartY;
-  const dx=e.clientX-dragStartX;
-  lastPointerY=e.clientY;
-
-  if(!isDragging&&Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)*1.2){
-    isDragging=true;
-    dragPending=false;
-    dragDir=dy<0?1:-1;
-
-    const adj=calcAdjacentMonth(dragDir);
-    adjVy=adj.ay; adjVm=adj.am;
-    adjGrid=document.createElement('div');
-    adjGrid.className='cal-grid';
-    adjGrid.style.cssText=`position:absolute;inset:0;transform:translateY(${dragDir>0?'100%':'-100%'})`;
-    renderGrid(adjGrid,adjVy,adjVm);
-    viewport.appendChild(adjGrid);
-    const cur=document.getElementById('cal-grid');
-    if(cur) cur.style.cssText='position:absolute;inset:0;';
+function addDays(date,days){
+  return new Date(date.getFullYear(),date.getMonth(),date.getDate()+days,12);
+}
+function weekOf(date){ return addDays(date,-date.getDay()); }
+function topDate(){
+  return addDays(firstWeek,Math.floor(viewport.scrollTop/weekHeight)*7);
+}
+function makeWeek(date){
+  const row=document.createElement('div');
+  row.className='cal-week';
+  renderWeek(row,date);
+  return row;
+}
+function updateVisibleMonth(){
+  // 頂端週列跨月時顯示新月份，跳轉月初也能立即看到目標月份。
+  const date=addDays(topDate(),6);
+  vy=date.getFullYear();vm=date.getMonth()+1;
+  updateHeader();
+}
+function buildCalendar(date,offset=0){
+  firstWeek=addDays(weekOf(date),-BUFFER_WEEKS*7);
+  weekCount=INITIAL_WEEKS;
+  const rows=document.createDocumentFragment();
+  for(let i=0;i<weekCount;i++) rows.appendChild(makeWeek(addDays(firstWeek,i*7)));
+  calendarGrid.replaceChildren(rows);
+  viewport.scrollTop=BUFFER_WEEKS*weekHeight+offset;
+  updateVisibleMonth();
+}
+function render(){
+  hideBubble();
+  if(firstWeek){
+    const date=topDate(),offset=viewport.scrollTop%weekHeight;
+    buildCalendar(date,offset);
+  }else{
+    weekHeight=Math.max(72,Math.round(viewport.clientHeight/6));
+    calendarGrid.style.setProperty('--week-height',weekHeight+'px');
+    buildCalendar(new Date(vy,vm-1,1,12));
   }
-
-  if(isDragging){
-    const curDy=e.clientY-dragStartY;
-    const cur=document.getElementById('cal-grid');
-    const adjStart=dragDir>0?viewport.offsetHeight:-viewport.offsetHeight;
-    if(cur) cur.style.transform=`translateY(${curDy}px)`;
-    if(adjGrid) adjGrid.style.transform=`translateY(${adjStart+curDy}px)`;
+}
+function changeMonth(delta){
+  selectedKey=null;hideBubble();
+  buildCalendar(new Date(vy,vm-1+delta,1,12));
+}
+function extendCalendar(){
+  if(viewport.scrollTop<weekHeight*3){
+    const rows=document.createDocumentFragment();
+    firstWeek=addDays(firstWeek,-BUFFER_WEEKS*7);
+    for(let i=0;i<BUFFER_WEEKS;i++) rows.appendChild(makeWeek(addDays(firstWeek,i*7)));
+    calendarGrid.prepend(rows);
+    weekCount+=BUFFER_WEEKS;
+    viewport.scrollTop+=BUFFER_WEEKS*weekHeight;
+    while(weekCount>MAX_WEEKS){calendarGrid.lastElementChild.remove();weekCount--;}
   }
+  if(viewport.scrollHeight-viewport.scrollTop-viewport.clientHeight<weekHeight*3){
+    const rows=document.createDocumentFragment();
+    for(let i=0;i<BUFFER_WEEKS;i++) rows.appendChild(makeWeek(addDays(firstWeek,(weekCount+i)*7)));
+    calendarGrid.appendChild(rows);
+    weekCount+=BUFFER_WEEKS;
+    const excess=Math.max(0,weekCount-MAX_WEEKS);
+    for(let i=0;i<excess;i++) calendarGrid.firstElementChild.remove();
+    if(excess){
+      firstWeek=addDays(firstWeek,excess*7);
+      weekCount-=excess;
+      viewport.scrollTop-=excess*weekHeight;
+    }
+  }
+}
+viewport.addEventListener('scroll',()=>{
+  hideBubble();swipeBlocked=true;
+  clearTimeout(scrollEndTimer);
+  scrollEndTimer=setTimeout(()=>swipeBlocked=false,150);
+  if(scrollFrame) return;
+  scrollFrame=requestAnimationFrame(()=>{
+    scrollFrame=0;
+    extendCalendar();
+    updateVisibleMonth();
+  });
 },{passive:true});
-
-function endDrag(e){
-  if(!dragPending&&!isDragging) return;
-  dragPending=false;
-  if(!isDragging) return;
-  isDragging=false;
-
-  const totalDy=(e.clientY??lastPointerY)-dragStartY;
-  swipeBlocked=true;
-  setTimeout(()=>swipeBlocked=false,80);
-
-  const movedEnough=Math.abs(totalDy)>2;
-  const sameDir=(dragDir>0&&totalDy<0)||(dragDir<0&&totalDy>0);
-  if(movedEnough&&sameDir) completeSlide(dragDir);
-  else snapBack();
-}
-
-window.addEventListener('pointerup', endDrag);
-window.addEventListener('pointercancel', e=>{
-  dragPending=false;
-  if(!isDragging) return;
-  isDragging=false;
-  snapBack();
-});
-
-function completeSlide(dir){
-  isAnimating=true;
-  vy=adjVy; vm=adjVm;
-  const cur=document.getElementById('cal-grid');
-  const t='transform 0.24s cubic-bezier(0.25,0.46,0.45,0.94)';
-  if(cur){cur.style.transition=t;cur.style.transform=`translateY(${dir>0?'-100%':'100%'})`;}
-  if(adjGrid){adjGrid.style.transition=t;adjGrid.style.transform='translateY(0)';}
-  setTimeout(()=>{
-    if(cur) cur.remove();
-    if(adjGrid){adjGrid.id='cal-grid';adjGrid.style.cssText='';adjGrid=null;}
-    selectedKey=null;
-    updateHeader();
-    isAnimating=false;
-  },250);
-}
-
-function snapBack(){
-  const cur=document.getElementById('cal-grid');
-  const t='transform 0.2s cubic-bezier(0.25,0.46,0.45,0.94)';
-  if(cur){cur.style.transition=t;cur.style.transform='translateY(0)';}
-  if(adjGrid){adjGrid.style.transition=t;adjGrid.style.transform=`translateY(${dragDir>0?'100%':'-100%'})`;}
-  setTimeout(()=>{
-    if(cur) cur.removeAttribute('style');
-    if(adjGrid){adjGrid.remove();adjGrid=null;}
-  },210);
-}
-
-// ── 滾輪 ──
-let lastWheel=0;
-viewport.addEventListener('wheel', e=>{
-  e.preventDefault();
-  const now=Date.now();
-  if(isAnimating||now-lastWheel<380) return;
-  lastWheel=now;
-  changeMonth(e.deltaY>0?1:-1);
-},{passive:false});
+// 旋轉螢幕或外層導覽列改變高度時，保留頂端週與週內位置。
+new ResizeObserver(()=>{
+  if(!firstWeek||!viewport.clientHeight) return;
+  const nextHeight=Math.max(72,Math.round(viewport.clientHeight/6));
+  if(Math.abs(nextHeight-weekHeight)<0.5) return;
+  const date=topDate(),fraction=(viewport.scrollTop%weekHeight)/weekHeight;
+  weekHeight=nextHeight;
+  calendarGrid.style.setProperty('--week-height',weekHeight+'px');
+  buildCalendar(date,fraction*weekHeight);
+}).observe(viewport);
 
 // ── 點擊與泡泡 ──
 function handleClick(key,el){
@@ -1041,15 +963,13 @@ function jumpToDate(){
   const m=parseInt(document.getElementById('jump-month').value);
   if(y>=1900&&y<=2100&&m>=1&&m<=12){
     vy=y;vm=m;closeJumpModal();selectedKey=null;
-    updateHeader();hideBubble();
-    renderGrid(document.getElementById('cal-grid'),vy,vm);
+    hideBubble();buildCalendar(new Date(y,m-1,1,12));
   }
 }
 function goToToday(){
   vy=today.getFullYear();vm=today.getMonth()+1;
   selectedKey=null;closeJumpModal();
-  updateHeader();hideBubble();
-  renderGrid(document.getElementById('cal-grid'),vy,vm);
+  hideBubble();buildCalendar(today);
 }
 
 // ── IO Modal ──
