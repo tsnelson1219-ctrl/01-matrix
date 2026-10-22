@@ -33,6 +33,9 @@
             overflow: hidden; 
             user-select: none; -webkit-user-select: none;
         }
+        /* 頁面背景鋪滿 iframe，避免 body 被根元素的 flex 置中縮窄。 */
+        html { display: block; }
+        body { width: 100%; }
 
         /* 圓盤區：佔滿剩餘空間並內部居中，高度不受下方面板影響 */
         .disc-section {
