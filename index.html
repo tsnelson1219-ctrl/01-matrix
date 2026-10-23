@@ -144,7 +144,7 @@
         {"name":"十神五極","file":"101010.html","themeClass":"dark-theme","darkClass":true,"themeControl":".theme-btn"},
         {"name":"地支藏干","file":"12 h.html","themeClass":"light-theme","darkClass":false,"themeControl":".theme-switch"},
         {"name":"12長生","file":"12life.html","themeClass":"light-theme","darkClass":false,"themeControl":".theme-switch"},
-        {"name":"九宮飛星","file":"9P.html","themeClass":"light-mode","darkClass":false,"themeControl":".theme-toggle"}
+        {"name":"九宮飛星","file":"Matrix_九宮飛星_流年羅盤與宅盤_v2.html","themeClass":"light","darkClass":false,"themeControl":".head-actions"}
     ];
 
     let currentIndex = 0;
@@ -203,6 +203,7 @@
         const doc = frame.contentDocument;
         if (!doc || !doc.body) return;
         const app = apps[Number(frame.dataset.appIndex)];
+        doc.documentElement.classList.add('matrix-embedded');
         doc.body.classList.toggle(app.themeClass,
             app.darkClass ? currentTheme === 'dark' : currentTheme === 'light');
 
@@ -214,6 +215,7 @@
             doc.head.appendChild(style);
         }
         style.textContent = app.themeControl + ' { visibility: hidden !important; pointer-events: none !important; }';
+        frame.contentWindow.dispatchEvent(new frame.contentWindow.CustomEvent('matrix:theme', {detail: {theme: currentTheme}}));
     }
 
     function prepareFrame(frame) {
