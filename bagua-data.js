@@ -12,6 +12,9 @@ window.BAGUA_DATA = {
     '坤': {nature:'地',lines:[0,0,0],element:'土',meaning:'承載、包容、順勢成就。'}
   },
   directions:['北','東北','東','東南','南','西南','西','西北'],
+  families:{'乾':'父','坤':'母','震':'長男','坎':'中男','艮':'少男','巽':'長女','離':'中女','兌':'少女'},
+  // Independent six-part reference ring, not an eight-trigram correspondence.
+  sixQi:['厥陰','少陰','太陰','少陽','陽明','太陽'],
   arrangements:{later:['坎','艮','震','巽','離','坤','兌','乾'],earlier:['坤','震','離','兌','乾','巽','坎','艮']},
   // Plain-language summaries are editorial notes, not quotations or line divination.
   hexagrams:[

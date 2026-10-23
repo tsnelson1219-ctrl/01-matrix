@@ -26,7 +26,7 @@ main{max-width:800px;margin:auto;padding:12px 18px 30px}
 .compass-wrap{position:relative;max-width:680px;aspect-ratio:1;margin:26px auto 0}
 #compass{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
 #compass.dragging{cursor:grabbing}
-.reset-north{position:absolute;top:calc(5.882353% - 30px);left:50%;transform:translateX(-50%);width:40px;height:36px;border:0;padding:0;display:flex;align-items:center;justify-content:center;color:var(--upper);z-index:1}
+.reset-north{position:absolute;top:calc(4.411765% - 30px);left:50%;transform:translateX(-50%);width:40px;height:36px;border:0;padding:0;display:flex;align-items:center;justify-content:center;color:var(--upper);z-index:1}
 .reset-north::before{content:'';width:20px;height:16px;background:currentColor;clip-path:polygon(0 0,100% 0,50% 100%)}
 .sector{fill:var(--panel);fill-opacity:.65;stroke:var(--line);stroke-width:1}
 #compass [tabindex]:focus{outline:none}
@@ -36,9 +36,14 @@ main{max-width:800px;margin:auto;padding:12px 18px 30px}
 .gua.is-lower .sector{fill:var(--lower);fill-opacity:.12;stroke:var(--lower);stroke-width:2}
 .gua.is-both .sector{fill:var(--gold);fill-opacity:.15;stroke:var(--gold);stroke-width:2}
 .gua.is-holding .sector{stroke:var(--gold);stroke-width:4}
+.band{fill:var(--panel);stroke:var(--line);stroke-width:1}
+.family-label{font-size:18px;dominant-baseline:central}
+.qi-label{font-size:17px;dominant-baseline:central}
+.yin-label{fill:var(--lower)}.yang-label{fill:var(--upper)}
+.ring-guide{font-size:11px;color:var(--muted);text-align:center;margin:0 0 8px}
 .direction{fill:var(--muted);font-size:16px;dominant-baseline:central}
-.gua-name{fill:var(--gold);font-size:24px;font-weight:600;dominant-baseline:central}
-.gua-nature{fill:var(--muted);font-size:15px;dominant-baseline:central}
+.gua-name{fill:var(--gold);font-size:22px;font-weight:600;dominant-baseline:central}
+.gua-nature{fill:var(--muted);font-size:13px;dominant-baseline:central}
 .yao{fill:var(--ink)}
 #compassCenter{cursor:pointer}
 #compassCenter:hover .center-ring,#compassCenter:focus-visible .center-ring{stroke:var(--upper);stroke-width:2.5}
@@ -71,7 +76,7 @@ details{font-size:11px;color:var(--muted);margin-top:15px}summary{cursor:pointer
 <main>
  <div class="toolbar"><div class="modes" aria-label="八卦排列"><button type="button" data-mode="later" class="active" aria-pressed="true">後天八卦</button><button type="button" data-mode="earlier" aria-pressed="false">先天八卦</button></div><output id="angle" class="angle" aria-label="盤面旋轉角度">0°</output></div>
  <section class="chart-panel" aria-label="八卦方位盤">
-  <div class="compass-wrap"><button class="reset-north" id="resetNorth" type="button" title="北向重置" aria-label="北向重置"></button><svg id="compass" viewBox="0 0 680 680" role="group" aria-label="可拖曳旋轉的八卦盤" aria-describedby="status"><g id="rotating"></g></svg></div>
+  <div class="compass-wrap"><button class="reset-north" id="resetNorth" type="button" title="北向重置" aria-label="北向重置"></button><svg id="compass" viewBox="0 0 680 680" role="group" aria-label="可拖曳旋轉的八卦盤" aria-describedby="status"><g id="rotating"></g></svg></div><p class="ring-guide">方位 · 八卦 · 六親 · 六氣（獨立六分）</p>
  </section>
  <section class="selection" aria-label="上下卦組合">
   <div class="selection-head"><button class="slot upper" id="upperSlot" type="button" aria-pressed="false">上卦 · —</button><button class="slot lower" id="lowerSlot" type="button" aria-pressed="false">下卦 · —</button><button class="clear" id="clear" type="button">清除</button></div>
@@ -81,7 +86,7 @@ details{font-size:11px;color:var(--muted);margin-top:15px}summary{cursor:pointer
    <h3 class="keyword" id="keyword"></h3><p class="meaning" id="meaning"></p><p class="footnote">卦義簡析 · 未指定動爻</p>
   </article>
  </section>
- <details><summary>操作與資料</summary><p>拖曳轉盤對位，點上方三角形回到北向，點中央太極取消選取。長按約半秒選上卦，再點任一卦選下卦；同一卦也能重疊成卦。也可先點「上卦」或「下卦」，再選盤面。盤面只做手動對位。</p><p>鍵盤：以 Tab 選卦，空白鍵選上卦，Enter 點選；左右方向鍵旋轉，Home 回正。切換排列會保留已選上下卦。</p><p>後天方位依<a href="https://zh.wikisource.org/zh-hant/周易/說卦" target="_blank" rel="noopener">《說卦傳》</a>；先天方位參照<a href="https://tcmb.culture.tw/zh-tw/detail?id=648564&amp;indexCode=Culture_Invisible" target="_blank" rel="noopener">國家文化記憶庫</a>。卦名與上下卦對照參照<a href="https://zh.wikisource.org/zh-hant/周易" target="_blank" rel="noopener">《周易》</a>。白話解釋為本工具整理。</p></details>
+ <details><summary>操作與資料</summary><p>拖曳轉盤對位，點上方三角形回到北向，點中央太極取消選取。長按約半秒選上卦，再點任一卦選下卦；同一卦也能重疊成卦。也可先點「上卦」或「下卦」，再選盤面。盤面只做手動對位。</p><p>鍵盤：以 Tab 選卦，空白鍵選上卦，Enter 點選；左右方向鍵旋轉，Home 回正。切換排列會保留已選上下卦。</p><p>後天方位依<a href="https://zh.wikisource.org/zh-hant/周易/說卦" target="_blank" rel="noopener">《說卦傳》</a>；先天方位參照<a href="https://tcmb.culture.tw/zh-tw/detail?id=648564&amp;indexCode=Culture_Invisible" target="_blank" rel="noopener">國家文化記憶庫</a>。卦名與上下卦對照參照<a href="https://zh.wikisource.org/zh-hant/周易" target="_blank" rel="noopener">《周易》</a>。白話解釋為本工具整理。</p><p>六親環依《說卦傳》的父母、三男三女。六氣另作獨立六分環，依厥陰、少陰、太陰、少陽、陽明、太陽的環序列示，參照<a href="https://yibian.hopto.org/tw/shu/?sid=4459" target="_blank" rel="noopener">《素問・六微旨大論》</a>；不代表與八卦、地理方位的一對一配屬，也不推算當年的司天在泉。</p></details>
 </main>
 <script src="bagua-data.js"></script>
 <script>
@@ -92,10 +97,25 @@ const hexLookup=new Map(D.hexagrams.map((h,i)=>[h[1]+h[2],{data:h,number:i+1}]))
 let labels=[],gesture=null,longTimer=null;
 function svg(tag,attrs={},text){const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;return e;}
 function polar(r,deg){const a=(deg-90)*Math.PI/180;return [340+r*Math.cos(a),340+r*Math.sin(a)];}
-function sectorPath(i){const a=i*45-22.5,b=i*45+22.5,p=(r,d)=>polar(r,d).join(' ');return `M ${p(85,a)} L ${p(300,a)} A 300 300 0 0 1 ${p(300,b)} L ${p(85,b)} A 85 85 0 0 0 ${p(85,a)} Z`;}
+function annularPath(inner,outer,first,last){const p=(r,d)=>polar(r,d).join(' ');return `M ${p(inner,first)} L ${p(outer,first)} A ${outer} ${outer} 0 0 1 ${p(outer,last)} L ${p(inner,last)} A ${inner} ${inner} 0 0 0 ${p(inner,first)} Z`;}
+function sectorPath(i){return annularPath(150,260,i*45-22.5,i*45+22.5);}
 function drawLines(root,lines,x,y,width,gap,height,spacing,css){for(let row=0;row<lines.length;row++){const bit=lines[lines.length-1-row],yy=y+row*spacing;if(bit)root.append(svg('rect',{x,y:yy,width,height,rx:1,class:css}));else{const half=(width-gap)/2;root.append(svg('rect',{x,y:yy,width:half,height,rx:1,class:css}),svg('rect',{x:x+half+gap,y:yy,width:half,height,rx:1,class:css}));}}}
-function buildCompass(){const root=$('rotating');root.replaceChildren();labels=[];D.arrangements[state.mode].forEach((name,i)=>{const t=D.trigrams[name],g=svg('g',{class:'gua','data-gua':name,role:'button',tabindex:0,'aria-label':`${name}卦，${t.nature}，${D.directions[i]}方；空白鍵選上卦，Enter 點選`});g.append(svg('path',{d:sectorPath(i),class:'sector'}));const [x,y]=polar(194,i*45),label=svg('g',{'pointer-events':'none'});drawLines(label,t.lines,-40,-44,80,14,8,16,'yao');label.append(svg('text',{x:0,y:23,'text-anchor':'middle',class:'gua-name'},name),svg('text',{x:0,y:51,'text-anchor':'middle',class:'gua-nature'},t.nature+' · '+t.element));g.append(label);labels.push({el:label,x,y});const [dx,dy]=polar(278,i*45),dir=svg('text',{'text-anchor':'middle',class:'direction','pointer-events':'none'},D.directions[i]);root.append(g,dir);labels.push({el:dir,x:dx,y:dy});});
- const center=svg('g',{role:'button',tabindex:0,'aria-label':'取消選取上下卦'});center.append(svg('title',{},'取消選取'));center.append(svg('circle',{cx:340,cy:340,r:85,class:'center-ring'}));const tai=svg('g',{transform:'translate(340 340)'});tai.append(svg('circle',{r:42,class:'taiji-light'}),svg('path',{d:'M0 -42 A42 42 0 0 1 0 42 A21 21 0 0 1 0 0 A21 21 0 0 0 0 -42',class:'taiji-dark'}),svg('circle',{cx:0,cy:-21,r:6,class:'taiji-dark'}),svg('circle',{cx:0,cy:21,r:6,class:'taiji-light'}));center.append(tai);root.append(center);center.id='compassCenter';paintRotation();paintSelection();}
+function buildCompass(){
+ const root=$('rotating');root.replaceChildren();labels=[];
+ D.arrangements[state.mode].forEach((name,i)=>{
+  const t=D.trigrams[name],g=svg('g',{class:'gua','data-gua':name,role:'button',tabindex:0,'aria-label':`${name}卦，${t.nature}，${D.families[name]}，${D.directions[i]}方；空白鍵選上卦，Enter 點選`}),a=i*45;
+  g.append(svg('path',{d:sectorPath(i),class:'sector'}),svg('path',{d:annularPath(260,310,a-22.5,a+22.5),class:'band direction-cell'}),svg('path',{d:annularPath(105,150,a-22.5,a+22.5),class:'band family-cell'}));
+  const [x,y]=polar(205,a),label=svg('g',{'pointer-events':'none'});
+  drawLines(label,t.lines,-32,-35,64,12,6,12,'yao');
+  label.append(svg('text',{x:0,y:18,'text-anchor':'middle',class:'gua-name'},name),svg('text',{x:0,y:41,'text-anchor':'middle',class:'gua-nature'},t.nature+' · '+t.element));g.append(label);labels.push({el:label,x,y});
+  const [dx,dy]=polar(285,a),dir=svg('text',{'text-anchor':'middle',class:'direction','pointer-events':'none'},D.directions[i]);g.append(dir);labels.push({el:dir,x:dx,y:dy});
+  const [fx,fy]=polar(127.5,a),family=svg('text',{'text-anchor':'middle',class:'family-label '+('乾震坎艮'.includes(name)?'yang-label':'yin-label'),'pointer-events':'none'},D.families[name]);g.append(family);labels.push({el:family,x:fx,y:fy});root.append(g);
+ });
+ const qiRing=svg('g',{'aria-label':'六氣獨立六分環','pointer-events':'none'});
+ D.sixQi.forEach((name,i)=>{const a=i*60,[x,y]=polar(76.5,a),text=svg('text',{'text-anchor':'middle',class:'qi-label '+(name.includes('陰')?'yin-label':'yang-label')},name);qiRing.append(svg('path',{d:annularPath(48,105,a-30,a+30),class:'band qi-cell'}),text);labels.push({el:text,x,y});});root.append(qiRing);
+ const center=svg('g',{id:'compassCenter',role:'button',tabindex:0,'aria-label':'取消選取上下卦'});center.append(svg('title',{},'取消選取'),svg('circle',{cx:340,cy:340,r:48,class:'center-ring'}));
+ const tai=svg('g',{transform:'translate(340 340) scale(.68)'});tai.append(svg('circle',{r:42,class:'taiji-light'}),svg('path',{d:'M0 -42 A42 42 0 0 1 0 42 A21 21 0 0 1 0 0 A21 21 0 0 0 0 -42',class:'taiji-dark'}),svg('circle',{cx:0,cy:-21,r:6,class:'taiji-dark'}),svg('circle',{cx:0,cy:21,r:6,class:'taiji-light'}));center.append(tai);root.append(center);paintRotation();paintSelection();
+}
 function paintRotation(){const r=state.rotation;$('rotating').setAttribute('transform',`rotate(${r} 340 340)`);for(const l of labels)l.el.setAttribute('transform',`translate(${l.x} ${l.y}) rotate(${-r})`);$('compassCenter').setAttribute('transform',`rotate(${-r} 340 340)`);$('angle').textContent=((r%360+360)%360).toFixed(0)+'°';}
 function paintSelection(){for(const g of document.querySelectorAll('.gua')){const n=g.dataset.gua,u=n===state.upper,l=n===state.lower;g.classList.toggle('is-upper',u);g.classList.toggle('is-lower',l);g.classList.toggle('is-both',u&&l);g.setAttribute('aria-pressed',String(u||l));}$('upperSlot').textContent='上卦 · '+(state.upper||'—');$('lowerSlot').textContent='下卦 · '+(state.lower||'—');$('upperSlot').setAttribute('aria-pressed',String(state.target==='upper'));$('lowerSlot').setAttribute('aria-pressed',String(state.target==='lower'));}
 function renderResult(){const found=hexLookup.get(state.upper+state.lower);$('result').hidden=!found;if(!found)return;const {data:h,number:n}=found,up=D.trigrams[state.upper],low=D.trigrams[state.lower],root=$('hexagram');root.replaceChildren();drawLines(root,up.lines,4,5,72,12,9,18,'upper-yao');drawLines(root,low.lines,4,65,72,12,9,18,'lower-yao');root.setAttribute('aria-label',`${h[0]}卦，上${state.upper}下${state.lower}，六爻由下往上讀`);$('hexNumber').textContent='第 '+n+' 卦';$('hexTitle').textContent=state.upper===state.lower?h[0]+'為'+up.nature:up.nature+low.nature+h[0];$('composition').textContent=`上${state.upper}（${up.nature}）· 下${state.lower}（${low.nature}）`;$('keyword').textContent=h[3];$('meaning').textContent=h[4];}
