@@ -49,6 +49,11 @@ body:not(.annual-mode) .annual-only{display:none!important}
 
 .annual-mode .settings .section{grid-column:1/-1}
 .annual-mode .chart-panel{padding-top:10px}
+.annual-mode .canvas{margin-top:40px}
+.annual-reset-marker{display:none;position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:40px;height:36px;padding:0;border:0;background:transparent;color:var(--fire);align-items:center;justify-content:center;z-index:2}
+.annual-mode .annual-reset-marker{display:flex}
+.annual-reset-marker::before{content:'';width:20px;height:16px;background:currentColor;clip-path:polygon(0 0,100% 0,50% 100%)}
+.annual-reset-marker:hover{background:transparent;color:var(--gold)}
 .annual-mode .detail-panel{display:block}
 .annual-mode .detail-panel>.section{border-right:0;border-bottom:1px solid var(--line)}
 .annual-mode .detail-panel>.section:last-child{border-bottom:0}
@@ -97,8 +102,8 @@ html.matrix-embedded .head-actions { display: none; }
  <div class="chart-head"><div class="chart-name" id="chartName"></div><div class="segments house-only" aria-label="顯示圖層"><button data-view="both" class="active" aria-pressed="true">宅盤＋流年</button><button data-view="house" aria-pressed="false">宅盤</button></div></div>
  <div class="chart-panel"><div class="legend house-only"><span class="mountain"><i class="dot"></i>山星</span><span class="facing"><i class="dot"></i>向星</span><span class="base"><i class="dot"></i>運星</span><span class="annual"><i class="dot"></i>流年</span></div>
  <div class="canvas" id="canvas"><svg id="chart" viewBox="0 0 720 720" role="group" aria-label="宅盤與流年九宮圖"><defs><clipPath id="mapClip"><circle cx="360" cy="360" r="260"/></clipPath></defs><g clip-path="url(#mapClip)"><image id="floorImage" preserveAspectRatio="xMidYMid meet"/></g><g id="rings"></g><g id="palaces"></g><g id="directionArrow"></g></svg>
- <svg id="annualCompass" viewBox="0 0 720 720" role="img" aria-label="可旋轉的流年八方位星盤；也可使用下方的方位按鈕選取" tabindex="0"><defs><clipPath id="annualClip"><circle cx="360" cy="360" r="303"/></clipPath></defs><g clip-path="url(#annualClip)"><image id="annualFloorImage" preserveAspectRatio="xMidYMid meet"/></g><g id="annualRotating"></g><g id="annualNorthMarker"><path d="M360 26 L351 43 L369 43Z" fill="var(--fire)"/><text x="360" y="18" fill="var(--fire)" text-anchor="middle" font-size="15" font-weight="bold">畫面上方</text></g></svg></div>
- <div class="annual-tools annual-only"><button id="annualZoomOut" aria-label="縮小流年羅盤">－</button><button id="annualZoomIn" aria-label="放大流年羅盤">＋</button><span class="tool-readout" id="annualRotationLabel">旋轉 0°</span><button id="annualReset">北向重置</button></div>
+ <button id="annualReset" class="annual-reset-marker" type="button" aria-label="北向重置" title="北向重置"></button><svg id="annualCompass" viewBox="0 0 720 720" role="img" aria-label="可旋轉的流年八方位星盤；也可使用下方的方位按鈕選取" tabindex="0"><defs><clipPath id="annualClip"><circle cx="360" cy="360" r="303"/></clipPath></defs><g clip-path="url(#annualClip)"><image id="annualFloorImage" preserveAspectRatio="xMidYMid meet"/></g><g id="annualRotating"></g></svg></div>
+ <div class="annual-tools annual-only"><button id="annualZoomOut" aria-label="縮小流年羅盤">－</button><button id="annualZoomIn" aria-label="放大流年羅盤">＋</button><span class="tool-readout" id="annualRotationLabel">旋轉 0°</span></div>
  <div class="annual-mobile-summary annual-only" id="annualMobileSummary" aria-label="流年八方星曜速覽"></div>
  <div class="map-handles"><button id="mapMode" disabled aria-pressed="false">移動底圖</button><button id="centerMap" disabled>對齊中心</button></div><p class="map-hint" id="mapHint">點選一宮，查看四層星數與自己的註記。</p>
  </div><div class="chart-foot"><span id="northTip">流年盤可自由旋轉；方向標籤會跟著旋轉。宅盤一律北在上。</span><span id="chartSummary"></span></div><p class="warning" id="warning" hidden></p>
