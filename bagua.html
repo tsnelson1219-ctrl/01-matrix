@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MATRIX · 八卦</title>
 <style>
-:root{color-scheme:dark;--bg:#0f0e0c;--panel:#181612;--card:#211e18;--ink:#e8dfcf;--muted:#a39883;--line:#514632;--ring-line:#78664b;--gold:#d4a75b;--upper:#dd8c75;--lower:#73b8a2}
-body.light{color-scheme:light;--bg:#f5f0e5;--panel:#fffaf0;--card:#eee6d5;--ink:#3e372b;--muted:#796e5b;--line:#c4b18c;--ring-line:#b19a70;--gold:#b48625;--upper:#ac5841;--lower:#307966}
+:root{color-scheme:dark;--bg:#0f0e0c;--panel:#181612;--card:#211e18;--ink:#e8dfcf;--muted:#a39883;--line:#514632;--ring-line:#78664b;--gold:#d4a75b;--upper:#dd8c75;--lower:#73b8a2;--yang-line:#ef8272;--gua-fill:#292316}
+body.light{color-scheme:light;--bg:#f5f0e5;--panel:#fffaf0;--card:#eee6d5;--ink:#3e372b;--muted:#796e5b;--line:#c4b18c;--ring-line:#b19a70;--gold:#b48625;--upper:#ac5841;--lower:#307966;--yang-line:#be4034;--gua-fill:#f1e5c7}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.65 "Microsoft JhengHei","PingFang TC",sans-serif}
 button{font:inherit;color:var(--muted);background:transparent;border:1.5px solid var(--line);border-radius:7px;padding:6px 12px;cursor:pointer}
@@ -28,7 +28,7 @@ main{max-width:800px;margin:auto;padding:12px 18px 30px}
 #compass.dragging{cursor:grabbing}
 .reset-north{position:absolute;top:calc(4.411765% - 30px);left:50%;transform:translateX(-50%);width:40px;height:36px;border:0;padding:0;display:flex;align-items:center;justify-content:center;color:var(--upper);z-index:1}
 .reset-north::before{content:'';width:20px;height:16px;background:currentColor;clip-path:polygon(0 0,100% 0,50% 100%)}
-.sector{fill:var(--panel);fill-opacity:.65;stroke:var(--gold);stroke-width:3.2}
+.sector{fill:var(--gua-fill);fill-opacity:1;stroke:var(--gold);stroke-width:3.2}
 #compass [tabindex]:focus{outline:none}
 .gua{cursor:pointer;outline:none}
 .gua:hover .sector,.gua:focus-visible .sector{fill:var(--card);stroke:var(--gold);stroke-width:3.8}
@@ -60,6 +60,7 @@ main{max-width:800px;margin:auto;padding:12px 18px 30px}
 .result-top{display:flex;align-items:center;gap:20px;margin-bottom:12px}
 #hexagram{width:80px;height:124px;flex-shrink:0}
 .upper-yao{fill:var(--upper)}.lower-yao{fill:var(--lower)}
+rect.yang-yao{fill:var(--yang-line)}
 .number{font-size:11px;color:var(--muted);letter-spacing:1px}
 .hex-title{font-size:28px;color:var(--gold);font-weight:500;letter-spacing:2px;margin:0 0 2px}
 .composition{font-size:12px;color:var(--muted)}
@@ -99,7 +100,7 @@ function svg(tag,attrs={},text){const e=document.createElementNS(NS,tag);for(con
 function polar(r,deg){const a=(deg-90)*Math.PI/180;return [340+r*Math.cos(a),340+r*Math.sin(a)];}
 function annularPath(inner,outer,first,last){const p=(r,d)=>polar(r,d).join(' ');return `M ${p(inner,first)} L ${p(outer,first)} A ${outer} ${outer} 0 0 1 ${p(outer,last)} L ${p(inner,last)} A ${inner} ${inner} 0 0 0 ${p(inner,first)} Z`;}
 function sectorPath(i){return annularPath(150,260,i*45-22.5,i*45+22.5);}
-function drawLines(root,lines,x,y,width,gap,height,spacing,css){for(let row=0;row<lines.length;row++){const bit=lines[lines.length-1-row],yy=y+row*spacing;if(bit)root.append(svg('rect',{x,y:yy,width,height,rx:1,class:css}));else{const half=(width-gap)/2;root.append(svg('rect',{x,y:yy,width:half,height,rx:1,class:css}),svg('rect',{x:x+half+gap,y:yy,width:half,height,rx:1,class:css}));}}}
+function drawLines(root,lines,x,y,width,gap,height,spacing,css){for(let row=0;row<lines.length;row++){const bit=lines[lines.length-1-row],yy=y+row*spacing;if(bit)root.append(svg('rect',{x,y:yy,width,height,rx:1,class:css+' yang-yao'}));else{const half=(width-gap)/2;root.append(svg('rect',{x,y:yy,width:half,height,rx:1,class:css}),svg('rect',{x:x+half+gap,y:yy,width:half,height,rx:1,class:css}));}}}
 function buildCompass(){
  const root=$('rotating');root.replaceChildren();labels=[];
  D.arrangements[state.mode].forEach((name,i)=>{
