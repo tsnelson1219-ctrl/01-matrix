@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MATRIX · 八卦</title>
 <style>
-:root{color-scheme:dark;--bg:#0f0e0c;--panel:#181612;--card:#211e18;--ink:#e8dfcf;--muted:#a39883;--line:#514632;--ring-line:#78664b;--gold:#d4a75b;--upper:#dd8c75;--lower:#73b8a2;--yang-line:#ef8272;--gua-fill:#292316;--gua-stroke:#73b8a2;--select-upper:#613a2f;--select-lower:#244d40;--select-both:#59491f;--select-hold:#486b5b}
-body.light{color-scheme:light;--bg:#f5f0e5;--panel:#fffaf0;--card:#eee6d5;--ink:#3e372b;--muted:#796e5b;--line:#c4b18c;--ring-line:#b19a70;--gold:#b48625;--upper:#ac5841;--lower:#307966;--yang-line:#be4034;--gua-fill:#f1e5c7;--gua-stroke:#b48625;--select-upper:#eed0b5;--select-lower:#c9ddce;--select-both:#e6c477;--select-hold:#e2bc68}
+:root{color-scheme:dark;--bg:#0f0e0c;--panel:#181612;--card:#211e18;--ink:#e8dfcf;--muted:#a39883;--line:#514632;--ring-line:#78664b;--gold:#d4a75b;--upper:#dd8c75;--lower:#73b8a2;--yang-line:#ef8272;--gua-fill:#292316;--gua-stroke:#73b8a2;--select-upper:#613a2f;--select-lower:#244d40;--select-both:#59491f;--select-hold:#486b5b;--gua-dim-fill:#1b1914}
+body.light{color-scheme:light;--bg:#f5f0e5;--panel:#fffaf0;--card:#eee6d5;--ink:#3e372b;--muted:#796e5b;--line:#c4b18c;--ring-line:#b19a70;--gold:#b48625;--upper:#ac5841;--lower:#307966;--yang-line:#be4034;--gua-fill:#f1e5c7;--gua-stroke:#b48625;--select-upper:#eed0b5;--select-lower:#c9ddce;--select-both:#e6c477;--select-hold:#e2bc68;--gua-dim-fill:#f9f3e6}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.65 "Microsoft JhengHei","PingFang TC",sans-serif}
 button{font:inherit;color:var(--muted);background:transparent;border:1.5px solid var(--line);border-radius:7px;padding:6px 12px;cursor:pointer}
@@ -41,7 +41,10 @@ main{max-width:800px;margin:auto;padding:12px 18px 30px}
 .symbol-label{font-size:16px;dominant-baseline:central}
 .yin-label{fill:var(--lower)}.yang-label{fill:var(--upper)}
 .ring-guide{font-size:11px;color:var(--muted);text-align:center;margin:0 0 8px}
-.direction{fill:var(--muted);font-size:16px;dominant-baseline:central}
+.has-selection .gua:not(.is-upper):not(.is-lower) .sector{fill:var(--gua-dim-fill);fill-opacity:1;stroke:var(--gua-stroke);stroke-width:1.2}
+#rotating.has-selection .gua:focus-visible .sector{stroke-width:2.5}
+#rotating.has-selection .gua.is-holding .sector{fill:var(--select-hold);stroke:var(--gold);stroke-width:5.2}
+.direction{fill:var(--muted);font-size:16px;font-weight:700;dominant-baseline:central}
 .gua-name{fill:var(--gold);font-size:22px;font-weight:600;dominant-baseline:central}
 .gua-nature{fill:var(--muted);font-size:13px;dominant-baseline:central}
 .yao{fill:var(--ink)}
@@ -126,7 +129,7 @@ function buildCompass(){
  const tai=svg('g',{transform:state.mode==='earlier'?'translate(340 340) scale(.68)':'translate(340 340)'});tai.append(svg('circle',{r:42,class:'taiji-light'}),svg('path',{d:'M0 -42 A42 42 0 0 1 0 42 A21 21 0 0 1 0 0 A21 21 0 0 0 0 -42',class:'taiji-dark'}),svg('circle',{cx:0,cy:-21,r:6,class:'taiji-dark'}),svg('circle',{cx:0,cy:21,r:6,class:'taiji-light'}));center.append(tai);root.append(center);paintRotation();paintSelection();
 }
 function paintRotation(){const r=state.rotation;$('rotating').setAttribute('transform',`rotate(${r} 340 340)`);for(const l of labels)l.el.setAttribute('transform',`translate(${l.x} ${l.y}) rotate(${-r})`);$('compassCenter').setAttribute('transform',`rotate(${-r} 340 340)`);$('angle').textContent=((r%360+360)%360).toFixed(0)+'°';}
-function paintSelection(){for(const g of document.querySelectorAll('.gua')){const n=g.dataset.gua,u=n===state.upper,l=n===state.lower;g.classList.toggle('is-upper',u);g.classList.toggle('is-lower',l);g.classList.toggle('is-both',u&&l);g.setAttribute('aria-pressed',String(u||l));}$('upperSlot').textContent='上卦 · '+(state.upper||'—');$('lowerSlot').textContent='下卦 · '+(state.lower||'—');$('upperSlot').setAttribute('aria-pressed',String(state.target==='upper'));$('lowerSlot').setAttribute('aria-pressed',String(state.target==='lower'));}
+function paintSelection(){$('rotating').classList.toggle('has-selection',!!(state.upper||state.lower));for(const g of document.querySelectorAll('.gua')){const n=g.dataset.gua,u=n===state.upper,l=n===state.lower;g.classList.toggle('is-upper',u);g.classList.toggle('is-lower',l);g.classList.toggle('is-both',u&&l);g.setAttribute('aria-pressed',String(u||l));}$('upperSlot').textContent='上卦 · '+(state.upper||'—');$('lowerSlot').textContent='下卦 · '+(state.lower||'—');$('upperSlot').setAttribute('aria-pressed',String(state.target==='upper'));$('lowerSlot').setAttribute('aria-pressed',String(state.target==='lower'));}
 function renderResult(){const found=hexLookup.get(state.upper+state.lower);$('result').hidden=!found;if(!found)return;const {data:h,number:n}=found,up=D.trigrams[state.upper],low=D.trigrams[state.lower],root=$('hexagram');root.replaceChildren();drawLines(root,up.lines,4,5,72,12,9,18,'upper-yao');drawLines(root,low.lines,4,65,72,12,9,18,'lower-yao');root.setAttribute('aria-label',`${h[0]}卦，上${state.upper}下${state.lower}，六爻由下往上讀`);$('hexNumber').textContent='第 '+n+' 卦';$('hexTitle').textContent=state.upper===state.lower?h[0]+'為'+up.nature:up.nature+low.nature+h[0];$('composition').textContent=`上${state.upper}（${up.nature}）· 下${state.lower}（${low.nature}）`;$('keyword').textContent=h[3];$('meaning').textContent=h[4];}
 function setUpper(name){state.upper=name;state.lower=null;state.target='lower';paintSelection();renderResult();$('status').textContent=`上卦 ${name} · 再點選下卦`;}
 function selectGua(name){if(state.target==='upper'){setUpper(name);return;}if(state.target==='lower'){state.lower=name;state.target=null;paintSelection();renderResult();$('status').textContent=`${state.upper}上${state.lower}下 · 長按可重新組卦`;return;}$('status').textContent=name+'為'+D.trigrams[name].nature+' · '+D.trigrams[name].meaning;}
