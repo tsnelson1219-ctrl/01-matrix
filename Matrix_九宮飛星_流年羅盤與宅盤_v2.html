@@ -49,8 +49,8 @@ body:not(.annual-mode) .annual-only{display:none!important}
 
 .annual-mode .settings .section{grid-column:1/-1}
 .annual-mode .chart-panel{padding-top:10px}
-.annual-mode .canvas{margin-top:40px}
-.annual-reset-marker{display:none;position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:40px;height:36px;padding:0;border:0;background:transparent;color:var(--fire);align-items:center;justify-content:center;z-index:2}
+.annual-mode .canvas{margin-top:26px}
+.annual-reset-marker{display:none;position:absolute;top:calc(2.205882% - 30px);left:50%;transform:translateX(-50%);width:40px;height:36px;padding:0;border:0;background:transparent;color:var(--fire);align-items:center;justify-content:center;z-index:2}
 .annual-mode .annual-reset-marker{display:flex}
 .annual-reset-marker::before{content:'';width:20px;height:16px;background:currentColor;clip-path:polygon(0 0,100% 0,50% 100%)}
 .annual-reset-marker:hover{background:transparent;color:var(--gold)}
@@ -71,6 +71,21 @@ body:not(.annual-mode) .annual-only{display:none!important}
 .annual-subtitle{font-size:12px;color:var(--muted);margin-top:7px}
 .annual-year-label{color:var(--gold);font-weight:600}
 @media(max-width:680px){.annual-mode .annual-mobile-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:12px}.annual-mode .directions{display:none}.mode-bar{padding:0 14px;margin:13px auto 0}.mode-switch{width:100%;display:grid;grid-template-columns:1fr 1fr}.mode-switch button{padding:10px 4px}.annual-mode .settings{display:block}.annual-mode .settings .section{border-right:0}.annual-mode .detail-panel>.section{padding:14px}.annual-status{font-size:15px}.annual-impact{font-size:16px}.annual-tools{gap:5px}.annual-tools button{padding:6px 9px}.directions{grid-template-columns:repeat(5,minmax(0,1fr))}}
+/* Give the chart the full row; settings and details follow below it. */
+@media screen{
+ main{max-width:1100px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .chart-area{grid-column:1/-1;order:0;min-width:0;width:100%}
+ .settings{grid-column:1;order:1;min-width:0}
+ .detail-panel{grid-column:2;order:2;display:block;min-width:0}
+ .detail-panel .section{border-right:0;border-bottom:1px solid var(--line)}
+ .detail-panel .section:last-child{border-bottom:0}
+}
+@media screen and (max-width:680px){
+ main{padding:12px 6px;gap:12px}
+ .chart-panel{padding:4px}
+ .annual-mode .chart-panel{padding-top:4px}
+ .settings,.detail-panel{width:100%}
+}
 @media print{.mode-bar,.annual-tools,.directions{display:none!important}}
 /* Embedded in MATRIX: the outer navigation owns the theme. */
 html.matrix-embedded header { padding: 14px 24px 12px; }
@@ -102,7 +117,7 @@ html.matrix-embedded .head-actions { display: none; }
  <div class="chart-head"><div class="chart-name" id="chartName"></div><div class="segments house-only" aria-label="顯示圖層"><button data-view="both" class="active" aria-pressed="true">宅盤＋流年</button><button data-view="house" aria-pressed="false">宅盤</button></div></div>
  <div class="chart-panel"><div class="legend house-only"><span class="mountain"><i class="dot"></i>山星</span><span class="facing"><i class="dot"></i>向星</span><span class="base"><i class="dot"></i>運星</span><span class="annual"><i class="dot"></i>流年</span></div>
  <div class="canvas" id="canvas"><svg id="chart" viewBox="0 0 720 720" role="group" aria-label="宅盤與流年九宮圖"><defs><clipPath id="mapClip"><circle cx="360" cy="360" r="260"/></clipPath></defs><g clip-path="url(#mapClip)"><image id="floorImage" preserveAspectRatio="xMidYMid meet"/></g><g id="rings"></g><g id="palaces"></g><g id="directionArrow"></g></svg>
- <button id="annualReset" class="annual-reset-marker" type="button" aria-label="北向重置" title="北向重置"></button><svg id="annualCompass" viewBox="0 0 720 720" role="img" aria-label="可旋轉的流年八方位星盤；也可使用下方的方位按鈕選取" tabindex="0"><defs><clipPath id="annualClip"><circle cx="360" cy="360" r="303"/></clipPath></defs><g clip-path="url(#annualClip)"><image id="annualFloorImage" preserveAspectRatio="xMidYMid meet"/></g><g id="annualRotating"></g></svg></div>
+ <button id="annualReset" class="annual-reset-marker" type="button" aria-label="北向重置" title="北向重置"></button><svg id="annualCompass" viewBox="20 20 680 680" role="img" aria-label="可旋轉的流年八方位星盤；也可使用下方的方位按鈕選取" tabindex="0"><defs><clipPath id="annualClip"><circle cx="360" cy="360" r="303"/></clipPath></defs><g clip-path="url(#annualClip)"><image id="annualFloorImage" preserveAspectRatio="xMidYMid meet"/></g><g id="annualRotating"></g></svg></div>
  <div class="annual-tools annual-only"><button id="annualZoomOut" aria-label="縮小流年羅盤">－</button><button id="annualZoomIn" aria-label="放大流年羅盤">＋</button><span class="tool-readout" id="annualRotationLabel">旋轉 0°</span></div>
  <div class="annual-mobile-summary annual-only" id="annualMobileSummary" aria-label="流年八方星曜速覽"></div>
  <div class="map-handles"><button id="mapMode" disabled aria-pressed="false">移動底圖</button><button id="centerMap" disabled>對齊中心</button></div><p class="map-hint" id="mapHint">點選一宮，查看四層星數與自己的註記。</p>
@@ -193,7 +208,7 @@ $('demo').onclick=()=>{const demo=`<svg xmlns="http://www.w3.org/2000/svg" width
 $('canvas').addEventListener('pointerdown',e=>{if(!mapMode||!state.map.src)return;e.preventDefault();const rect=$('canvas').getBoundingClientRect();drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,x:state.map.x,y:state.map.y,ratio:720/rect.width};$('canvas').setPointerCapture(e.pointerId)});$('canvas').addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;state.map.x=Math.max(-500,Math.min(500,drag.x+(e.clientX-drag.startX)*drag.ratio));state.map.y=Math.max(-500,Math.min(500,drag.y+(e.clientY-drag.startY)*drag.ratio));renderMap()});for(const event of ['pointerup','pointercancel','lostpointercapture'])$('canvas').addEventListener(event,e=>{if(drag?.id===e.pointerId){drag=null;if($('canvas').hasPointerCapture(e.pointerId))$('canvas').releasePointerCapture(e.pointerId)}});$('canvas').addEventListener('click',e=>{if(mapMode){e.stopPropagation();e.preventDefault()}},true);
 // Compass interaction: pointer drag rotates; 2-finger pinch scales. In map mode the shared floorplan handler takes over.
 const annualPointers=new Map();let annualGesture=null;
-function localPoint(e){const rect=$('annualCompass').getBoundingClientRect();return {x:(e.clientX-rect.left)*720/rect.width,y:(e.clientY-rect.top)*720/rect.height};}
+function localPoint(e){const rect=$('annualCompass').getBoundingClientRect();return {x:20+(e.clientX-rect.left)*680/rect.width,y:20+(e.clientY-rect.top)*680/rect.height};}
 function angleAtPoint(p){return Math.atan2(p.x-360,360-p.y)*180/Math.PI;}
 $('annualCompass').addEventListener('pointerdown',e=>{if(state.mode!=='annual'||mapMode)return;const p=localPoint(e);annualPointers.set(e.pointerId,p);$('annualCompass').setPointerCapture(e.pointerId);$('annualCompass').classList.add('dragging');if(annualPointers.size===1){annualGesture={type:'rotate',id:e.pointerId,startAngle:angleAtPoint(p),original:state.annualRotation,startX:p.x,startY:p.y,moved:false}}else if(annualPointers.size===2){const [a,b]=[...annualPointers.values()];annualGesture={type:'pinch',distance:Math.hypot(a.x-b.x,a.y-b.y),original:state.annualScale,moved:true};}});
 $('annualCompass').addEventListener('pointermove',e=>{if(!annualPointers.has(e.pointerId)||!annualGesture)return;const p=localPoint(e);annualPointers.set(e.pointerId,p);if(annualPointers.size===2&&annualGesture.type==='pinch'){const [a,b]=[...annualPointers.values()];state.annualScale=Math.max(.7,Math.min(2,annualGesture.original*Math.hypot(a.x-b.x,a.y-b.y)/Math.max(1,annualGesture.distance)));paintAnnualTransform();}else if(annualPointers.size===1&&annualGesture.type==='rotate'&&annualGesture.id===e.pointerId){if(Math.hypot(p.x-annualGesture.startX,p.y-annualGesture.startY)>6)annualGesture.moved=true;if(annualGesture.moved){state.annualRotation=annualGesture.original+angleAtPoint(p)-annualGesture.startAngle;paintAnnualTransform();}}});
