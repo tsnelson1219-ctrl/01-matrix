@@ -29,6 +29,7 @@ main{max-width:800px;margin:auto;padding:12px 18px 30px}
 .reset-north{position:absolute;top:calc(5.882353% - 30px);left:50%;transform:translateX(-50%);width:40px;height:36px;border:0;padding:0;display:flex;align-items:center;justify-content:center;color:var(--upper);z-index:1}
 .reset-north::before{content:'';width:20px;height:16px;background:currentColor;clip-path:polygon(0 0,100% 0,50% 100%)}
 .sector{fill:var(--panel);fill-opacity:.65;stroke:var(--line);stroke-width:1}
+#compass [tabindex]:focus{outline:none}
 .gua{cursor:pointer;outline:none}
 .gua:hover .sector,.gua:focus-visible .sector{fill:var(--card);stroke:var(--gold);stroke-width:2}
 .gua.is-upper .sector{fill:var(--upper);fill-opacity:.12;stroke:var(--upper);stroke-width:2}
