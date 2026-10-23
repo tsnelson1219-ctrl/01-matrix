@@ -44,7 +44,8 @@ main{max-width:800px;margin:auto;padding:12px 18px 30px}
 .has-selection .gua:not(.is-upper):not(.is-lower) .sector{fill:var(--gua-dim-fill);fill-opacity:1;stroke:var(--gua-stroke);stroke-width:1.2}
 #rotating.has-selection .gua:focus-visible .sector{stroke-width:2.5}
 #rotating.has-selection .gua.is-holding .sector{fill:var(--select-hold);stroke:var(--gold);stroke-width:5.2}
-.direction{fill:var(--ink);font-size:19px;font-weight:900;paint-order:stroke fill;stroke:var(--ink);stroke-width:.35;dominant-baseline:central}
+.direction{fill:var(--muted);font-size:16px;font-weight:400;dominant-baseline:central}
+.direction.cardinal{font-weight:700}
 .gua-name{fill:var(--gold);font-size:22px;font-weight:600;dominant-baseline:central}
 .gua-nature{fill:var(--muted);font-size:13px;dominant-baseline:central}
 .yao{fill:var(--ink)}
@@ -112,7 +113,7 @@ function buildCompass(){
   const [x,y]=polar(205,a),label=svg('g',{'pointer-events':'none'});
   drawLines(label,t.lines,-32,-35,64,12,6,12,'yao');
   label.append(svg('text',{x:0,y:18,'text-anchor':'middle',class:'gua-name'},name),svg('text',{x:0,y:41,'text-anchor':'middle',class:'gua-nature'},t.nature+' · '+t.element));g.append(label);labels.push({el:label,x,y});
-  const [dx,dy]=polar(285,a),dir=svg('text',{'text-anchor':'middle',class:'direction','pointer-events':'none'},D.directions[i]);g.append(dir);labels.push({el:dir,x:dx,y:dy});
+  const [dx,dy]=polar(285,a),dir=svg('text',{'text-anchor':'middle',class:'direction'+(i%2===0?' cardinal':''),'pointer-events':'none'},D.directions[i]);g.append(dir);labels.push({el:dir,x:dx,y:dy});
   const [fx,fy]=polar(127.5,a),family=svg('text',{'text-anchor':'middle',class:'family-label '+('乾震坎艮'.includes(name)?'yang-label':'yin-label'),'pointer-events':'none'},D.families[name]);g.append(family);labels.push({el:family,x:fx,y:fy});root.append(g);
  });
  if(state.mode==='earlier'){
