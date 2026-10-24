@@ -101,7 +101,7 @@ details{font-size:11px;color:var(--muted);margin-top:15px}summary{cursor:pointer
    <h3 class="keyword" id="keyword"></h3><p class="meaning" id="meaning"></p><p class="footnote">卦義簡析 · 未指定動爻</p>
   </article>
  </section>
- <details><summary>操作與資料</summary><p>拖曳轉盤對位，點上方三角形回到北向，點中央太極取消選取。長按約半秒選上卦，再點任一卦選下卦；同一卦也能重疊成卦。一般單點會高亮該卦並顯示簡意，不更改已組成的上下卦。也可先點「上卦」或「下卦」，再選盤面。盤面只做手動對位。</p><p>鍵盤：以 Tab 選卦，空白鍵選上卦，Enter 點選；左右方向鍵旋轉，Home 回正。切換排列會保留已選上下卦。</p><p>後天方位依<a href="https://zh.wikisource.org/zh-hant/周易/說卦" target="_blank" rel="noopener">《說卦傳》</a>；先天方位參照<a href="https://tcmb.culture.tw/zh-tw/detail?id=648564&amp;indexCode=Culture_Invisible" target="_blank" rel="noopener">國家文化記憶庫</a>。卦名與上下卦對照參照<a href="https://zh.wikisource.org/zh-hant/周易" target="_blank" rel="noopener">《周易》</a>。白話解釋為本工具整理。</p><p>六親環依《說卦傳》的父母、三男三女。先天排列另顯示四象：太陽生乾兌、少陰生離震、少陽生巽坎、太陰生艮坤。四象用兩爻表示，在上方添一陰爻或陽爻即成對應兩卦；四象環格與外側兩卦對齊。參照<a href="https://ygc.skku.edu/ygc/sub.do?dataid=I_fcf_DJG_0240_0010_0020" target="_blank" rel="noopener">《易學啟蒙》相關論述</a>。</p></details>
+ <details><summary>操作與資料</summary><p>拖曳轉盤對位，點上方三角形回到北向，點中央太極取消選取。長按約半秒選上卦，再點任一卦選下卦；同一卦也能重疊成卦。一般單點會高亮該卦並顯示簡意，不更改已組成的上下卦。也可先點「上卦」或「下卦」，再選盤面。雙指在盤面上縮放及平移整頁，單指仍可轉盤；連點兩下盤面恢復原大小。盤面只做手動對位。</p><p>鍵盤：以 Tab 選卦，空白鍵選上卦，Enter 點選；左右方向鍵旋轉，Home 回正。切換排列會保留已選上下卦。</p><p>後天方位依<a href="https://zh.wikisource.org/zh-hant/周易/說卦" target="_blank" rel="noopener">《說卦傳》</a>；先天方位參照<a href="https://tcmb.culture.tw/zh-tw/detail?id=648564&amp;indexCode=Culture_Invisible" target="_blank" rel="noopener">國家文化記憶庫</a>。卦名與上下卦對照參照<a href="https://zh.wikisource.org/zh-hant/周易" target="_blank" rel="noopener">《周易》</a>。白話解釋為本工具整理。</p><p>六親環依《說卦傳》的父母、三男三女。先天排列另顯示四象：太陽生乾兌、少陰生離震、少陽生巽坎、太陰生艮坤。四象用兩爻表示，在上方添一陰爻或陽爻即成對應兩卦；四象環格與外側兩卦對齊。參照<a href="https://ygc.skku.edu/ygc/sub.do?dataid=I_fcf_DJG_0240_0010_0020" target="_blank" rel="noopener">《易學啟蒙》相關論述</a>。</p></details>
 </main>
 <script src="bagua-data.js"></script>
 <script>
@@ -181,6 +181,37 @@ compass.addEventListener('pointerup',e=>{if(!gesture||e.pointerId!==gesture.id)r
 for(const event of ['pointercancel','lostpointercapture'])compass.addEventListener(event,cancelGesture);
 compass.addEventListener('click',e=>{if(e.detail===0){if(e.target.closest('#compassCenter'))clearSelection();else{const g=e.target.closest('.gua');if(g)selectGua(g.dataset.gua);}}});
 compass.addEventListener('keydown',e=>{if(e.target.closest('#compassCenter')&&(e.key===' '||e.key==='Enter')){e.preventDefault();clearSelection();return;}const name=e.target.closest('.gua')?.dataset.gua;if(e.key===' '&&name){e.preventDefault();cancelGesture();setUpper(name);}else if(e.key==='Enter'&&name){e.preventDefault();selectGua(name);}else if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();state.rotation+=e.key==='ArrowRight'?5:-5;paintRotation();}else if(e.key==='Home'){e.preventDefault();state.rotation=0;paintRotation();}});
+// Two fingers zoom and pan the tool; a single finger keeps rotating the compass.
+const zoomHost=document.querySelector('main'),zoomSurface=document.querySelector('.chart-panel');
+let zoomScale=1,zoomX=0,zoomY=0,zoomStart=null,zoomBlocked=false;
+const zoomPointers=new Map();
+zoomSurface.style.touchAction='none';zoomHost.style.transformOrigin='0 0';
+function applyZoom(){zoomHost.style.transform=`translate(${zoomX}px,${zoomY}px) scale(${zoomScale})`;}
+function resetZoom(){zoomScale=1;zoomX=zoomY=0;applyZoom();}
+zoomSurface.addEventListener('pointerdown',e=>{
+ zoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(zoomPointers.size>=2){
+  cancelGesture();zoomBlocked=true;e.stopImmediatePropagation();
+  const [a,b]=[...zoomPointers.values()],rect=zoomHost.getBoundingClientRect();
+  zoomStart={distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),scale:zoomScale,x:zoomX,y:zoomY,cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,left:rect.left-zoomX,top:rect.top-zoomY};
+ }
+ if(zoomBlocked){zoomSurface.setPointerCapture(e.pointerId);e.stopImmediatePropagation();}
+},true);
+zoomSurface.addEventListener('pointermove',e=>{
+ if(!zoomPointers.has(e.pointerId))return;
+ zoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(!zoomBlocked)return;e.stopImmediatePropagation();e.preventDefault();
+ if(zoomPointers.size!==2||!zoomStart)return;
+ const [a,b]=[...zoomPointers.values()],z=zoomStart;
+ zoomScale=Math.max(.8,Math.min(3,z.scale*Math.hypot(a.x-b.x,a.y-b.y)/z.distance));
+ const ratio=zoomScale/z.scale;
+ zoomX=(a.x+b.x)/2-z.left-(z.cx-z.left-z.x)*ratio;
+ zoomY=(a.y+b.y)/2-z.top-(z.cy-z.top-z.y)*ratio;applyZoom();
+},true);
+function endZoomPointer(e){zoomPointers.delete(e.pointerId);if(zoomBlocked){e.stopImmediatePropagation();cancelGesture();if(zoomSurface.hasPointerCapture(e.pointerId))zoomSurface.releasePointerCapture(e.pointerId);}if(zoomPointers.size===0){zoomBlocked=false;zoomStart=null;}}
+for(const type of ['pointerup','pointercancel'])zoomSurface.addEventListener(type,endZoomPointer,true);
+zoomSurface.addEventListener('dblclick',e=>{if(e.target.closest('button'))return;resetZoom();});
+window.addEventListener('blur',()=>{zoomPointers.clear();zoomBlocked=false;zoomStart=null;});
 $('resetNorth').onclick=()=>{cancelGesture();state.rotation=0;paintRotation();};
 for(const b of document.querySelectorAll('[data-mode]'))b.onclick=()=>{cancelGesture();state.mode=b.dataset.mode;for(const btn of document.querySelectorAll('[data-mode]')){const active=btn.dataset.mode===state.mode;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));}buildCompass();};
 $('upperSlot').onclick=()=>{state.target='upper';paintSelection();$('status').textContent='點選盤面，設定上卦';};
