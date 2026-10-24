@@ -33,6 +33,14 @@ async function point(frame,name){return frame.evaluate(name=>{const i=D.arrangem
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:18769/bagua.html');await page.locator('.gua').first().waitFor();
   assert.equal(await page.evaluate(()=>state.mode),'later');
+  // Single tap remains visible after the pointer leaves, without starting a composition.
+  let tap=await point(page,'乾');await page.mouse.click(tap.x,tap.y);await page.mouse.move(0,0);
+  assert.deepEqual(await page.evaluate(()=>[state.inspected,state.upper,state.lower]),['乾',null,null]);
+  assert.equal(await page.locator('[data-gua=乾]').getAttribute('aria-pressed'),'true');
+  assert.equal(await page.evaluate(()=>getComputedStyle(document.querySelector('[data-gua=乾] .sector')).fill!==getComputedStyle(document.querySelector('[data-gua=離] .sector')).fill),true);
+  tap=await point(page,'兌');await page.touchscreen.tap(tap.x,tap.y);assert.equal(await page.locator('.is-inspected').count(),1);
+  assert.equal(await page.locator('.is-inspected').getAttribute('data-gua'),'兌');
+  await page.locator('#compassCenter').click();assert.equal(await page.evaluate(()=>state.inspected),null);
   let pos=await point(page,'坎');await page.mouse.move(pos.x,pos.y);await page.mouse.down();await page.waitForTimeout(650);await page.mouse.up();
   assert.deepEqual(await page.evaluate(()=>[state.upper,state.lower,state.target]),['坎',null,'lower']);
   pos=await point(page,'離');await page.mouse.click(pos.x,pos.y);
