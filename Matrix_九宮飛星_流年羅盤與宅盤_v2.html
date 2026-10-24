@@ -96,6 +96,12 @@ body:not(.annual-mode) .annual-only{display:none!important}
 /* Embedded in MATRIX: the outer navigation owns the theme. */
 html.matrix-embedded header { padding: 14px 24px 12px; }
 html.matrix-embedded .head-actions { display: none; }
+
+/* Interactive SVGs use their own shaped highlight, never a browser selection box. */
+#chart *,#annualCompass *,#chart,#annualCompass{user-select:none!important;-webkit-user-select:none!important;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#chart:focus,#annualCompass:focus,#chart :focus,#annualCompass :focus{outline:none!important}
+#chart .cell-group:focus-visible .grid-cell{stroke:var(--gold);stroke-width:3.2}
+#annualCompass:focus-visible .annual-sector.selected{stroke:var(--gold);stroke-width:3.2}
 </style>
 </head>
 <body>
@@ -230,5 +236,8 @@ window.addEventListener('matrix:theme', event => {
 setup();setupAnnual();try{const latest=localStorage.getItem('matrix-flying-stars-v2');const previous=localStorage.getItem('matrix-house-prototype-v1');if(latest||previous)state=validState(JSON.parse(latest||previous))}catch(e){}render();
 </script>
 <script src="ornaments.js"></script>
+<script>
+for(const surface of document.querySelectorAll('#chart,#annualCompass')){for(const type of ['selectstart','dragstart','contextmenu'])surface.addEventListener(type,e=>e.preventDefault());}
+</script>
 </body>
 </html>
