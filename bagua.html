@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MATRIX · 八卦</title>
 <style>
-:root{color-scheme:dark;--bg:#0f0e0c;--panel:#181612;--card:#211e18;--ink:#e8dfcf;--muted:#a39883;--line:#514632;--ring-line:#78664b;--gold:#d4a75b;--upper:#dd8c75;--lower:#73b8a2;--yang-line:#ef8272;--gua-fill:#292316;--gua-stroke:#73b8a2;--select-upper:#613a2f;--select-lower:#244d40;--select-both:#59491f;--select-hold:#486b5b;--gua-dim-fill:#1b1914}
-body.light{color-scheme:light;--bg:#f5f0e5;--panel:#fffaf0;--card:#eee6d5;--ink:#3e372b;--muted:#796e5b;--line:#c4b18c;--ring-line:#b19a70;--gold:#b48625;--upper:#ac5841;--lower:#307966;--yang-line:#be4034;--gua-fill:#f1e5c7;--gua-stroke:#b48625;--select-upper:#eed0b5;--select-lower:#c9ddce;--select-both:#e6c477;--select-hold:#e2bc68;--gua-dim-fill:#f9f3e6}
+:root{color-scheme:dark;--bg:#0f0e0c;--panel:#181612;--card:#211e18;--ink:#e8dfcf;--muted:#a39883;--line:#514632;--ring-line:#615640;--gold:#d4a75b;--upper:#dd8c75;--lower:#73b8a2;--yang-line:#ef8272;--gua-fill:#252219;--gua-stroke:#63927e;--select-upper:#613a2f;--select-lower:#244d40;--select-both:#59491f;--select-hold:#486b5b;--gua-dim-fill:#1b1914;--inspect-fill:#62512b;--inspect-stroke:#f0c66a}
+body.light{color-scheme:light;--bg:#f5f0e5;--panel:#fffaf0;--card:#eee6d5;--ink:#3e372b;--muted:#796e5b;--line:#c4b18c;--ring-line:#bfae8c;--gold:#b48625;--upper:#ac5841;--lower:#307966;--yang-line:#be4034;--gua-fill:#f3ead4;--gua-stroke:#b59950;--select-upper:#eed0b5;--select-lower:#c9ddce;--select-both:#e6c477;--select-hold:#e2bc68;--gua-dim-fill:#f9f3e6;--inspect-fill:#d1e3d5;--inspect-stroke:#2b775d}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.65 "Microsoft JhengHei","PingFang TC",sans-serif}
 button{font:inherit;color:var(--muted);background:transparent;border:1.5px solid var(--line);border-radius:7px;padding:6px 12px;cursor:pointer}
@@ -22,36 +22,44 @@ main{max-width:800px;margin:auto;padding:12px 18px 30px}
 .modes button{border:0;padding:5px 14px;font-size:12px}
 .modes button.active{background:var(--gold);color:var(--bg)}
 .angle{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.chart-panel{border:1.5px solid var(--line);border-radius:13px;background:radial-gradient(ellipse at 50% 35%,var(--panel),var(--bg));padding:4px}
-.compass-wrap{position:relative;max-width:680px;aspect-ratio:1;margin:26px auto 0}
+.chart-panel{position:relative;isolation:isolate;overflow:hidden;border:1.5px solid var(--line);border-radius:13px;background:radial-gradient(ellipse at 50% 35%,var(--panel),var(--bg));padding:4px}
+.compass-wrap{position:relative;z-index:1;max-width:680px;aspect-ratio:1;margin:26px auto 0}
 #compass{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
 #compass.dragging{cursor:grabbing}
 .reset-north{position:absolute;top:calc(4.411765% - 30px);left:50%;transform:translateX(-50%);width:40px;height:36px;border:0;padding:0;display:flex;align-items:center;justify-content:center;color:var(--upper);z-index:1}
 .reset-north::before{content:'';width:20px;height:16px;background:currentColor;clip-path:polygon(0 0,100% 0,50% 100%)}
-.sector{fill:var(--gua-fill);fill-opacity:1;stroke:var(--gua-stroke);stroke-width:3.2}
+.sector{fill:var(--gua-fill);stroke:none}
 #compass [tabindex]:focus{outline:none}
 .gua{cursor:pointer;outline:none}
-.gua:hover .sector,.gua:focus-visible .sector{fill:var(--card);stroke:var(--gua-stroke);stroke-width:3.8}
-.gua.is-upper .sector{fill:var(--select-upper);fill-opacity:1;stroke:var(--upper);stroke-width:3.8}
-.gua.is-lower .sector{fill:var(--select-lower);fill-opacity:1;stroke:var(--lower);stroke-width:3.8}
-.gua.is-both .sector{fill:var(--select-both);fill-opacity:1;stroke:var(--gold);stroke-width:3.8}
-.gua.is-holding .sector{fill:var(--select-hold);fill-opacity:1;stroke:var(--gold);stroke-width:5.2}
-.band{fill:var(--panel);stroke:var(--ring-line);stroke-width:1.8}
+.gua:hover .sector,.gua:focus-visible .sector{fill:var(--card)}
+.gua.is-upper .sector{fill:var(--select-upper)}
+.gua.is-lower .sector{fill:var(--select-lower)}
+.gua.is-both .sector{fill:var(--select-both)}
+.band{fill:var(--panel);stroke:none}
+.compass-grid{fill:none;stroke:var(--ring-line);stroke-width:1;pointer-events:none}
+.compass-grid .gua-divider{stroke:var(--gua-stroke);stroke-width:1.2}
+.compass-grid .gua-rim{stroke:var(--gua-stroke);stroke-width:2.8}
 .family-label{font-size:18px;dominant-baseline:central}
 .symbol-label{font-size:16px;dominant-baseline:central}
 .yin-label{fill:var(--lower)}.yang-label{fill:var(--upper)}
 .ring-guide{font-size:11px;color:var(--muted);text-align:center;margin:0 0 8px}
-.has-selection .gua:not(.is-upper):not(.is-lower) .sector{fill:var(--gua-dim-fill);fill-opacity:1;stroke:var(--gua-stroke);stroke-width:1.2}
-#rotating.has-selection .gua:focus-visible .sector{stroke-width:2.5}
-#rotating.has-selection .gua.is-holding .sector{fill:var(--select-hold);stroke:var(--gold);stroke-width:5.2}
+.has-selection .gua:not(.is-upper):not(.is-lower) .sector{fill:var(--gua-dim-fill)}
+#rotating .gua.is-inspected:not(.is-upper):not(.is-lower):not(.is-holding) .sector{fill:var(--inspect-fill)}
+#rotating .gua.is-holding .sector{fill:var(--select-hold)}
 .direction{fill:var(--muted);font-size:16px;font-weight:400;dominant-baseline:central}
 .direction.cardinal{font-weight:900;paint-order:stroke fill;stroke:var(--muted);stroke-width:.85;stroke-linejoin:round}
 .gua-name{fill:var(--gold);font-size:22px;font-weight:600;dominant-baseline:central}
 .gua-nature{fill:var(--muted);font-size:13px;dominant-baseline:central}
+body:not(.light) .gua-name{fill:#efca83}
+body:not(.light) .gua-nature{fill:#c6baa3}
+.cloud-corner{position:absolute;width:clamp(70px,17%,130px);height:auto;pointer-events:none;color:#c49a66;opacity:.55;z-index:0}
+.cloud-corner.top{top:8px;right:8px;transform:rotate(180deg)}
+.cloud-corner.bottom{bottom:8px;left:8px}
+body.light .cloud-corner{color:#b96863;opacity:.62}
 .yao{fill:var(--ink)}
 #compassCenter{cursor:pointer}
 #compassCenter:hover .center-ring,#compassCenter:focus-visible .center-ring{stroke:var(--upper);stroke-width:3.2}
-.center-ring{fill:var(--panel);stroke:var(--gold);stroke-width:2.2}
+.center-ring{fill:var(--panel);stroke:var(--ring-line);stroke-width:1}
 .taiji-light{fill:var(--ink)}.taiji-dark{fill:var(--panel)}
 .selection{margin-top:12px;border:1.5px solid var(--line);border-radius:11px;background:var(--panel);padding:14px 16px}
 .selection-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -81,6 +89,8 @@ details{font-size:11px;color:var(--muted);margin-top:15px}summary{cursor:pointer
 <main>
  <div class="toolbar"><div class="modes" aria-label="八卦排列"><button type="button" data-mode="later" class="active" aria-pressed="true">後天八卦</button><button type="button" data-mode="earlier" aria-pressed="false">先天八卦</button></div><output id="angle" class="angle" aria-label="盤面旋轉角度">0°</output></div>
  <section class="chart-panel" aria-label="八卦方位盤">
+<svg class="cloud-corner top" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M18 4L12 30C21 55 21 76 12 98C28 77 22 44 18 4Z"/><path d="M8 35L4 45C15 65 14 82 7 95C20 82 17 58 8 35Z"/><path d="M156 142L130 148C105 139 84 139 62 148C83 132 116 138 156 142Z"/><path d="M125 152L115 156C95 145 78 146 65 153C78 140 102 143 125 152Z"/><path d="M14 124C4 135 5 147 20 151C12 142 11 135 14 124Z"/></g><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="3.5" d="M12 99C19 88 33 91 36 103C40 118 21 127 15 116C10 107 24 101 27 109C29 113 25 117 22 114"/><path stroke-width="3.5" d="M61 148C72 141 69 127 57 124C42 120 33 139 44 145C53 150 59 136 51 133C47 131 43 135 46 138"/><path stroke-width="2.8" d="M33 111C31 124 18 128 22 141C25 151 37 153 46 149"/><path stroke-width="1.1" d="M22 31C26 63 27 81 18 92M68 142C79 133 97 134 129 138"/></g></svg>
+<svg class="cloud-corner bottom" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><g fill="currentColor"><path d="M18 4L12 30C21 55 21 76 12 98C28 77 22 44 18 4Z"/><path d="M8 35L4 45C15 65 14 82 7 95C20 82 17 58 8 35Z"/><path d="M156 142L130 148C105 139 84 139 62 148C83 132 116 138 156 142Z"/><path d="M125 152L115 156C95 145 78 146 65 153C78 140 102 143 125 152Z"/><path d="M14 124C4 135 5 147 20 151C12 142 11 135 14 124Z"/></g><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="3.5" d="M12 99C19 88 33 91 36 103C40 118 21 127 15 116C10 107 24 101 27 109C29 113 25 117 22 114"/><path stroke-width="3.5" d="M61 148C72 141 69 127 57 124C42 120 33 139 44 145C53 150 59 136 51 133C47 131 43 135 46 138"/><path stroke-width="2.8" d="M33 111C31 124 18 128 22 141C25 151 37 153 46 149"/><path stroke-width="1.1" d="M22 31C26 63 27 81 18 92M68 142C79 133 97 134 129 138"/></g></svg>
   <div class="compass-wrap"><button class="reset-north" id="resetNorth" type="button" title="北向重置" aria-label="北向重置"></button><svg id="compass" viewBox="0 0 680 680" role="group" aria-label="可拖曳旋轉的八卦盤" aria-describedby="status"><g id="rotating"></g></svg></div><p class="ring-guide" id="ringGuide">方位 · 八卦 · 六親</p>
  </section>
  <section class="selection" aria-label="上下卦組合">
@@ -91,13 +101,13 @@ details{font-size:11px;color:var(--muted);margin-top:15px}summary{cursor:pointer
    <h3 class="keyword" id="keyword"></h3><p class="meaning" id="meaning"></p><p class="footnote">卦義簡析 · 未指定動爻</p>
   </article>
  </section>
- <details><summary>操作與資料</summary><p>拖曳轉盤對位，點上方三角形回到北向，點中央太極取消選取。長按約半秒選上卦，再點任一卦選下卦；同一卦也能重疊成卦。也可先點「上卦」或「下卦」，再選盤面。盤面只做手動對位。</p><p>鍵盤：以 Tab 選卦，空白鍵選上卦，Enter 點選；左右方向鍵旋轉，Home 回正。切換排列會保留已選上下卦。</p><p>後天方位依<a href="https://zh.wikisource.org/zh-hant/周易/說卦" target="_blank" rel="noopener">《說卦傳》</a>；先天方位參照<a href="https://tcmb.culture.tw/zh-tw/detail?id=648564&amp;indexCode=Culture_Invisible" target="_blank" rel="noopener">國家文化記憶庫</a>。卦名與上下卦對照參照<a href="https://zh.wikisource.org/zh-hant/周易" target="_blank" rel="noopener">《周易》</a>。白話解釋為本工具整理。</p><p>六親環依《說卦傳》的父母、三男三女。先天排列另顯示四象：太陽生乾兌、少陰生離震、少陽生巽坎、太陰生艮坤。四象用兩爻表示，在上方添一陰爻或陽爻即成對應兩卦；四象環格與外側兩卦對齊。參照<a href="https://ygc.skku.edu/ygc/sub.do?dataid=I_fcf_DJG_0240_0010_0020" target="_blank" rel="noopener">《易學啟蒙》相關論述</a>。</p></details>
+ <details><summary>操作與資料</summary><p>拖曳轉盤對位，點上方三角形回到北向，點中央太極取消選取。長按約半秒選上卦，再點任一卦選下卦；同一卦也能重疊成卦。一般單點會高亮該卦並顯示簡意，不更改已組成的上下卦。也可先點「上卦」或「下卦」，再選盤面。盤面只做手動對位。</p><p>鍵盤：以 Tab 選卦，空白鍵選上卦，Enter 點選；左右方向鍵旋轉，Home 回正。切換排列會保留已選上下卦。</p><p>後天方位依<a href="https://zh.wikisource.org/zh-hant/周易/說卦" target="_blank" rel="noopener">《說卦傳》</a>；先天方位參照<a href="https://tcmb.culture.tw/zh-tw/detail?id=648564&amp;indexCode=Culture_Invisible" target="_blank" rel="noopener">國家文化記憶庫</a>。卦名與上下卦對照參照<a href="https://zh.wikisource.org/zh-hant/周易" target="_blank" rel="noopener">《周易》</a>。白話解釋為本工具整理。</p><p>六親環依《說卦傳》的父母、三男三女。先天排列另顯示四象：太陽生乾兌、少陰生離震、少陽生巽坎、太陰生艮坤。四象用兩爻表示，在上方添一陰爻或陽爻即成對應兩卦；四象環格與外側兩卦對齊。參照<a href="https://ygc.skku.edu/ygc/sub.do?dataid=I_fcf_DJG_0240_0010_0020" target="_blank" rel="noopener">《易學啟蒙》相關論述</a>。</p></details>
 </main>
 <script src="bagua-data.js"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id),D=window.BAGUA_DATA,NS='http://www.w3.org/2000/svg';
-const state={mode:'later',rotation:0,upper:null,lower:null,target:null};
+const state={mode:'later',rotation:0,upper:null,lower:null,target:null,inspected:null};
 const hexLookup=new Map(D.hexagrams.map((h,i)=>[h[1]+h[2],{data:h,number:i+1}]));
 let labels=[],gesture=null,longTimer=null;
 function svg(tag,attrs={},text){const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;return e;}
@@ -125,21 +135,47 @@ function buildCompass(){
    drawLines(label,item.lines,-16,-18,32,6,5,9,color);label.append(svg('text',{x:0,y:13,'text-anchor':'middle',class:'symbol-label '+color},item.name));symbols.append(label);labels.push({el:label,x,y});
   });root.append(symbols);
  }
+ // Draw shared boundaries once, independently of the interactive filled cells.
+ const grid=svg('g',{class:'compass-grid','aria-hidden':'true','pointer-events':'none'});
+ for(const r of [105,150,260,310])grid.append(svg('circle',{cx:340,cy:340,r,class:r===150||r===260?'gua-rim':''}));
+ const radial=(inner,outer,a,css='')=>{const [x1,y1]=polar(inner,a),[x2,y2]=polar(outer,a);grid.append(svg('line',{x1,y1,x2,y2,class:css}));};
+ for(let i=0;i<8;i++){const a=i*45-22.5;radial(105,150,a);radial(150,260,a,'gua-divider');radial(260,310,a);}
+ if(state.mode==='earlier')for(let i=0;i<4;i++)radial(48,105,22.5+i*90);
+ root.append(grid);
+ // Keep upright symbols and text above every cell fill at all rotation angles.
+ const lettering=svg('g',{id:'compassLettering','pointer-events':'none'});
+ for(const label of labels)lettering.append(label.el);
+ root.append(lettering);
  $('ringGuide').textContent=state.mode==='earlier'?'方位 · 八卦 · 六親 · 四象':'方位 · 八卦 · 六親';
  const center=svg('g',{id:'compassCenter',role:'button',tabindex:0,'aria-label':'取消選取上下卦'});center.append(svg('title',{},'取消選取'),svg('circle',{cx:340,cy:340,r:state.mode==='earlier'?48:105,class:'center-ring'}));
  const tai=svg('g',{transform:state.mode==='earlier'?'translate(340 340) scale(.68)':'translate(340 340)'});tai.append(svg('circle',{r:42,class:'taiji-light'}),svg('path',{d:'M0 -42 A42 42 0 0 1 0 42 A21 21 0 0 1 0 0 A21 21 0 0 0 0 -42',class:'taiji-dark'}),svg('circle',{cx:0,cy:-21,r:6,class:'taiji-dark'}),svg('circle',{cx:0,cy:21,r:6,class:'taiji-light'}));center.append(tai);root.append(center);paintRotation();paintSelection();
 }
 function paintRotation(){const r=state.rotation;$('rotating').setAttribute('transform',`rotate(${r} 340 340)`);for(const l of labels)l.el.setAttribute('transform',`translate(${l.x} ${l.y}) rotate(${-r})`);$('compassCenter').setAttribute('transform',`rotate(${-r} 340 340)`);$('angle').textContent=((r%360+360)%360).toFixed(0)+'°';}
-function paintSelection(){$('rotating').classList.toggle('has-selection',!!(state.upper||state.lower));for(const g of document.querySelectorAll('.gua')){const n=g.dataset.gua,u=n===state.upper,l=n===state.lower;g.classList.toggle('is-upper',u);g.classList.toggle('is-lower',l);g.classList.toggle('is-both',u&&l);g.setAttribute('aria-pressed',String(u||l));}$('upperSlot').textContent='上卦 · '+(state.upper||'—');$('lowerSlot').textContent='下卦 · '+(state.lower||'—');$('upperSlot').setAttribute('aria-pressed',String(state.target==='upper'));$('lowerSlot').setAttribute('aria-pressed',String(state.target==='lower'));}
+function paintSelectionOutlines(){
+ const root=$('rotating');let outlines=$('selectionOutlines');
+ if(!outlines){outlines=svg('g',{id:'selectionOutlines','pointer-events':'none','aria-hidden':'true'});root.append(outlines);}
+ outlines.replaceChildren();
+ D.arrangements[state.mode].forEach((name,i)=>{
+  const g=root.querySelector('[data-gua="'+name+'"]'),holding=g?.classList.contains('is-holding'),u=name===state.upper,l=name===state.lower,inspected=name===state.inspected;
+  const focused=g?.matches(':focus-visible');
+  if(!holding&&!u&&!l&&!inspected&&!focused)return;
+  const stroke=holding?'var(--gold)':u&&l?'var(--gold)':u?'var(--upper)':l?'var(--lower)':inspected?'var(--inspect-stroke)':'var(--gold)',width=holding?3.5:3;
+  outlines.append(svg('path',{d:sectorPath(i),fill:'none',stroke,'stroke-width':width,'stroke-linejoin':'round','data-outline':name}));
+ });
+ root.append(outlines);
+}
+function paintSelection(){$('rotating').classList.toggle('has-selection',!!(state.upper||state.lower));for(const g of document.querySelectorAll('.gua')){const n=g.dataset.gua,u=n===state.upper,l=n===state.lower;g.classList.toggle('is-upper',u);g.classList.toggle('is-lower',l);g.classList.toggle('is-both',u&&l);g.classList.toggle('is-inspected',n===state.inspected);g.setAttribute('aria-pressed',String(u||l||n===state.inspected));}$('upperSlot').textContent='上卦 · '+(state.upper||'—');$('lowerSlot').textContent='下卦 · '+(state.lower||'—');$('upperSlot').setAttribute('aria-pressed',String(state.target==='upper'));$('lowerSlot').setAttribute('aria-pressed',String(state.target==='lower'));paintSelectionOutlines();}
 function renderResult(){const found=hexLookup.get(state.upper+state.lower);$('result').hidden=!found;if(!found)return;const {data:h,number:n}=found,up=D.trigrams[state.upper],low=D.trigrams[state.lower],root=$('hexagram');root.replaceChildren();drawLines(root,up.lines,4,5,72,12,9,18,'upper-yao');drawLines(root,low.lines,4,65,72,12,9,18,'lower-yao');root.setAttribute('aria-label',`${h[0]}卦，上${state.upper}下${state.lower}，六爻由下往上讀`);$('hexNumber').textContent='第 '+n+' 卦';$('hexTitle').textContent=state.upper===state.lower?h[0]+'為'+up.nature:up.nature+low.nature+h[0];$('composition').textContent=`上${state.upper}（${up.nature}）· 下${state.lower}（${low.nature}）`;$('keyword').textContent=h[3];$('meaning').textContent=h[4];}
-function setUpper(name){state.upper=name;state.lower=null;state.target='lower';paintSelection();renderResult();$('status').textContent=`上卦 ${name} · 再點選下卦`;}
-function selectGua(name){if(state.target==='upper'){setUpper(name);return;}if(state.target==='lower'){state.lower=name;state.target=null;paintSelection();renderResult();$('status').textContent=`${state.upper}上${state.lower}下 · 長按可重新組卦`;return;}$('status').textContent=name+'為'+D.trigrams[name].nature+' · '+D.trigrams[name].meaning;}
-function cancelTimer(){if(longTimer!==null)clearTimeout(longTimer);longTimer=null;document.querySelectorAll('.is-holding').forEach(e=>e.classList.remove('is-holding'));}
+function setUpper(name){state.inspected=null;state.upper=name;state.lower=null;state.target='lower';paintSelection();renderResult();$('status').textContent=`上卦 ${name} · 再點選下卦`;}
+function selectGua(name){if(state.target==='upper'){setUpper(name);return;}if(state.target==='lower'){state.inspected=null;state.lower=name;state.target=null;paintSelection();renderResult();$('status').textContent=`${state.upper}上${state.lower}下 · 長按可重新組卦`;return;}state.inspected=name;paintSelection();$('status').textContent=name+'為'+D.trigrams[name].nature+' · '+D.trigrams[name].meaning;}
+function cancelTimer(){if(longTimer!==null)clearTimeout(longTimer);longTimer=null;document.querySelectorAll('.is-holding').forEach(e=>e.classList.remove('is-holding'));paintSelectionOutlines();}
 function cancelGesture(){cancelTimer();gesture=null;$('compass').classList.remove('dragging');}
 function pointerAngle(e){const b=$('compass').getBoundingClientRect();return Math.atan2(e.clientY-b.top-b.height/2,e.clientX-b.left-b.width/2)*180/Math.PI;}
 const compass=$('compass');
+compass.addEventListener('focusin',paintSelectionOutlines);
+compass.addEventListener('focusout',()=>requestAnimationFrame(paintSelectionOutlines));
 compass.addEventListener('contextmenu',e=>e.preventDefault());
-compass.addEventListener('pointerdown',e=>{if(e.button!==0)return;if(gesture){cancelGesture();return;}const g=e.target.closest('.gua');gesture={id:e.pointerId,name:g?.dataset.gua,center:!!e.target.closest('#compassCenter'),x:e.clientX,y:e.clientY,last:pointerAngle(e),moved:false,held:false};compass.setPointerCapture(e.pointerId);if(g){g.classList.add('is-holding');longTimer=setTimeout(()=>{longTimer=null;if(!gesture||gesture.moved)return;gesture.held=true;setUpper(gesture.name);g.classList.remove('is-holding');},550);}});
+compass.addEventListener('pointerdown',e=>{if(e.button!==0)return;if(gesture){cancelGesture();return;}const g=e.target.closest('.gua');gesture={id:e.pointerId,name:g?.dataset.gua,center:!!e.target.closest('#compassCenter'),x:e.clientX,y:e.clientY,last:pointerAngle(e),moved:false,held:false};compass.setPointerCapture(e.pointerId);if(g){g.classList.add('is-holding');paintSelectionOutlines();longTimer=setTimeout(()=>{longTimer=null;if(!gesture||gesture.moved)return;gesture.held=true;setUpper(gesture.name);g.classList.remove('is-holding');paintSelectionOutlines();},550);}});
 compass.addEventListener('pointermove',e=>{if(!gesture||e.pointerId!==gesture.id)return;const g=gesture;if(!g.moved&&Math.hypot(e.clientX-g.x,e.clientY-g.y)>9){g.moved=true;cancelTimer();compass.classList.add('dragging');}if(g.moved){const a=pointerAngle(e),delta=((a-g.last+540)%360)-180;state.rotation+=delta;paintRotation();}g.last=pointerAngle(e);});
 compass.addEventListener('pointerup',e=>{if(!gesture||e.pointerId!==gesture.id)return;const g=gesture;cancelGesture();if(compass.hasPointerCapture(e.pointerId))compass.releasePointerCapture(e.pointerId);if(!g.moved&&!g.held){if(g.center)clearSelection();else if(g.name)selectGua(g.name);}});
 for(const event of ['pointercancel','lostpointercapture'])compass.addEventListener(event,cancelGesture);
@@ -149,7 +185,7 @@ $('resetNorth').onclick=()=>{cancelGesture();state.rotation=0;paintRotation();};
 for(const b of document.querySelectorAll('[data-mode]'))b.onclick=()=>{cancelGesture();state.mode=b.dataset.mode;for(const btn of document.querySelectorAll('[data-mode]')){const active=btn.dataset.mode===state.mode;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));}buildCompass();};
 $('upperSlot').onclick=()=>{state.target='upper';paintSelection();$('status').textContent='點選盤面，設定上卦';};
 $('lowerSlot').onclick=()=>{state.target=state.upper?'lower':'upper';paintSelection();$('status').textContent=state.upper?'點選盤面，設定下卦':'先點選上卦，再選下卦';};
-function clearSelection(){cancelGesture();state.upper=null;state.lower=null;state.target=null;paintSelection();renderResult();$('status').textContent='長按選上卦，再點選下卦';}
+function clearSelection(){cancelGesture();state.upper=null;state.lower=null;state.target=null;state.inspected=null;paintSelection();renderResult();$('status').textContent='長按選上卦，再點選下卦';}
 $('clear').onclick=clearSelection;
 function readTheme(){try{return localStorage.getItem('theme')==='light';}catch{return false;}}
 function applyStandaloneTheme(){if(window.self===window.top)document.body.classList.toggle('light',readTheme());}
