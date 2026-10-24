@@ -37,7 +37,10 @@ async function point(frame,name){return frame.evaluate(name=>{const i=D.arrangem
   let tap=await point(page,'乾');await page.mouse.click(tap.x,tap.y);await page.mouse.move(0,0);
   assert.deepEqual(await page.evaluate(()=>[state.inspected,state.upper,state.lower]),['乾',null,null]);
   assert.equal(await page.locator('[data-gua=乾]').getAttribute('aria-pressed'),'true');
-  assert.equal(await page.evaluate(()=>getComputedStyle(document.querySelector('[data-gua=乾] .sector')).fill!==getComputedStyle(document.querySelector('[data-gua=離] .sector')).fill),true);
+  for(let theme=0;theme<2;theme++){
+   assert.equal(await page.evaluate(()=>{const selected=getComputedStyle(document.querySelector('[data-gua=乾] .sector')),normal=getComputedStyle(document.querySelector('[data-gua=離] .sector'));return selected.fill!==normal.fill&&selected.stroke!==normal.stroke;}),true);
+   await page.locator('#theme').click();
+  }
   tap=await point(page,'兌');await page.touchscreen.tap(tap.x,tap.y);assert.equal(await page.locator('.is-inspected').count(),1);
   assert.equal(await page.locator('.is-inspected').getAttribute('data-gua'),'兌');
   await page.locator('#compassCenter').click();assert.equal(await page.evaluate(()=>state.inspected),null);
