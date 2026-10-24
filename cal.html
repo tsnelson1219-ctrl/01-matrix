@@ -186,6 +186,19 @@ body.light .day-cell.today{box-shadow:inset 0 0 0 2px var(--red);}
   .weekday-row span{ font-size:14px; }
 }
 
+/* Narrow cells use a reserved month row and a horizontal solar-term row. */
+@media(max-width:420px){
+ .day-cell{padding:18px 1px 5px;justify-content:center;gap:2px}
+ .cell-mid{flex-direction:column;gap:3px;width:100%;min-width:0}
+ .cell-left{gap:2px;width:100%;min-width:0}
+ .day-num{font-size:16px;line-height:1.1;white-space:nowrap}
+ .day-sub{font-size:11px;line-height:1.1;margin-top:0;padding:1px 2px;white-space:nowrap}
+ .jq-inner{writing-mode:horizontal-tb;font-size:10px;line-height:1.2;padding:1px 3px;letter-spacing:0}
+ .gz-month-tag,.lm-month-tag{font-size:8px;padding:0 3px;letter-spacing:0;line-height:1.5}
+ .cell-top{top:2px}
+ .day-cell .remind-label,.day-cell .sol-remind-label{flex-shrink:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:9px;line-height:1.2;margin-top:0}
+}
+
 /* ── Bubble ── */
 .note-bubble{display:none;position:fixed;z-index:200;max-width:180px;min-width:80px;background:var(--bg2);border:1px solid var(--gold3);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--text);line-height:1.4;box-shadow:0 4px 16px rgba(0,0,0,.4);pointer-events:none;word-break:break-all;}
 .note-bubble.bubble-above::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--gold3);border-bottom:none;}
@@ -813,7 +826,7 @@ function render(){
     const date=topDate(),offset=viewport.scrollTop%weekHeight;
     buildCalendar(date,offset);
   }else{
-    weekHeight=Math.max(72,Math.round(viewport.clientHeight/6));
+    weekHeight=Math.max(window.innerWidth<=420?94:72,Math.round(viewport.clientHeight/6));
     calendarGrid.style.setProperty('--week-height',weekHeight+'px');
     buildCalendar(new Date(vy,vm-1,1,12));
   }
@@ -856,7 +869,7 @@ viewport.addEventListener('scroll',()=>{
 // 旋轉螢幕或外層導覽列改變高度時，保留頂端週與週內位置。
 new ResizeObserver(()=>{
   if(!firstWeek||!viewport.clientHeight) return;
-  const nextHeight=Math.max(72,Math.round(viewport.clientHeight/6));
+  const nextHeight=Math.max(window.innerWidth<=420?94:72,Math.round(viewport.clientHeight/6));
   if(Math.abs(nextHeight-weekHeight)<0.5) return;
   const date=topDate(),fraction=(viewport.scrollTop%weekHeight)/weekHeight;
   weekHeight=nextHeight;
