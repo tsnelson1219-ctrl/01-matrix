@@ -41,7 +41,7 @@ async function point(frame,name){return frame.evaluate(name=>{const i=D.arrangem
   assert.equal(await page.locator('[data-outline=乾]').getAttribute('fill'),'none');
   assert.equal(await page.locator('#selectionOutlines').evaluate(e=>getComputedStyle(e).pointerEvents),'none');
   for(let theme=0;theme<2;theme++){
-   assert.equal(await page.evaluate(()=>{const selected=getComputedStyle(document.querySelector('[data-gua=乾] .sector')),normal=getComputedStyle(document.querySelector('[data-gua=離] .sector'));return selected.fill!==normal.fill&&selected.stroke!==normal.stroke;}),true);
+   assert.equal(await page.evaluate(()=>{const selected=getComputedStyle(document.querySelector('[data-gua=乾] .sector')),normal=getComputedStyle(document.querySelector('[data-gua=離] .sector'));return selected.fill!==normal.fill&&getComputedStyle(document.querySelector('[data-outline=乾]')).stroke!==getComputedStyle(document.querySelector('.gua-rim')).stroke;}),true);
    await page.locator('#theme').click();
   }
   tap=await point(page,'兌');await page.touchscreen.tap(tap.x,tap.y);assert.equal(await page.locator('.is-inspected').count(),1);
