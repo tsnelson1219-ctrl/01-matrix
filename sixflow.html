@@ -117,8 +117,9 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 
 /* Compact layout aligned with the reference calculator and Matrix sub-pages. */
 .page{width:min(100%,800px);padding:0 18px 30px}
-.datetime-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 2px 7px;color:var(--muted);font-size:11px;letter-spacing:.5px;font-variant-numeric:tabular-nums}
-.datetime-bar .live-clock{color:var(--gold);font-size:15px;font-weight:600;letter-spacing:1px}
+.datetime-bar{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:13px 8px 12px;color:var(--gold);font-size:13px;line-height:1.7;letter-spacing:.5px;font-variant-numeric:tabular-nums;text-align:center}
+.datetime-bar .live-date,.datetime-bar .live-lunar{display:block}
+.datetime-bar .live-note{display:block;color:var(--muted);font-size:11px;margin-top:2px}
 .topbar{height:auto;min-height:54px;margin:0 -18px;padding:9px 20px}
 .topbar h1{font-size:22px;font-weight:500;letter-spacing:3px;color:var(--ink);margin:0}
 .brand,.hero{display:none!important}
@@ -144,9 +145,10 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 </head>
 <body>
 <div class="page">
-  <div class="datetime-bar" aria-label="台灣目前日期與時間">
-    <time id="liveDate">載入日期…</time>
-    <time class="live-clock" id="liveClock">--:--:--</time>
+  <div class="datetime-bar" aria-label="台灣目前陽曆、農曆日期與時間">
+    <time class="live-date" id="liveDate">陽曆：載入中…</time>
+    <time class="live-lunar" id="liveLunar">農曆：載入中…</time>
+    <span class="live-note">◎ 依你裝置的時間（GMT+8）</span>
   </div>
   <header class="topbar"><h1>小六壬占事</h1><button class="theme-btn" id="themeBtn" type="button" aria-label="切換深淺色">☽</button></header>
 
@@ -209,12 +211,22 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 
   function updateHeaderClock(){
     const now=new Date();
-    $('liveDate').textContent=new Intl.DateTimeFormat('zh-TW',{
-      timeZone:'Asia/Taipei',year:'numeric',month:'long',day:'numeric',weekday:'long'
-    }).format(now);
-    $('liveClock').textContent=new Intl.DateTimeFormat('zh-TW',{
-      timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
-    }).format(now);
+    const parts=new Intl.DateTimeFormat('en-CA',{
+      timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+    }).formatToParts(now);
+    const v=Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,Number(p.value)]));
+    $('liveDate').textContent='陽曆：'+v.year+'年'+v.month+'月'+v.day+'日 '+v.hour+':'+String(v.minute).padStart(2,'0');
+    try{
+      const lunar=Solar.fromYmdHms(v.year,v.month,v.day,v.hour,v.minute,v.second).getLunar();
+      const lunarMonth=Math.abs(lunar.getMonth());
+      const leap=lunar.getMonth()<0?'閏':'';
+      const hourIndex=hourIndexFromClock(v.hour);
+      $('liveLunar').textContent='農曆：'+lunar.getYear()+'年'+leap+lunarMonth+'月'+lunar.getDay()+'日 '+BRANCHES[hourIndex]+'時';
+    }catch(error){
+      $('liveLunar').textContent='農曆：日期換算中';
+      console.error(error);
+    }
   }
 
   function fillSelects(){
