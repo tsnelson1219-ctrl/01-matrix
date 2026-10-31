@@ -80,6 +80,14 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 .palace.active{border-color:var(--gold);background:var(--gold-soft);box-shadow:inset 0 0 0 1px var(--gold)}
 .palace-name{font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap}
 .palace-meaning{font-size:9px;color:var(--muted);margin-top:3px;white-space:nowrap}
+.full-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px auto 13px}
+.full-card{min-width:0;text-align:center;padding:13px 5px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.full-card.final{border-color:var(--gold);background:var(--gold-soft);box-shadow:inset 0 0 0 1px var(--gold)}
+.full-card-label{font-size:11px;color:var(--muted)}
+.full-card-name{font-size:20px;font-weight:700;color:var(--gold);margin:5px 0}
+.full-card-number{font-size:12px;color:var(--ink);padding-bottom:5px;border-bottom:1px solid var(--line);margin-bottom:5px}
+.full-card-meta{font-size:11px;color:var(--muted);line-height:1.7}
+@media(max-width:430px){.full-grid{gap:6px}.full-card{padding:10px 3px}.full-card-name{font-size:17px}.full-card-meta{font-size:10px}}
 .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
 .step{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px;text-align:center}
 .step-label{font-size:10px;color:var(--muted)}
@@ -145,12 +153,12 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 </head>
 <body>
 <div class="page">
+  <header class="topbar"><h1>小六壬占事</h1><button class="theme-btn" id="themeBtn" type="button" aria-label="切換深淺色">☽</button></header>
   <div class="datetime-bar" aria-label="台灣目前陽曆、農曆日期與時間">
     <time class="live-date" id="liveDate">陽曆：載入中…</time>
     <time class="live-lunar" id="liveLunar">農曆：載入中…</time>
     <span class="live-note">◎ 依你裝置的時間（GMT+8）</span>
   </div>
-  <header class="topbar"><h1>小六壬占事</h1><button class="theme-btn" id="themeBtn" type="button" aria-label="切換深淺色">☽</button></header>
 
   <section class="panel">
     <div class="input-row mode-row">
@@ -205,6 +213,18 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     {name:'空亡',hint:'落空・變數',desc:'主不確定、落空或虛耗。宜重新檢查前提與資訊，不宜只憑單一訊號下定論。'}
   ];
   const BRANCHES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  // 九宮版本：依九位循環，方位轉為後天八卦宮位。
+  const PALACES9 = [
+    {name:'大安',element:'木',palace:'震宮',direction:'東',hint:'安定・守成',desc:'主穩定、守成與按部就班。'},
+    {name:'留連',element:'木',palace:'巽宮',direction:'東南',hint:'遲滯・牽纏',desc:'主延遲、反覆與牽連。'},
+    {name:'速喜',element:'火',palace:'離宮',direction:'南',hint:'迅速・喜訊',desc:'主快速進展、消息與喜慶。'},
+    {name:'赤口',element:'金',palace:'兌宮',direction:'西',hint:'口舌・爭端',desc:'主口舌、衝突與風險。'},
+    {name:'小吉',element:'水',palace:'坎宮',direction:'北',hint:'助力・漸進',desc:'主小成、助力與漸進。'},
+    {name:'空亡',element:'土',palace:'中宮',direction:'中央',hint:'落空・變數',desc:'主不確定、落空與虛耗。'},
+    {name:'病符',element:'土',palace:'坤宮',direction:'西南',hint:'病耗・隱患',desc:'主耗損、阻滯與需要處理的隱患。'},
+    {name:'桃花',element:'土',palace:'艮宮',direction:'東北',hint:'人緣・牽動',desc:'主人際、情感與關係牽動。'},
+    {name:'天德',element:'金',palace:'乾宮',direction:'西北',hint:'貴人・化解',desc:'主貴人、長輩助力與化解。'}
+  ];
   const $ = id => document.getElementById(id);
   let currentResult = null;
   let displayMode = 'simple';
@@ -246,18 +266,30 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     return {monthStep,dayStep,hourStep};
   }
 
+  function palaceIndex9(month, day, hourIndex){
+    const advance=(start,count)=>(start+count-1)%9;
+    const monthStep=advance(0,month);
+    const dayStep=advance(monthStep,day);
+    const hourStep=advance(dayStep,hourIndex+1);
+    return {monthStep,dayStep,hourStep};
+  }
+
   function hourIndexFromClock(hour){
     return Math.floor(((hour + 1) % 24) / 2);
   }
 
   function runCast(data){
-    const steps = palaceIndex(data.month,data.day,data.hourIndex);
+    const steps = displayMode==='full'
+      ? palaceIndex9(data.month,data.day,data.hourIndex)
+      : palaceIndex(data.month,data.day,data.hourIndex);
+    const list=displayMode==='full'?PALACES9:PALACES;
     currentResult = {
       ...data,
+      mode:displayMode,
       steps,
       resultIndex:steps.hourStep,
-      result:PALACES[steps.hourStep],
-      createdAt:new Date().toISOString()
+      result:list[steps.hourStep],
+      createdAt:data.createdAt||new Date().toISOString()
     };
     renderResult();
   }
@@ -266,24 +298,27 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     if(!currentResult) return;
     const r=currentResult, p=r.result;
     const area=$('resultArea');
-    // 六宮維持三欄兩列；簡版將大安移至左下角，完整版保留原始排列。
-    const palmLayout=displayMode==='simple'?[1,2,3,0,4,5]:[0,1,2,3,4,5];
-    const palaceHtml=palmLayout.map(index=>{
-      const item=PALACES[index];
+    const simpleMode=displayMode==='simple';
+    const simpleList=PALACES;
+    const simpleLayout=[1,2,3,0,4,5];
+    const palaceHtml=simpleLayout.map(index=>{
+      const item=simpleList[index];
       return '<div class="palace palace-slot '+(index===r.resultIndex?'active':'')+'"><div class="palace-name">'+item.name+'</div><div class="palace-meaning">'+item.hint+'</div></div>';
     }).join('');
-    const common=
-      '<div class="result-top"><div class="result-kicker">FINAL PALACE</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+'</div></div>'+
-      '<div class="palace-grid">'+palaceHtml+'</div>';
-    const full=
-      '<div class="steps">'+
-        '<div class="step"><div class="step-label">月起</div><div class="step-value">'+PALACES[r.steps.monthStep].name+'</div><div class="step-number">農曆 '+r.month+' 月</div></div>'+
-        '<div class="step"><div class="step-label">日落</div><div class="step-value">'+PALACES[r.steps.dayStep].name+'</div><div class="step-number">農曆 '+r.day+' 日</div></div>'+
-        '<div class="step"><div class="step-label">時落</div><div class="step-value">'+p.name+'</div><div class="step-number">'+BRANCHES[r.hourIndex]+'時</div></div>'+
-      '</div>'+
-      '<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
+    const common=simpleMode
+      ? '<div class="result-top"><div class="result-kicker">六宮結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+'</div></div><div class="palace-grid">'+palaceHtml+'</div>'
+      : '<div class="result-top"><div class="result-kicker">九宮三傳 · 末傳結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+' · '+p.element+' · '+p.palace+'</div></div>';
+    const fullList=PALACES9;
+    const fullCards=[
+      {label:'初傳',number:r.month,item:fullList[r.steps.monthStep]},
+      {label:'中傳',number:r.day,item:fullList[r.steps.dayStep]},
+      {label:'末傳',number:r.hourIndex+1,item:fullList[r.steps.hourStep]}
+    ];
+    const full='<div class="full-grid">'+fullCards.map((step,i)=>
+      '<div class="full-card '+(i===2?'final':'')+'"><div class="full-card-label">'+step.label+'</div><div class="full-card-name">'+step.item.name+'</div><div class="full-card-number">數 '+step.number+'</div><div class="full-card-meta">行 '+step.item.element+'</div><div class="full-card-meta">宮 '+step.item.palace+'</div></div>'
+    ).join('')+'</div><div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
     const simple='<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
-    const meta='<div class="time-stamp">農曆 '+r.monthLabel+' '+r.day+' 日 · '+BRANCHES[r.hourIndex]+'時'+(r.timeLabel?' · '+r.timeLabel:'')+'</div>';
+    const meta='<div class="time-stamp">'+(simpleMode?'六宮簡版':'九宮完整版')+' · 農曆 '+r.monthLabel+' '+r.day+' 日 · '+BRANCHES[r.hourIndex]+'時'+(r.timeLabel?' · '+r.timeLabel:'')+'</div>';
     area.className='';
     area.innerHTML=common+(displayMode==='full'?full:simple)+meta+
       '<div class="result-actions"><button class="secondary-btn" id="saveRecord" type="button">保存這一卦</button><button class="secondary-btn" id="resetResult" type="button">清除結果</button></div>';
@@ -294,7 +329,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
   function setMode(mode){
     displayMode=mode;
     document.querySelectorAll('[data-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.mode===mode));
-    renderResult();
+    if(currentResult) runCast({...currentResult});
   }
 
   function getRecords(){
