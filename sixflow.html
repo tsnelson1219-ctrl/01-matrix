@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f0e0c">
-<title>小六壬計算器</title>
+<title>小六壬占事</title>
 <script src="./lunar.min.js"></script>
 <style>
 :root{
@@ -75,8 +75,9 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 .result-kicker{font-size:11px;color:var(--muted);letter-spacing:2px}
 .result-name{font-size:31px;letter-spacing:5px;color:var(--gold);font-weight:600;margin:3px 0}
 .result-tagline{font-size:12px;color:var(--muted)}
-.palace-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:8px 0 13px}
-.palace{border:1px solid var(--line);border-radius:8px;background:var(--bg);text-align:center;padding:9px 2px 8px;min-width:0}
+.palace-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(66px,auto));gap:8px;margin:8px auto 13px;max-width:450px}
+.palace{border:1px solid var(--line);border-radius:10px;background:var(--bg);text-align:center;padding:12px 4px 10px;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.palace-slot.empty{visibility:hidden;pointer-events:none;border:0;background:transparent}
 .palace.active{border-color:var(--gold);background:var(--gold-soft);box-shadow:inset 0 0 0 1px var(--gold)}
 .palace-name{font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap}
 .palace-meaning{font-size:9px;color:var(--muted);margin-top:3px;white-space:nowrap}
@@ -107,10 +108,10 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
  .page{padding-left:12px;padding-right:12px}
  .topbar{margin-left:-12px;margin-right:-12px;padding:0 12px}
  .panel{padding:13px}
- .palace-grid{gap:4px}
- .palace{padding:8px 1px}
- .palace-name{font-size:11px}
- .palace-meaning{font-size:8px}
+ .palace-grid{gap:7px;grid-template-rows:repeat(3,minmax(62px,auto))}
+ .palace{padding:9px 2px}
+ .palace-name{font-size:12px}
+ .palace-meaning{font-size:9px}
  .steps{gap:5px}
  .step{padding:8px 3px}
 }
@@ -142,7 +143,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 </head>
 <body>
 <div class="page">
-  <header class="topbar"><h1>小六壬計算器</h1><button class="theme-btn" id="themeBtn" type="button" aria-label="切換深淺色">☽</button></header>
+  <header class="topbar"><h1>小六壬占事</h1><button class="theme-btn" id="themeBtn" type="button" aria-label="切換深淺色">☽</button></header>
 
   <section class="panel">
     <div class="input-row mode-row">
@@ -238,9 +239,14 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     if(!currentResult) return;
     const r=currentResult, p=r.result;
     const area=$('resultArea');
-    const palaceHtml=PALACES.map((item,i)=>
-      '<div class="palace '+(i===r.resultIndex?'active':'')+'"><div class="palace-name">'+item.name+'</div><div class="palace-meaning">'+item.hint+'</div></div>'
-    ).join('');
+    // 掌訣位置：食指由指尖至指根為速喜、留連、大安；
+    // 中指由指尖至指根為赤口、小吉、空亡；無名指欄保留空位。
+    const palmLayout=[2,3,null,1,4,null,0,5,null];
+    const palaceHtml=palmLayout.map(index=>{
+      if(index===null) return '<div class="palace-slot empty" aria-hidden="true"></div>';
+      const item=PALACES[index];
+      return '<div class="palace palace-slot '+(index===r.resultIndex?'active':'')+'"><div class="palace-name">'+item.name+'</div><div class="palace-meaning">'+item.hint+'</div></div>';
+    }).join('');
     const common=
       '<div class="result-top"><div class="result-kicker">FINAL PALACE</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+'</div></div>'+
       '<div class="palace-grid">'+palaceHtml+'</div>';
