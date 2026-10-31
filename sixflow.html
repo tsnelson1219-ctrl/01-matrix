@@ -344,8 +344,13 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
       id:Date.now(),
       question:$('question').value.trim(),
       month:r.month,day:r.day,hourIndex:r.hourIndex,
-      palace:r.result.name,createdAt:r.createdAt,
-      timeLabel:r.timeLabel||'手動輸入'
+      palace:r.result.name,mode:r.mode||displayMode,
+      chain:r.steps?[
+        (r.mode==='full'?PALACES9:PALACES)[r.steps.monthStep].name,
+        (r.mode==='full'?PALACES9:PALACES)[r.steps.dayStep].name,
+        (r.mode==='full'?PALACES9:PALACES)[r.steps.hourStep].name
+      ]:[],
+      createdAt:r.createdAt,timeLabel:r.timeLabel||'手動輸入'
     });
     try{localStorage.setItem('sixflow.records',JSON.stringify(records.slice(0,50)));renderRecords();}
     catch(e){alert('此瀏覽器無法保存紀錄，請檢查儲存空間或瀏覽器設定。');}
@@ -355,7 +360,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     if(!records.length){root.innerHTML='<div class="records-empty">還沒有紀錄。<br>起卦後可將結果保存，日後回來驗證。</div>';return;}
     root.innerHTML=records.map(r=>
       '<div class="record"><div class="record-head"><div class="record-question">'+escapeHtml(r.question||'未填寫問事')+'</div><div class="record-result">'+r.palace+'</div></div>'+
-      '<div class="record-meta">'+escapeHtml(r.timeLabel||'')+' · 農曆 '+r.month+'月'+r.day+'日 · '+BRANCHES[r.hourIndex]+'時</div>'+
+      '<div class="record-meta">'+(r.mode==='full'?'九宮完整版':'六宮簡版')+' · '+escapeHtml(r.timeLabel||'')+' · 農曆 '+r.month+'月'+r.day+'日 · '+BRANCHES[r.hourIndex]+'時'+(r.chain&&r.chain.length?' · '+r.chain.join(' → '):'')+'</div>'+
       '<div class="record-head"><span class="record-meta">'+new Date(r.createdAt).toLocaleString('zh-TW',{hour12:false})+'</span><button class="record-delete" type="button" data-delete="'+r.id+'">刪除</button></div></div>'
     ).join('');
     root.querySelectorAll('[data-delete]').forEach(btn=>btn.addEventListener('click',()=>{
