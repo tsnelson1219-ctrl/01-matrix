@@ -238,8 +238,8 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     if(!currentResult) return;
     const r=currentResult, p=r.result;
     const area=$('resultArea');
-    // 手掌六宮：三欄兩列，依序呈現大安、留連、速喜／赤口、小吉、空亡。
-    const palmLayout=[0,1,2,3,4,5];
+    // 六宮維持三欄兩列；簡版將大安移至左下角，完整版保留原始排列。
+    const palmLayout=displayMode==='simple'?[1,2,3,0,4,5]:[0,1,2,3,4,5];
     const palaceHtml=palmLayout.map(index=>{
       const item=PALACES[index];
       return '<div class="palace palace-slot '+(index===r.resultIndex?'active':'')+'"><div class="palace-name">'+item.name+'</div><div class="palace-meaning">'+item.hint+'</div></div>';
