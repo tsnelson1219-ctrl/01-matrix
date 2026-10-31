@@ -164,10 +164,11 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     <div class="input-row mode-row">
       <span class="row-label">算法模式</span>
       <div class="mode-switch" role="group" aria-label="結果顯示模式">
-        <button type="button" data-mode="full">九宮完整版</button>
-        <button type="button" class="active" data-mode="simple">簡版</button>
+        <button type="button" data-mode="full">九宮三傳</button>
+        <button type="button" class="active" data-mode="simple">六宮掌訣</button>
       </div>
     </div>
+    <div class="mode-description" id="modeDescription">日常快速問事，掌握事情吉凶與當前狀態。</div>
     <div class="input-row question-row">
       <label class="question-label" for="question">問事內容 <span>（選填）</span></label>
       <input class="question-input" id="question" maxlength="60" placeholder="輸入想詢問的事情">
@@ -318,7 +319,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
       '<div class="full-card '+(i===2?'final':'')+'"><div class="full-card-label">'+step.label+'</div><div class="full-card-name">'+step.item.name+'</div><div class="full-card-number">數 '+step.number+'</div><div class="full-card-meta">行 '+step.item.element+'</div><div class="full-card-meta">宮 '+step.item.palace+'</div></div>'
     ).join('')+'</div><div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
     const simple='<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
-    const meta='<div class="time-stamp">'+(simpleMode?'六宮簡版':'九宮完整版')+' · 農曆 '+r.monthLabel+' '+r.day+' 日 · '+BRANCHES[r.hourIndex]+'時'+(r.timeLabel?' · '+r.timeLabel:'')+'</div>';
+    const meta='<div class="time-stamp">'+(simpleMode?'六宮掌訣':'九宮三傳')+' · 農曆 '+r.monthLabel+' '+r.day+' 日 · '+BRANCHES[r.hourIndex]+'時'+(r.timeLabel?' · '+r.timeLabel:'')+'</div>';
     area.className='';
     area.innerHTML=common+(displayMode==='full'?full:simple)+meta+
       '<div class="result-actions"><button class="secondary-btn" id="saveRecord" type="button">保存這一卦</button><button class="secondary-btn" id="resetResult" type="button">清除結果</button></div>';
@@ -329,6 +330,9 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
   function setMode(mode){
     displayMode=mode;
     document.querySelectorAll('[data-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.mode===mode));
+    $('modeDescription').textContent=mode==='full'
+      ? '深入分析事情的起始、發展與結果，並結合五行及八卦宮位觀察變化。'
+      : '日常快速問事，掌握事情吉凶與當前狀態。';
     if(currentResult) runCast({...currentResult});
   }
 
@@ -360,7 +364,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     if(!records.length){root.innerHTML='<div class="records-empty">還沒有紀錄。<br>起卦後可將結果保存，日後回來驗證。</div>';return;}
     root.innerHTML=records.map(r=>
       '<div class="record"><div class="record-head"><div class="record-question">'+escapeHtml(r.question||'未填寫問事')+'</div><div class="record-result">'+r.palace+'</div></div>'+
-      '<div class="record-meta">'+(r.mode==='full'?'九宮完整版':'六宮簡版')+' · '+escapeHtml(r.timeLabel||'')+' · 農曆 '+r.month+'月'+r.day+'日 · '+BRANCHES[r.hourIndex]+'時'+(r.chain&&r.chain.length?' · '+r.chain.join(' → '):'')+'</div>'+
+      '<div class="record-meta">'+(r.mode==='full'?'九宮三傳':'六宮掌訣')+' · '+escapeHtml(r.timeLabel||'')+' · 農曆 '+r.month+'月'+r.day+'日 · '+BRANCHES[r.hourIndex]+'時'+(r.chain&&r.chain.length?' · '+r.chain.join(' → '):'')+'</div>'+
       '<div class="record-head"><span class="record-meta">'+new Date(r.createdAt).toLocaleString('zh-TW',{hour12:false})+'</span><button class="record-delete" type="button" data-delete="'+r.id+'">刪除</button></div></div>'
     ).join('');
     root.querySelectorAll('[data-delete]').forEach(btn=>btn.addEventListener('click',()=>{
