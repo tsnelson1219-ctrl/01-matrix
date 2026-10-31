@@ -46,6 +46,17 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 .question-input::placeholder{color:var(--muted);opacity:.7}
 .char-count{text-align:right;color:var(--muted);font-size:10px;margin-top:3px}
 .auto-row{display:flex;align-items:center;gap:10px;margin-top:14px}
+.input-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.row-label{font-size:12px;color:var(--muted)}
+.mode-row{margin:0 0 13px}
+.question-row{display:block;margin-bottom:14px}
+.question-label span{color:var(--muted)}
+.cast-row{margin-top:0}
+.cast-row button{flex:1}
+#customTimePanel{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.manual-submit{width:100%;margin-top:11px}
+#customToggle[aria-expanded="true"]{background:var(--gold-soft);border-color:var(--gold)}
+.char-count{font-size:10px}
 .primary-btn{flex:1;min-height:43px;border:1px solid var(--gold);border-radius:8px;background:var(--gold);color:var(--bg);font-weight:700;letter-spacing:1px;padding:9px 12px}
 .primary-btn:active{transform:translateY(1px);opacity:.88}
 .secondary-btn{min-height:39px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--gold);padding:8px 13px}
@@ -53,7 +64,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 .divider{height:1px;background:var(--line);margin:15px 0}
 .manual-toggle{display:flex;justify-content:center;margin-top:10px}
 .text-btn{border:0;background:transparent;color:var(--muted);font-size:12px;text-decoration:underline;text-underline-offset:3px;padding:4px}
-.manual-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:13px}
+.manual-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:0}
 .field-select{padding:9px 8px}
 .mode-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 12px}
 .mode-switch{display:inline-flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
@@ -134,26 +145,31 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
   <header class="topbar"><h1>小六壬計算器</h1><button class="theme-btn" id="themeBtn" type="button" aria-label="切換深淺色">☽</button></header>
 
   <section class="panel">
-    <div class="section-head">
-      <div class="section-title"></div>
+    <div class="input-row mode-row">
+      <span class="row-label">顯示模式</span>
       <div class="mode-switch" role="group" aria-label="結果顯示模式">
-        <button type="button" class="active" data-mode="full">完整版</button>
-        <button type="button" data-mode="simple">簡版</button>
+        <button type="button" data-mode="full">完整版</button>
+        <button type="button" class="active" data-mode="simple">簡版</button>
       </div>
     </div>
-    <label class="question-label" for="question">想問什麼？（選填）</label>
-    <input class="question-input" id="question" maxlength="60" placeholder="例如：今天面試順不順？">
-    <div class="char-count"><span id="charCount">0</span>/60</div>
-    <div class="manual-fields" id="manualFields">
-      <div><label class="field-label" for="monthSelect">月</label><select class="field-select" id="monthSelect"></select></div>
-      <div><label class="field-label" for="daySelect">日</label><select class="field-select" id="daySelect"></select></div>
-      <div><label class="field-label" for="hourSelect">時</label><select class="field-select" id="hourSelect"></select></div>
+    <div class="input-row question-row">
+      <label class="question-label" for="question">問事內容 <span>（選填）</span></label>
+      <input class="question-input" id="question" maxlength="60" placeholder="輸入想詢問的事情">
+      <div class="char-count"><span id="charCount">0</span>/60</div>
     </div>
-    <div class="auto-row">
-      <button class="secondary-btn" id="manualCast" type="button">手動起卦</button>
-      <button class="primary-btn" id="autoCast" type="button">☾　使用現在時間</button>
+    <div class="input-row cast-row">
+      <button class="primary-btn" id="autoCast" type="button">現在起卦</button>
+      <button class="secondary-btn" id="customToggle" type="button" aria-expanded="false">自訂時間</button>
     </div>
-    <div class="time-stamp" id="timeStamp">尚未取得時間 · GMT+8</div>
+    <div id="customTimePanel" hidden>
+      <div class="manual-fields" id="manualFields">
+        <div><label class="field-label" for="monthSelect">農曆月</label><select class="field-select" id="monthSelect"></select></div>
+        <div><label class="field-label" for="daySelect">農曆日</label><select class="field-select" id="daySelect"></select></div>
+        <div><label class="field-label" for="hourSelect">時辰</label><select class="field-select" id="hourSelect"></select></div>
+      </div>
+      <button class="primary-btn manual-submit" id="manualCast" type="button">以自訂時間起卦</button>
+    </div>
+    <div class="time-stamp" id="timeStamp">尚未起卦</div>
   </section>
 
   <section class="panel">
@@ -183,7 +199,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
   const BRANCHES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
   const $ = id => document.getElementById(id);
   let currentResult = null;
-  let displayMode = 'full';
+  let displayMode = 'simple';
 
   function fillSelects(){
     const month = $('monthSelect'), day = $('daySelect'), hour = $('hourSelect');
@@ -333,6 +349,12 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 
   $('autoCast').addEventListener('click',autoCast);
   $('manualCast').addEventListener('click',manualCast);
+  $('customToggle').addEventListener('click',()=>{
+    const panel=$('customTimePanel');
+    const opening=panel.hidden;
+    panel.hidden=!opening;
+    $('customToggle').setAttribute('aria-expanded',String(opening));
+  });
   $('question').addEventListener('input',()=> $('charCount').textContent=$('question').value.length);
   document.querySelectorAll('[data-mode]').forEach(btn=>btn.addEventListener('click',()=>setMode(btn.dataset.mode)));
   $('themeBtn').addEventListener('click',()=>{
