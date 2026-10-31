@@ -149,6 +149,17 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
  .manual-fields{gap:6px}
  .field-select{padding:9px 5px;font-size:13px}
 }
+.mode-description{font-size:11px;line-height:1.75;color:var(--muted);margin:-3px 0 13px;padding:0 2px}
+.stage-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 13px}
+.stage-card{min-width:0;text-align:center;padding:12px 5px;border:1px solid var(--line);border-radius:9px;background:var(--bg)}
+.stage-card.final{border-color:var(--gold);background:var(--gold-soft);box-shadow:inset 0 0 0 1px var(--gold)}
+.stage-label{font-size:11px;color:var(--muted)}
+.stage-name{font-size:19px;font-weight:700;color:var(--gold);margin:4px 0}
+.stage-input{font-size:10px;color:var(--muted);line-height:1.6}
+.method-note{margin-top:12px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.method-title{font-size:12px;font-weight:700;color:var(--gold);margin-bottom:5px}
+.method-text{font-size:11px;line-height:1.8;color:var(--muted)}
+@media(max-width:430px){.stage-grid{gap:5px}.stage-card{padding:10px 3px}.stage-name{font-size:17px}.stage-input{font-size:9px}}
 </style>
 </head>
 <body>
@@ -168,7 +179,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
         <button type="button" class="active" data-mode="simple">六宮掌訣</button>
       </div>
     </div>
-    <div class="mode-description" id="modeDescription">日常快速問事，掌握事情吉凶與當前狀態。</div>
+    <div class="mode-description" id="modeDescription">以月宮、日宮、時宮逐步推算，適合日常快速問事與掌握事情狀態。</div>
     <div class="input-row question-row">
       <label class="question-label" for="question">問事內容 <span>（選填）</span></label>
       <input class="question-input" id="question" maxlength="60" placeholder="輸入想詢問的事情">
@@ -307,18 +318,27 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
       return '<div class="palace palace-slot '+(index===r.resultIndex?'active':'')+'"><div class="palace-name">'+item.name+'</div><div class="palace-meaning">'+item.hint+'</div></div>';
     }).join('');
     const common=simpleMode
-      ? '<div class="result-top"><div class="result-kicker">六宮結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+'</div></div><div class="palace-grid">'+palaceHtml+'</div>'
+      ? '<div class="result-top"><div class="result-kicker">六宮掌訣 · 時宮結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+'</div></div><div class="palace-grid">'+palaceHtml+'</div>'
       : '<div class="result-top"><div class="result-kicker">九宮三傳 · 末傳結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+' · '+p.element+' · '+p.palace+'</div></div>';
-    const fullList=PALACES9;
-    const fullCards=[
-      {label:'初傳',number:r.month,item:fullList[r.steps.monthStep]},
-      {label:'中傳',number:r.day,item:fullList[r.steps.dayStep]},
-      {label:'末傳',number:r.hourIndex+1,item:fullList[r.steps.hourStep]}
+    const list=simpleMode?PALACES:PALACES9;
+    const stageLabels=simpleMode?['月宮','日宮','時宮']:['初傳','中傳','末傳'];
+    const stageInputs=simpleMode
+      ? ['農曆 '+r.month+' 月','農曆 '+r.day+' 日',BRANCHES[r.hourIndex]+'時（子時起算）']
+      : ['月數 '+r.month,'日數 '+r.day,'時辰序數 '+(r.hourIndex+1)];
+    const stageCards=[
+      {label:stageLabels[0],input:stageInputs[0],item:list[r.steps.monthStep]},
+      {label:stageLabels[1],input:stageInputs[1],item:list[r.steps.dayStep]},
+      {label:stageLabels[2],input:stageInputs[2],item:list[r.steps.hourStep]}
     ];
-    const full='<div class="full-grid">'+fullCards.map((step,i)=>
-      '<div class="full-card '+(i===2?'final':'')+'"><div class="full-card-label">'+step.label+'</div><div class="full-card-name">'+step.item.name+'</div><div class="full-card-number">數 '+step.number+'</div><div class="full-card-meta">行 '+step.item.element+'</div><div class="full-card-meta">宮 '+step.item.palace+'</div></div>'
-    ).join('')+'</div><div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
-    const simple='<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
+    const stages='<div class="stage-grid">'+stageCards.map((step,i)=>
+      '<div class="stage-card '+(i===2?'final':'')+'"><div class="stage-label">'+step.label+'</div><div class="stage-name">'+step.item.name+'</div><div class="stage-input">'+step.input+'</div>'+(simpleMode?'':'<div class="stage-input">'+step.item.element+'・'+step.item.palace+'</div>')+'</div>'
+    ).join('')+'</div>';
+    const method=simpleMode
+      ? '<div class="method-note"><div class="method-title">六宮掌訣｜推算脈絡</div><div class="method-text">依序以農曆月份、日期、時辰接續推算：先從大安起月，得到月宮；再從月宮起日，得到日宮；最後從日宮起時，得到時宮。六宮依「大安、留連、速喜、赤口、小吉、空亡」循環。三個落點是同一條推算鏈，不是三個互不相關的卦；時宮是本次推算的最後落點。</div></div>'
+      : '<div class="method-note"><div class="method-title">九宮三傳｜推算脈絡</div><div class="method-text">初傳以大安為起點，按農曆月數推算；中傳從初傳落點接續，按農曆日數推算；末傳再從中傳落點接續，按時辰序數推算。九宮依「大安、留連、速喜、赤口、小吉、空亡、病符、桃花、天德」循環。三傳呈現同一推算鏈的起始、承接與最後落點，末傳為本次推算的結果。此處採用的是本工具設定的九宮擴充算法。</div></div>';
+    const interpretation='<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
+    const full=stages+method+interpretation;
+    const simple=stages+method+interpretation;
     const meta='<div class="time-stamp">'+(simpleMode?'六宮掌訣':'九宮三傳')+' · 農曆 '+r.monthLabel+' '+r.day+' 日 · '+BRANCHES[r.hourIndex]+'時'+(r.timeLabel?' · '+r.timeLabel:'')+'</div>';
     area.className='';
     area.innerHTML=common+(displayMode==='full'?full:simple)+meta+
@@ -331,8 +351,8 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     displayMode=mode;
     document.querySelectorAll('[data-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.mode===mode));
     $('modeDescription').textContent=mode==='full'
-      ? '深入分析事情的起始、發展與結果，並結合五行及八卦宮位觀察變化。'
-      : '日常快速問事，掌握事情吉凶與當前狀態。';
+      ? '以初傳、中傳、末傳呈現事情的連續變化，並結合五行與八卦宮位延伸觀察。'
+      : '以月宮、日宮、時宮逐步推算，適合日常快速問事與掌握事情狀態。';
     if(currentResult) runCast({...currentResult});
   }
 
