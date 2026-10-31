@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f0e0c">
-<title>SIX FLOW · 小六壬</title>
+<title>小六壬計算器</title>
 <script src="./lunar.min.js"></script>
 <style>
 :root{
@@ -103,45 +103,57 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
  .steps{gap:5px}
  .step{padding:8px 3px}
 }
+
+/* Compact layout aligned with the reference calculator and Matrix sub-pages. */
+.page{width:min(100%,800px);padding:0 18px 30px}
+.topbar{height:auto;min-height:54px;margin:0 -18px;padding:9px 20px}
+.topbar h1{font-size:22px;font-weight:500;letter-spacing:3px;color:var(--ink);margin:0}
+.brand,.hero{display:none!important}
+.panel{box-shadow:none;border-radius:11px;padding:14px 15px}
+.section-head{margin-bottom:10px}
+.section-title{font-size:13px}
+.manual-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:13px}
+.field-select{padding:9px 8px}
+.auto-row{margin-top:12px}
+.auto-row button{flex:1}
+.primary-btn{min-height:40px}
+.secondary-btn{min-height:40px}
+.time-stamp{margin-top:7px}
+@media(max-width:680px){
+ .page{padding:0 10px 22px}
+ .topbar{margin:0 -10px;padding:9px 12px}
+ .topbar h1{font-size:20px}
+ .panel{padding:13px}
+ .manual-fields{gap:6px}
+ .field-select{padding:9px 5px;font-size:13px}
+}
 </style>
 </head>
 <body>
 <div class="page">
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark">六</div>
-      <div><div class="brand-name">SIX FLOW</div><div class="brand-sub">MATRIX · DIVINATION</div></div>
-    </div>
-    <button class="theme-btn" id="themeBtn" type="button" aria-label="切換深淺色">◑</button>
-  </header>
-
-  <section class="hero">
-    <div class="eyebrow">SIX PALACES · TIME FLOW</div>
-    <h1>小六壬</h1>
-    <div class="hero-note">六宮流轉，時序有象</div>
-  </section>
+  <header class="topbar"><h1>小六壬計算器</h1><button class="theme-btn" id="themeBtn" type="button" aria-label="切換深淺色">☽</button></header>
 
   <section class="panel">
     <div class="section-head">
-      <div class="section-title">起卦設定</div>
-      <div class="section-hint">按下按鈕才取得時間</div>
+      <div class="section-title">DIVINATION CALCULATOR</div>
+      <div class="mode-switch" role="group" aria-label="結果顯示模式">
+        <button type="button" class="active" data-mode="full">完整版</button>
+        <button type="button" data-mode="simple">簡版</button>
+      </div>
     </div>
-    <label class="question-label" for="question">想問什麼？ <span class="section-hint">選填，最多 60 字</span></label>
+    <label class="question-label" for="question">想問什麼？（選填）</label>
     <input class="question-input" id="question" maxlength="60" placeholder="例如：今天面試順不順？">
-    <div class="char-count"><span id="charCount">0</span> / 60</div>
-
+    <div class="char-count"><span id="charCount">0</span>/60</div>
+    <div class="manual-fields" id="manualFields">
+      <div><label class="field-label" for="monthSelect">月</label><select class="field-select" id="monthSelect"></select></div>
+      <div><label class="field-label" for="daySelect">日</label><select class="field-select" id="daySelect"></select></div>
+      <div><label class="field-label" for="hourSelect">時</label><select class="field-select" id="hourSelect"></select></div>
+    </div>
     <div class="auto-row">
-      <button class="primary-btn" id="autoCast" type="button">◷　取得目前時間並起卦</button>
+      <button class="secondary-btn" id="manualCast" type="button">手動起卦</button>
+      <button class="primary-btn" id="autoCast" type="button">☾　使用現在時間</button>
     </div>
     <div class="time-stamp" id="timeStamp">尚未取得時間 · GMT+8</div>
-    <div class="manual-toggle"><button class="text-btn" id="manualToggle" type="button">改用手動輸入月、日、時</button></div>
-
-    <div class="manual-fields" id="manualFields" hidden>
-      <div><label class="field-label" for="monthSelect">農曆月</label><select class="field-select" id="monthSelect"></select></div>
-      <div><label class="field-label" for="daySelect">農曆日</label><select class="field-select" id="daySelect"></select></div>
-      <div><label class="field-label" for="hourSelect">時辰</label><select class="field-select" id="hourSelect"></select></div>
-      <button class="primary-btn" id="manualCast" type="button" style="grid-column:1/-1">依輸入資料起卦</button>
-    </div>
   </section>
 
   <section class="panel">
@@ -160,14 +172,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     <div id="records"><div class="records-empty">還沒有紀錄。<br>起卦後可將結果保存，日後回來驗證。</div></div>
   </section>
 
-  <section class="panel faq">
-    <div class="section-head"><div class="section-title">使用說明</div><div class="section-hint">SIX FLOW</div></div>
-    <details><summary>小六壬如何起卦？</summary><p>本頁採常見的月、日、時順數法：以大安為正月起點，依農曆月份、日期與時辰逐步順數，最後落宮作為結果。不同傳承可能存在起算與解讀差異。</p></details>
-    <details><summary>自動取得時間會使用哪一種日期？</summary><p>自動模式依裝置目前時間換算 GMT+8 的農曆月、日與時辰。起卦時會固定本次時間與結果，不會因頁面持續運作而自動改卦。</p></details>
-    <details><summary>完整版與簡版有什麼不同？</summary><p>簡版顯示最後落宮與基本提示；完整版另外列出月、日、時的逐步落宮過程，方便檢查計算路徑。</p></details>
-  </section>
 
-  <footer class="footer">SIX FLOW · MATRIX DIVINATION SYSTEM</footer>
 </div>
 
 <script>
@@ -334,11 +339,6 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 
   $('autoCast').addEventListener('click',autoCast);
   $('manualCast').addEventListener('click',manualCast);
-  $('manualToggle').addEventListener('click',()=>{
-    const fields=$('manualFields'),show=fields.hidden;
-    fields.hidden=!show;
-    $('manualToggle').textContent=show?'收起手動輸入':'改用手動輸入月、日、時';
-  });
   $('question').addEventListener('input',()=> $('charCount').textContent=$('question').value.length);
   document.querySelectorAll('[data-mode]').forEach(btn=>btn.addEventListener('click',()=>setMode(btn.dataset.mode)));
   $('themeBtn').addEventListener('click',()=>{
