@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f0e0c">
+<title>SIX FLOW · 小六壬</title>
+<script src="./lunar.min.js"></script>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0f0e0c;--panel:#181612;--panel2:#211e18;--ink:#e8dfcf;--muted:#a39883;
+  --gold:#d4a75b;--gold-soft:rgba(212,167,91,.13);--line:rgba(212,167,91,.24);
+  --green:#7aab8a;--red:#c06060;--shadow:0 12px 36px rgba(0,0,0,.22);
+}
+body.light{
+  color-scheme:light;
+  --bg:#f5eedc;--panel:#fffaf0;--panel2:#ede4cc;--ink:#403729;--muted:#81745e;
+  --gold:#80551e;--gold-soft:rgba(128,85,30,.10);--line:rgba(128,85,30,.25);
+  --green:#3d7a52;--red:#9a3030;--shadow:0 12px 30px rgba(75,53,20,.08);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{min-height:100%;background:var(--bg)}
+body{margin:0;min-height:100dvh;background:var(--bg);color:var(--ink);font:14px/1.65 "PingFang TC","Microsoft JhengHei",sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+[hidden]{display:none!important}
+.page{width:min(100%,760px);margin:0 auto;padding:0 16px calc(32px + env(safe-area-inset-bottom))}
+.topbar{height:58px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);margin:0 -16px;padding:0 16px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-mark{width:29px;height:29px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;color:var(--gold);font-family:Georgia,serif;font-size:15px}
+.brand-name{font:600 13px/1.2 Georgia,serif;letter-spacing:2.8px;color:var(--gold)}
+.brand-sub{font-size:10px;letter-spacing:1.8px;color:var(--muted);margin-top:3px}
+.theme-btn{width:32px;height:32px;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--gold);font-size:15px}
+.hero{text-align:center;padding:25px 0 18px}
+.eyebrow{font:11px Georgia,serif;letter-spacing:3px;color:var(--muted)}
+h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5px 0 0}
+.hero-note{font-size:12px;color:var(--muted);margin-top:5px;letter-spacing:1px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px;margin:0 0 13px;box-shadow:var(--shadow)}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.section-title{font-size:14px;font-weight:700;letter-spacing:1px;color:var(--gold)}
+.section-hint{font-size:11px;color:var(--muted)}
+.question-label,.field-label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.question-input,.field-select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:10px 11px;min-width:0}
+.question-input::placeholder{color:var(--muted);opacity:.7}
+.char-count{text-align:right;color:var(--muted);font-size:10px;margin-top:3px}
+.auto-row{display:flex;align-items:center;gap:10px;margin-top:14px}
+.primary-btn{flex:1;min-height:43px;border:1px solid var(--gold);border-radius:8px;background:var(--gold);color:var(--bg);font-weight:700;letter-spacing:1px;padding:9px 12px}
+.primary-btn:active{transform:translateY(1px);opacity:.88}
+.secondary-btn{min-height:39px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--gold);padding:8px 13px}
+.time-stamp{font-size:11px;color:var(--muted);text-align:center;margin-top:9px;min-height:18px}
+.divider{height:1px;background:var(--line);margin:15px 0}
+.manual-toggle{display:flex;justify-content:center;margin-top:10px}
+.text-btn{border:0;background:transparent;color:var(--muted);font-size:12px;text-decoration:underline;text-underline-offset:3px;padding:4px}
+.manual-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:13px}
+.field-select{padding:9px 8px}
+.mode-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 12px}
+.mode-switch{display:inline-flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.mode-switch button{border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:11px;padding:5px 12px}
+.mode-switch button.active{background:var(--gold-soft);color:var(--gold);box-shadow:inset 0 0 0 1px var(--line)}
+.result-empty{padding:25px 10px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:9px;font-size:12px}
+.result-top{text-align:center;padding:8px 0 14px}
+.result-kicker{font-size:11px;color:var(--muted);letter-spacing:2px}
+.result-name{font-size:31px;letter-spacing:5px;color:var(--gold);font-weight:600;margin:3px 0}
+.result-tagline{font-size:12px;color:var(--muted)}
+.palace-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:8px 0 13px}
+.palace{border:1px solid var(--line);border-radius:8px;background:var(--bg);text-align:center;padding:9px 2px 8px;min-width:0}
+.palace.active{border-color:var(--gold);background:var(--gold-soft);box-shadow:inset 0 0 0 1px var(--gold)}
+.palace-name{font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap}
+.palace-meaning{font-size:9px;color:var(--muted);margin-top:3px;white-space:nowrap}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.step{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px;text-align:center}
+.step-label{font-size:10px;color:var(--muted)}
+.step-value{font-size:14px;color:var(--gold);font-weight:700;margin-top:2px}
+.step-number{font-size:10px;color:var(--muted)}
+.explain{margin-top:13px;padding:12px;border-left:2px solid var(--gold);background:var(--gold-soft);border-radius:0 7px 7px 0}
+.explain-title{font-size:12px;color:var(--gold);font-weight:700;margin-bottom:4px}
+.explain-text{font-size:12px;color:var(--ink);line-height:1.8}
+.result-actions{display:flex;gap:8px;margin-top:13px}
+.result-actions button{flex:1}
+.records-empty{font-size:12px;color:var(--muted);text-align:center;padding:14px 0}
+.record{padding:10px 0;border-top:1px solid var(--line)}
+.record:first-child{border-top:0;padding-top:0}
+.record-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.record-question{font-size:13px;color:var(--ink);overflow-wrap:anywhere}
+.record-result{font-size:13px;color:var(--gold);font-weight:700;white-space:nowrap}
+.record-meta{font-size:10px;color:var(--muted);margin-top:4px}
+.record-delete{border:0;background:transparent;color:var(--muted);font-size:11px;padding:4px 0 4px 10px}
+.faq details{border-top:1px solid var(--line);padding:10px 0}
+.faq details:first-of-type{border-top:0}
+.faq summary{cursor:pointer;color:var(--gold);font-size:12px}
+.faq p{font-size:12px;color:var(--muted);line-height:1.8;padding:8px 2px 0}
+.footer{text-align:center;color:var(--muted);font:10px Georgia,serif;letter-spacing:1.5px;padding:8px 0 18px}
+@media(max-width:430px){
+ .page{padding-left:12px;padding-right:12px}
+ .topbar{margin-left:-12px;margin-right:-12px;padding:0 12px}
+ .panel{padding:13px}
+ .palace-grid{gap:4px}
+ .palace{padding:8px 1px}
+ .palace-name{font-size:11px}
+ .palace-meaning{font-size:8px}
+ .steps{gap:5px}
+ .step{padding:8px 3px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">六</div>
+      <div><div class="brand-name">SIX FLOW</div><div class="brand-sub">MATRIX · DIVINATION</div></div>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="切換深淺色">◑</button>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">SIX PALACES · TIME FLOW</div>
+    <h1>小六壬</h1>
+    <div class="hero-note">六宮流轉，時序有象</div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <div class="section-title">起卦設定</div>
+      <div class="section-hint">按下按鈕才取得時間</div>
+    </div>
+    <label class="question-label" for="question">想問什麼？ <span class="section-hint">選填，最多 60 字</span></label>
+    <input class="question-input" id="question" maxlength="60" placeholder="例如：今天面試順不順？">
+    <div class="char-count"><span id="charCount">0</span> / 60</div>
+
+    <div class="auto-row">
+      <button class="primary-btn" id="autoCast" type="button">◷　取得目前時間並起卦</button>
+    </div>
+    <div class="time-stamp" id="timeStamp">尚未取得時間 · GMT+8</div>
+    <div class="manual-toggle"><button class="text-btn" id="manualToggle" type="button">改用手動輸入月、日、時</button></div>
+
+    <div class="manual-fields" id="manualFields" hidden>
+      <div><label class="field-label" for="monthSelect">農曆月</label><select class="field-select" id="monthSelect"></select></div>
+      <div><label class="field-label" for="daySelect">農曆日</label><select class="field-select" id="daySelect"></select></div>
+      <div><label class="field-label" for="hourSelect">時辰</label><select class="field-select" id="hourSelect"></select></div>
+      <button class="primary-btn" id="manualCast" type="button" style="grid-column:1/-1">依輸入資料起卦</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="mode-row">
+      <div class="section-title">卦象結果</div>
+      <div class="mode-switch" role="group" aria-label="結果顯示模式">
+        <button type="button" class="active" data-mode="full">完整版</button>
+        <button type="button" data-mode="simple">簡版</button>
+      </div>
+    </div>
+    <div id="resultArea" class="result-empty">尚未起卦<br>取得目前時間，或自行輸入農曆月、日與時辰。</div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head"><div class="section-title">我的紀錄</div><div class="section-hint">保存在此裝置</div></div>
+    <div id="records"><div class="records-empty">還沒有紀錄。<br>起卦後可將結果保存，日後回來驗證。</div></div>
+  </section>
+
+  <section class="panel faq">
+    <div class="section-head"><div class="section-title">使用說明</div><div class="section-hint">SIX FLOW</div></div>
+    <details><summary>小六壬如何起卦？</summary><p>本頁採常見的月、日、時順數法：以大安為正月起點，依農曆月份、日期與時辰逐步順數，最後落宮作為結果。不同傳承可能存在起算與解讀差異。</p></details>
+    <details><summary>自動取得時間會使用哪一種日期？</summary><p>自動模式依裝置目前時間換算 GMT+8 的農曆月、日與時辰。起卦時會固定本次時間與結果，不會因頁面持續運作而自動改卦。</p></details>
+    <details><summary>完整版與簡版有什麼不同？</summary><p>簡版顯示最後落宮與基本提示；完整版另外列出月、日、時的逐步落宮過程，方便檢查計算路徑。</p></details>
+  </section>
+
+  <footer class="footer">SIX FLOW · MATRIX DIVINATION SYSTEM</footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const PALACES = [
+    {name:'大安',hint:'平穩・守成',desc:'主平穩、安定與守成。事情宜按部就班，重視既有條件，不宜為求快速而躁進。'},
+    {name:'留連',hint:'遲滯・牽纏',desc:'主延遲、反覆與牽纏。進展可能較慢，宜先釐清卡點，保留彈性並避免倉促決定。'},
+    {name:'速喜',hint:'迅速・喜訊',desc:'主快速、消息與喜慶。事情較容易出現進展或回應，宜把握時機，同時確認細節。'},
+    {name:'赤口',hint:'口舌・爭端',desc:'主口舌、摩擦與突發阻礙。溝通宜留意措辭，重要事項最好留下清楚紀錄。'},
+    {name:'小吉',hint:'助力・漸進',desc:'主小成、助力與漸進。適合透過合作、協調與持續累積推動事情。'},
+    {name:'空亡',hint:'落空・變數',desc:'主不確定、落空或虛耗。宜重新檢查前提與資訊，不宜只憑單一訊號下定論。'}
+  ];
+  const BRANCHES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  const $ = id => document.getElementById(id);
+  let currentResult = null;
+  let displayMode = 'full';
+
+  function fillSelects(){
+    const month = $('monthSelect'), day = $('daySelect'), hour = $('hourSelect');
+    month.innerHTML = '<option value="">選月</option>';
+    for(let i=1;i<=12;i++) month.add(new Option(i+' 月',String(i)));
+    day.innerHTML = '<option value="">選日</option>';
+    for(let i=1;i<=30;i++) day.add(new Option(i+' 日',String(i)));
+    hour.innerHTML = '<option value="">選時辰</option>';
+    BRANCHES.forEach((b,i)=>hour.add(new Option(b+'時',String(i))));
+  }
+
+  function palaceIndex(month, day, hourIndex){
+    const monthStep = (month - 1) % 6;
+    const dayStep = (monthStep + day - 1) % 6;
+    const hourStep = (dayStep + hourIndex) % 6;
+    return {monthStep,dayStep,hourStep};
+  }
+
+  function hourIndexFromClock(hour){
+    return Math.floor(((hour + 1) % 24) / 2);
+  }
+
+  function runCast(data){
+    const steps = palaceIndex(data.month,data.day,data.hourIndex);
+    currentResult = {
+      ...data,
+      steps,
+      resultIndex:steps.hourStep,
+      result:PALACES[steps.hourStep],
+      createdAt:new Date().toISOString()
+    };
+    renderResult();
+  }
+
+  function renderResult(){
+    if(!currentResult) return;
+    const r=currentResult, p=r.result;
+    const area=$('resultArea');
+    const palaceHtml=PALACES.map((item,i)=>
+      '<div class="palace '+(i===r.resultIndex?'active':'')+'"><div class="palace-name">'+item.name+'</div><div class="palace-meaning">'+item.hint+'</div></div>'
+    ).join('');
+    const common=
+      '<div class="result-top"><div class="result-kicker">FINAL PALACE</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+'</div></div>'+
+      '<div class="palace-grid">'+palaceHtml+'</div>';
+    const full=
+      '<div class="steps">'+
+        '<div class="step"><div class="step-label">月起</div><div class="step-value">'+PALACES[r.steps.monthStep].name+'</div><div class="step-number">農曆 '+r.month+' 月</div></div>'+
+        '<div class="step"><div class="step-label">日落</div><div class="step-value">'+PALACES[r.steps.dayStep].name+'</div><div class="step-number">農曆 '+r.day+' 日</div></div>'+
+        '<div class="step"><div class="step-label">時落</div><div class="step-value">'+p.name+'</div><div class="step-number">'+BRANCHES[r.hourIndex]+'時</div></div>'+
+      '</div>'+
+      '<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
+    const simple='<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
+    const meta='<div class="time-stamp">農曆 '+r.monthLabel+' '+r.day+' 日 · '+BRANCHES[r.hourIndex]+'時'+(r.timeLabel?' · '+r.timeLabel:'')+'</div>';
+    area.className='';
+    area.innerHTML=common+(displayMode==='full'?full:simple)+meta+
+      '<div class="result-actions"><button class="secondary-btn" id="saveRecord" type="button">保存這一卦</button><button class="secondary-btn" id="resetResult" type="button">清除結果</button></div>';
+    $('saveRecord').addEventListener('click',saveRecord);
+    $('resetResult').addEventListener('click',resetResult);
+  }
+
+  function setMode(mode){
+    displayMode=mode;
+    document.querySelectorAll('[data-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.mode===mode));
+    renderResult();
+  }
+
+  function getRecords(){
+    try{return JSON.parse(localStorage.getItem('sixflow.records')||'[]');}
+    catch(e){return [];}
+  }
+  function saveRecord(){
+    if(!currentResult)return;
+    const records=getRecords();
+    const r=currentResult;
+    records.unshift({
+      id:Date.now(),
+      question:$('question').value.trim(),
+      month:r.month,day:r.day,hourIndex:r.hourIndex,
+      palace:r.result.name,createdAt:r.createdAt,
+      timeLabel:r.timeLabel||'手動輸入'
+    });
+    try{localStorage.setItem('sixflow.records',JSON.stringify(records.slice(0,50)));renderRecords();}
+    catch(e){alert('此瀏覽器無法保存紀錄，請檢查儲存空間或瀏覽器設定。');}
+  }
+  function renderRecords(){
+    const records=getRecords(), root=$('records');
+    if(!records.length){root.innerHTML='<div class="records-empty">還沒有紀錄。<br>起卦後可將結果保存，日後回來驗證。</div>';return;}
+    root.innerHTML=records.map(r=>
+      '<div class="record"><div class="record-head"><div class="record-question">'+escapeHtml(r.question||'未填寫問事')+'</div><div class="record-result">'+r.palace+'</div></div>'+
+      '<div class="record-meta">'+escapeHtml(r.timeLabel||'')+' · 農曆 '+r.month+'月'+r.day+'日 · '+BRANCHES[r.hourIndex]+'時</div>'+
+      '<div class="record-head"><span class="record-meta">'+new Date(r.createdAt).toLocaleString('zh-TW',{hour12:false})+'</span><button class="record-delete" type="button" data-delete="'+r.id+'">刪除</button></div></div>'
+    ).join('');
+    root.querySelectorAll('[data-delete]').forEach(btn=>btn.addEventListener('click',()=>{
+      const next=getRecords().filter(x=>String(x.id)!==btn.dataset.delete);
+      localStorage.setItem('sixflow.records',JSON.stringify(next));renderRecords();
+    }));
+  }
+  function escapeHtml(value){
+    return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+  function resetResult(){
+    currentResult=null;
+    $('resultArea').className='result-empty';
+    $('resultArea').textContent='尚未起卦。取得目前時間，或自行輸入農曆月、日與時辰。';
+    $('timeStamp').textContent='尚未取得時間 · GMT+8';
+  }
+
+  function autoCast(){
+    try{
+      const now=new Date();
+      const solar=Solar.fromDate(now);
+      const lunar=solar.getLunar();
+      const rawMonth=lunar.getMonth();
+      const month=Math.abs(rawMonth);
+      const day=lunar.getDay();
+      const h=now.getHours();
+      const hourIndex=hourIndexFromClock(h);
+      const stamp=new Intl.DateTimeFormat('zh-TW',{
+        timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',
+        hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false
+      }).format(now);
+      $('monthSelect').value=String(month);
+      $('daySelect').value=String(day);
+      $('hourSelect').value=String(hourIndex);
+      const monthLabel=lunar.getMonthInChinese();
+      $('timeStamp').textContent='已取得 '+stamp+' · GMT+8'+(rawMonth<0?' · 閏月':'');
+      runCast({month,day,hourIndex,monthLabel,timeLabel:stamp,source:'auto'});
+    }catch(error){
+      $('timeStamp').textContent='時間換算失敗，請改用手動輸入。';
+      console.error(error);
+    }
+  }
+
+  function manualCast(){
+    const month=Number($('monthSelect').value),day=Number($('daySelect').value),hourIndex=Number($('hourSelect').value);
+    if(!month||!day||$('hourSelect').value===''){
+      alert('請完整選擇農曆月、日與時辰。');return;
+    }
+    runCast({month,day,hourIndex,monthLabel:'農曆'+month+'月',timeLabel:'手動輸入',source:'manual'});
+    $('timeStamp').textContent='手動輸入 · 農曆 '+month+'月'+day+'日 · '+BRANCHES[hourIndex]+'時';
+  }
+
+  $('autoCast').addEventListener('click',autoCast);
+  $('manualCast').addEventListener('click',manualCast);
+  $('manualToggle').addEventListener('click',()=>{
+    const fields=$('manualFields'),show=fields.hidden;
+    fields.hidden=!show;
+    $('manualToggle').textContent=show?'收起手動輸入':'改用手動輸入月、日、時';
+  });
+  $('question').addEventListener('input',()=> $('charCount').textContent=$('question').value.length);
+  document.querySelectorAll('[data-mode]').forEach(btn=>btn.addEventListener('click',()=>setMode(btn.dataset.mode)));
+  $('themeBtn').addEventListener('click',()=>{
+    document.body.classList.toggle('light');
+    try{localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark');}catch(e){}
+  });
+  try{if(localStorage.getItem('theme')==='light')document.body.classList.add('light');}catch(e){}
+  fillSelects();
+  renderRecords();
+})();
+</script>
+</body>
+</html>
