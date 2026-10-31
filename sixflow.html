@@ -117,6 +117,8 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 
 /* Compact layout aligned with the reference calculator and Matrix sub-pages. */
 .page{width:min(100%,800px);padding:0 18px 30px}
+.datetime-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 2px 7px;color:var(--muted);font-size:11px;letter-spacing:.5px;font-variant-numeric:tabular-nums}
+.datetime-bar .live-clock{color:var(--gold);font-size:15px;font-weight:600;letter-spacing:1px}
 .topbar{height:auto;min-height:54px;margin:0 -18px;padding:9px 20px}
 .topbar h1{font-size:22px;font-weight:500;letter-spacing:3px;color:var(--ink);margin:0}
 .brand,.hero{display:none!important}
@@ -142,6 +144,10 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 </head>
 <body>
 <div class="page">
+  <div class="datetime-bar" aria-label="台灣目前日期與時間">
+    <time id="liveDate">載入日期…</time>
+    <time class="live-clock" id="liveClock">--:--:--</time>
+  </div>
   <header class="topbar"><h1>小六壬占事</h1><button class="theme-btn" id="themeBtn" type="button" aria-label="切換深淺色">☽</button></header>
 
   <section class="panel">
@@ -200,6 +206,16 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
   const $ = id => document.getElementById(id);
   let currentResult = null;
   let displayMode = 'simple';
+
+  function updateHeaderClock(){
+    const now=new Date();
+    $('liveDate').textContent=new Intl.DateTimeFormat('zh-TW',{
+      timeZone:'Asia/Taipei',year:'numeric',month:'long',day:'numeric',weekday:'long'
+    }).format(now);
+    $('liveClock').textContent=new Intl.DateTimeFormat('zh-TW',{
+      timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+    }).format(now);
+  }
 
   function fillSelects(){
     const month = $('monthSelect'), day = $('daySelect'), hour = $('hourSelect');
@@ -365,6 +381,8 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     try{localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark');}catch(e){}
   });
   try{if(localStorage.getItem('theme')==='light')document.body.classList.add('light');}catch(e){}
+  updateHeaderClock();
+  setInterval(updateHeaderClock,1000);
   fillSelects();
   renderRecords();
 })();
