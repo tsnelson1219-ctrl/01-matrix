@@ -197,7 +197,14 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
   </div>
 
   <section class="panel">
-    <div class="mode-description">傳統六宮掌訣｜月起、日起、時落</div>
+    <div class="input-row mode-row">
+      <span class="row-label">算法模式</span>
+      <div class="mode-switch" role="group" aria-label="結果顯示模式">
+        <button type="button" data-mode="full">九宮三傳</button>
+        <button type="button" class="active" data-mode="simple">六宮掌訣</button>
+      </div>
+    </div>
+    <div class="mode-description" id="modeDescription">六宮掌訣：月起、日起、時落。</div>
     <div class="input-row question-row">
       <label class="question-label" for="question">問事內容 <span>（選填）</span></label>
       <input class="question-input" id="question" maxlength="60" placeholder="輸入想詢問的事情">
@@ -257,7 +264,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
   ];
   const $ = id => document.getElementById(id);
   let currentResult = null;
-  const displayMode = 'simple';
+  let displayMode = 'simple';
 
   function updateHeaderClock(){
     const now=new Date();
@@ -309,8 +316,10 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
   }
 
   function runCast(data){
-    const steps = palaceIndex(data.month,data.day,data.hourIndex);
-    const list = PALACES;
+    const steps = displayMode==='full'
+      ? palaceIndex9(data.month,data.day,data.hourIndex)
+      : palaceIndex(data.month,data.day,data.hourIndex);
+    const list=displayMode==='full'?PALACES9:PALACES;
     currentResult = {
       ...data,
       mode:displayMode,
@@ -326,17 +335,22 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     if(!currentResult) return;
     const r=currentResult, p=r.result;
     const area=$('resultArea');
+    const simpleMode=displayMode==='simple';
+    const list=simpleMode?PALACES:PALACES9;
     const simpleLayout=[1,2,3,0,4,5];
     const palaceHtml=simpleLayout.map(index=>{
       const item=PALACES[index];
       const category=[0,2,4].includes(index)?'三吉':'三凶';
       return '<div class="palace palace-slot '+(index===r.resultIndex?'active':'')+'"><div class="palace-name">'+item.name+'</div><div class="palace-meaning">'+category+'</div></div>';
     }).join('');
-    const common='<div class="result-top"><div class="result-kicker">傳統六宮掌訣 · 時宮結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+([0,2,4].includes(r.resultIndex)?'三吉':'三凶')+'</div></div><div class="palace-grid">'+palaceHtml+'</div>';
-    const list=PALACES;
-    const stageLabels=['月宮','日宮','時宮'];
-    const stageRoles=['月起','日起','時落'];
-    const stageInputs=['農曆 '+r.month+' 月','農曆 '+r.day+' 日',BRANCHES[r.hourIndex]+'時'];
+    const common=simpleMode
+      ? '<div class="result-top"><div class="result-kicker">傳統六宮掌訣 · 時宮結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+([0,2,4].includes(r.resultIndex)?'三吉':'三凶')+'</div></div><div class="palace-grid">'+palaceHtml+'</div>'
+      : '<div class="result-top"><div class="result-kicker">九宮三傳 · 末傳結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+' · '+p.element+' · '+p.palace+'</div></div>';
+    const stageLabels=simpleMode?['月宮','日宮','時宮']:['初傳','中傳','末傳'];
+    const stageRoles=simpleMode?['月起','日起','時落']:['初傳','中傳','末傳'];
+    const stageInputs=simpleMode
+      ? ['農曆 '+r.month+' 月','農曆 '+r.day+' 日',BRANCHES[r.hourIndex]+'時']
+      : ['農曆月數 '+r.month,'農曆日數 '+r.day,'時辰序數 '+(r.hourIndex+1)];
     const stageCards=[
       {label:stageLabels[0],role:stageRoles[0],phase:'start',input:stageInputs[0],item:list[r.steps.monthStep]},
       {label:stageLabels[1],role:stageRoles[1],phase:'middle',input:stageInputs[1],item:list[r.steps.dayStep]},
@@ -346,8 +360,10 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
       '<div class="stage-card phase-'+step.phase+' '+(i===2?'final':'')+'"><div class="stage-rail"><div class="stage-role">'+step.role+'</div></div><div class="stage-content"><div class="stage-label">'+step.label+'</div><div class="stage-name">'+step.item.name+'</div><div class="stage-input">'+step.input+'</div></div></div>'
     ).join('')+'</div>';
     const category=[0,2,4].includes(r.resultIndex)?'三吉':'三凶';
-    const interpretation='<div class="explain"><div class="explain-title">古籍所載：'+category+'</div><div class="explain-text">清代《西齋雜著二種・鳳城瑣錄》〈六壬口訣〉記載六課陰陽消長。此處只呈現吉凶分類；各宮細部斷語及五行配屬仍待逐條核對文獻。</div></div>';
-    const meta='<div class="time-stamp">六宮掌訣 · 農曆 '+r.monthLabel+' '+r.day+' 日 · '+BRANCHES[r.hourIndex]+'時'+(r.timeLabel?' · '+r.timeLabel:'')+'</div>';
+    const interpretation=simpleMode
+      ? '<div class="explain"><div class="explain-title">古籍所載：'+category+'</div><div class="explain-text">清代《西齋雜著二種・鳳城瑣錄》〈六壬口訣〉記載六課陰陽消長。此處只呈現吉凶分類；各宮細部斷語及五行配屬仍待逐條核對文獻。</div></div>'
+      : '<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+' 九宮擴充系統獨立運算，不套用六宮的判斷規則。</div></div>';
+    const meta='<div class="time-stamp">'+(simpleMode?'六宮掌訣':'九宮三傳')+' · 農曆 '+r.monthLabel+' '+r.day+' 日 · '+BRANCHES[r.hourIndex]+'時'+(r.timeLabel?' · '+r.timeLabel:'')+'</div>';
     area.className='';
     area.innerHTML=common+interpretation+stages+meta+
       '<div class="result-actions"><button class="secondary-btn" id="saveRecord" type="button">保存這一卦</button><button class="secondary-btn" id="resetResult" type="button">清除結果</button></div>';
@@ -355,7 +371,14 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     $('resetResult').addEventListener('click',resetResult);
   }
 
-  function setMode(){ if(currentResult) runCast({...currentResult}); }
+  function setMode(mode){
+    displayMode=mode;
+    document.querySelectorAll('[data-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.mode===mode));
+    $('modeDescription').textContent=mode==='full'
+      ? '九宮三傳：月定初傳、日定中傳、時定末傳；獨立於六宮運算。'
+      : '六宮掌訣：月起、日起、時落；不套用九宮配置。';
+    if(currentResult) runCast({...currentResult});
+  }
 
   function getRecords(){
     try{return JSON.parse(localStorage.getItem('sixflow.records')||'[]');}
@@ -458,6 +481,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     $('customToggle').setAttribute('aria-expanded',String(opening));
   });
   $('question').addEventListener('input',()=> $('charCount').textContent=$('question').value.length);
+  document.querySelectorAll('[data-mode]').forEach(btn=>btn.addEventListener('click',()=>setMode(btn.dataset.mode)));
 
   $('themeBtn').addEventListener('click',()=>{
     document.body.classList.toggle('light');
