@@ -403,8 +403,8 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     displayMode=mode;
     document.querySelectorAll('[data-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.mode===mode));
     $('modeDescription').textContent=mode==='full'
-      ? '九宮三傳：看事情的起因、發展與結果。'
-      : '六宮掌訣：以月、日、時推算，快速看事情走向。';
+      ? '三傳看起因、發展、結果，結合五行與八卦。'
+      : '六宮看吉凶與走向，並以五行生剋串接。';
     if(currentResult) runCast({...currentResult});
   }
 
