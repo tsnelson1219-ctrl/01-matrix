@@ -197,14 +197,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
   </div>
 
   <section class="panel">
-    <div class="input-row mode-row">
-      <span class="row-label">算法模式</span>
-      <div class="mode-switch" role="group" aria-label="結果顯示模式">
-        <button type="button" data-mode="full">九宮三傳</button>
-        <button type="button" class="active" data-mode="simple">六宮掌訣</button>
-      </div>
-    </div>
-    <div class="mode-description" id="modeDescription">月起、日起、時落，六宮循環。</div>
+    <div class="mode-description">傳統六宮掌訣｜月起、日起、時落</div>
     <div class="input-row question-row">
       <label class="question-label" for="question">問事內容 <span>（選填）</span></label>
       <input class="question-input" id="question" maxlength="60" placeholder="輸入想詢問的事情">
@@ -264,7 +257,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
   ];
   const $ = id => document.getElementById(id);
   let currentResult = null;
-  let displayMode = 'simple';
+  const displayMode = 'simple';
 
   function updateHeaderClock(){
     const now=new Date();
@@ -316,10 +309,8 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
   }
 
   function runCast(data){
-    const steps = displayMode==='full'
-      ? palaceIndex9(data.month,data.day,data.hourIndex)
-      : palaceIndex(data.month,data.day,data.hourIndex);
-    const list=displayMode==='full'?PALACES9:PALACES;
+    const steps = palaceIndex(data.month,data.day,data.hourIndex);
+    const list = PALACES;
     currentResult = {
       ...data,
       mode:displayMode,
@@ -335,78 +326,36 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     if(!currentResult) return;
     const r=currentResult, p=r.result;
     const area=$('resultArea');
-    const simpleMode=displayMode==='simple';
-    const simpleList=PALACES;
     const simpleLayout=[1,2,3,0,4,5];
     const palaceHtml=simpleLayout.map(index=>{
-      const item=simpleList[index];
-      return '<div class="palace palace-slot '+(index===r.resultIndex?'active':'')+'"><div class="palace-name">'+item.name+'</div><div class="palace-meaning">'+item.hint+'</div></div>';
+      const item=PALACES[index];
+      const category=[0,2,4].includes(index)?'三吉':'三凶';
+      return '<div class="palace palace-slot '+(index===r.resultIndex?'active':'')+'"><div class="palace-name">'+item.name+'</div><div class="palace-meaning">'+category+'</div></div>';
     }).join('');
-    const common=simpleMode
-      ? '<div class="result-top"><div class="result-kicker">六宮掌訣 · 時宮結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+'</div></div><div class="palace-grid">'+palaceHtml+'</div>'
-      : '<div class="result-top"><div class="result-kicker">九宮三傳 · 末傳結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+' · '+p.element+' · '+p.palace+'</div></div>';
-    const list=simpleMode?PALACES:PALACES9;
-    const elementOf = simpleMode
-      ? ['木','水','火','金','木','土']
-      : list.map(item=>item.element);
-    const stageLabels=simpleMode?['月宮','日宮','時宮']:['初傳','中傳','末傳'];
-    const stageRoles=['起因','發展','結果'];
-    const stageInputs=simpleMode
-      ? ['農曆 '+r.month+' 月','農曆 '+r.day+' 日',BRANCHES[r.hourIndex]+'時（子時起算）']
-      : ['月數 '+r.month,'日數 '+r.day,'時辰序數 '+(r.hourIndex+1)];
+    const common='<div class="result-top"><div class="result-kicker">傳統六宮掌訣 · 時宮結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+([0,2,4].includes(r.resultIndex)?'三吉':'三凶')+'</div></div><div class="palace-grid">'+palaceHtml+'</div>';
+    const list=PALACES;
+    const stageLabels=['月宮','日宮','時宮'];
+    const stageRoles=['月起','日起','時落'];
+    const stageInputs=['農曆 '+r.month+' 月','農曆 '+r.day+' 日',BRANCHES[r.hourIndex]+'時'];
     const stageCards=[
       {label:stageLabels[0],role:stageRoles[0],phase:'start',input:stageInputs[0],item:list[r.steps.monthStep]},
       {label:stageLabels[1],role:stageRoles[1],phase:'middle',input:stageInputs[1],item:list[r.steps.dayStep]},
       {label:stageLabels[2],role:stageRoles[2],phase:'end',input:stageInputs[2],item:list[r.steps.hourStep]}
     ];
     const stages='<div class="stage-grid">'+stageCards.map((step,i)=>
-      '<div class="stage-card phase-'+step.phase+' '+(i===2?'final':'')+'"><div class="stage-rail"><div class="stage-role">'+step.role+'</div></div><div class="stage-content"><div class="stage-label">'+step.label+'</div><div class="stage-name">'+step.item.name+'</div><div class="stage-input">'+step.input+(simpleMode?'（'+elementOf[list.indexOf(step.item)]+'）':' · '+step.item.element+'・'+step.item.palace)+'</div><div class="stage-reading">'+step.item.hint+'</div></div></div>'
+      '<div class="stage-card phase-'+step.phase+' '+(i===2?'final':'')+'"><div class="stage-rail"><div class="stage-role">'+step.role+'</div></div><div class="stage-content"><div class="stage-label">'+step.label+'</div><div class="stage-name">'+step.item.name+'</div><div class="stage-input">'+step.input+'</div></div></div>'
     ).join('')+'</div>';
-    const method=simpleMode
-      ? '<div class="method-note"><div class="method-title">六宮掌訣</div><div class="method-text">月起、日起、時落；六宮循環，時宮為最後落點。</div></div>'
-      : '<div class="method-note"><div class="method-title">九宮三傳</div><div class="method-text">月定初傳、日定中傳、時定末傳；九宮循環，末傳為最後落點。</div></div>';
-    const generate = {'木':'火','火':'土','土':'金','金':'水','水':'木'};
-    const control = {'木':'土','土':'水','水':'火','火':'金','金':'木'};
-    function relation(a,b){
-      if(a===b) return '比和：同氣相扶';
-      if(generate[a]===b) return '前宮生後宮：前段助長後段';
-      if(generate[b]===a) return '後宮生前宮：後段回助前段';
-      if(control[a]===b) return '前宮剋後宮：前段制約後段';
-      if(control[b]===a) return '後宮剋前宮：後段反制前段';
-      return '五行關係待確認';
-    }
-    const relationHtml = [
-      {from:stageCards[0],to:stageCards[1]},
-      {from:stageCards[1],to:stageCards[2]}
-    ].map(pair=>{
-      const a=elementOf[list.indexOf(pair.from.item)];
-      const b=elementOf[list.indexOf(pair.to.item)];
-      return '<div class="relation-row"><span>'+pair.from.item.name+'（'+a+'）</span><span class="relation-arrow">→</span><span>'+pair.to.item.name+'（'+b+'）</span><strong>'+relation(a,b)+'</strong></div>';
-    }).join('');
-    const extra = '<div class="element-analysis"><div class="method-title">五行生剋串接</div>'+relationHtml+
-      (simpleMode
-        ? '<div class="analysis-note">六宮採用：大安木、留連水、速喜火、赤口金、小吉木、空亡土。八卦配位各派不同，本模式不強行套用。</div>'
-        : '<div class="analysis-note">卦位：'+stageCards.map(x=>x.item.name+'・'+x.item.palace+'（'+x.item.direction+'）').join(' → ')+'</div>')+
-      '</div>';
-    const interpretation='<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
-    const full=stages+method+extra+interpretation;
-    const simple=stages+method+extra+interpretation;
-    const meta='<div class="time-stamp">'+(simpleMode?'六宮掌訣':'九宮三傳')+' · 農曆 '+r.monthLabel+' '+r.day+' 日 · '+BRANCHES[r.hourIndex]+'時'+(r.timeLabel?' · '+r.timeLabel:'')+'</div>';
+    const category=[0,2,4].includes(r.resultIndex)?'三吉':'三凶';
+    const interpretation='<div class="explain"><div class="explain-title">古籍所載：'+category+'</div><div class="explain-text">清代《西齋雜著二種・鳳城瑣錄》〈六壬口訣〉記載六課陰陽消長。此處只呈現吉凶分類；各宮細部斷語及五行配屬仍待逐條核對文獻。</div></div>';
+    const meta='<div class="time-stamp">六宮掌訣 · 農曆 '+r.monthLabel+' '+r.day+' 日 · '+BRANCHES[r.hourIndex]+'時'+(r.timeLabel?' · '+r.timeLabel:'')+'</div>';
     area.className='';
-    area.innerHTML=common+(displayMode==='full'?full:simple)+meta+
+    area.innerHTML=common+interpretation+stages+meta+
       '<div class="result-actions"><button class="secondary-btn" id="saveRecord" type="button">保存這一卦</button><button class="secondary-btn" id="resetResult" type="button">清除結果</button></div>';
     $('saveRecord').addEventListener('click',saveRecord);
     $('resetResult').addEventListener('click',resetResult);
   }
 
-  function setMode(mode){
-    displayMode=mode;
-    document.querySelectorAll('[data-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.mode===mode));
-    $('modeDescription').textContent=mode==='full'
-      ? '三傳看起因、發展、結果，結合五行與八卦。'
-      : '六宮看吉凶與走向，並以五行生剋串接。';
-    if(currentResult) runCast({...currentResult});
-  }
+  function setMode(){ if(currentResult) runCast({...currentResult}); }
 
   function getRecords(){
     try{return JSON.parse(localStorage.getItem('sixflow.records')||'[]');}
@@ -509,7 +458,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     $('customToggle').setAttribute('aria-expanded',String(opening));
   });
   $('question').addEventListener('input',()=> $('charCount').textContent=$('question').value.length);
-  document.querySelectorAll('[data-mode]').forEach(btn=>btn.addEventListener('click',()=>setMode(btn.dataset.mode)));
+
   $('themeBtn').addEventListener('click',()=>{
     document.body.classList.toggle('light');
     try{localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark');}catch(e){}
