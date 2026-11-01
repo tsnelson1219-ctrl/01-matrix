@@ -59,6 +59,17 @@ body.light .cloud-corner{color:#b96863;opacity:.62}
 .yao{fill:var(--ink)}
 #compassCenter{cursor:pointer}
 #compassCenter:hover .center-ring,#compassCenter:focus-visible .center-ring{stroke:var(--upper);stroke-width:3.2}
+
+#compassCenter .taiji-light,#compassCenter .taiji-dark,#compassCenter .center-ring{transition:filter .25s ease,stroke .25s ease,stroke-width .25s ease}
+#compassCenter.taiji-charging .center-ring{stroke:var(--gold);stroke-width:2.6;filter:drop-shadow(0 0 5px var(--gold))}
+#compassCenter.taiji-charging .taiji-light{filter:drop-shadow(0 0 5px var(--upper))}
+#compassCenter.taiji-charging .taiji-dark{filter:drop-shadow(0 0 5px var(--lower))}
+#compassCenter.taiji-spinning .center-ring{stroke:var(--gold);stroke-width:3.2;filter:drop-shadow(0 0 9px var(--gold))}
+#compassCenter.taiji-spinning .taiji-light{filter:drop-shadow(0 0 10px var(--upper)) drop-shadow(0 0 5px var(--gold))}
+#compassCenter.taiji-spinning .taiji-dark{filter:drop-shadow(0 0 10px var(--lower)) drop-shadow(0 0 5px var(--gold))}
+#compassCenter.taiji-coasting .center-ring{stroke:var(--gold);filter:drop-shadow(0 0 4px var(--gold))}
+#compassCenter.taiji-coasting .taiji-light{filter:drop-shadow(0 0 5px var(--upper))}
+#compassCenter.taiji-coasting .taiji-dark{filter:drop-shadow(0 0 5px var(--lower))}
 .center-ring{fill:var(--panel);stroke:var(--ring-line);stroke-width:1}
 .taiji-light{fill:var(--ink)}.taiji-dark{fill:var(--panel)}
 .selection{margin-top:12px;border:1.5px solid var(--line);border-radius:11px;background:var(--panel);padding:14px 16px}
@@ -113,7 +124,7 @@ details{font-size:11px;color:var(--muted);margin-top:15px}summary{cursor:pointer
 const $=id=>document.getElementById(id),D=window.BAGUA_DATA,NS='http://www.w3.org/2000/svg';
 const state={mode:'later',rotation:0,upper:null,lower:null,target:null,inspected:null};
 const hexLookup=new Map(D.hexagrams.map((h,i)=>[h[1]+h[2],{data:h,number:i+1}]));
-let labels=[],gesture=null,longTimer=null;
+let labels=[],gesture=null,longTimer=null,taijiCenter=null;
 function svg(tag,attrs={},text){const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;return e;}
 function polar(r,deg){const a=(deg-90)*Math.PI/180;return [340+r*Math.cos(a),340+r*Math.sin(a)];}
 function annularPath(inner,outer,first,last){const p=(r,d)=>polar(r,d).join(' ');return `M ${p(inner,first)} L ${p(outer,first)} A ${outer} ${outer} 0 0 1 ${p(outer,last)} L ${p(inner,last)} A ${inner} ${inner} 0 0 0 ${p(inner,first)} Z`;}
@@ -152,13 +163,13 @@ function buildCompass(){
  root.append(lettering);
  $('ringGuide').textContent=state.mode==='earlier'?'方位 · 八卦 · 六親 · 四象':'方位 · 八卦 · 六親';
  const center=svg('g',{id:'compassCenter',role:'button',tabindex:0,'aria-label':'取消選取上下卦'});center.append(svg('title',{},'取消選取'),svg('circle',{cx:340,cy:340,r:state.mode==='earlier'?48:105,class:'center-ring'}));
- const tai=svg('g',{transform:state.mode==='earlier'?'translate(340 340) scale(.68)':'translate(340 340)'});tai.append(svg('circle',{r:42,class:'taiji-light'}),svg('path',{d:'M0 -42 A42 42 0 0 1 0 42 A21 21 0 0 1 0 0 A21 21 0 0 0 0 -42',class:'taiji-dark'}),svg('circle',{cx:0,cy:-21,r:6,class:'taiji-dark'}),svg('circle',{cx:0,cy:21,r:6,class:'taiji-light'}));center.append(tai);root.append(center);
+ taijiCenter=center;const tai=svg('g',{transform:state.mode==='earlier'?'translate(340 340) scale(.68)':'translate(340 340)'});tai.append(svg('circle',{r:42,class:'taiji-light'}),svg('path',{d:'M0 -42 A42 42 0 0 1 0 42 A21 21 0 0 1 0 0 A21 21 0 0 0 0 -42',class:'taiji-dark'}),svg('circle',{cx:0,cy:-21,r:6,class:'taiji-dark'}),svg('circle',{cx:0,cy:21,r:6,class:'taiji-light'}));center.append(tai);root.append(center);
  // The Taiji owns its pointer sequence. Stop it before the compass-level drag handler.
  let centerTimer=null,centerHeld=false,centerPointer=null;
  center.addEventListener('pointerdown',e=>{
   if(e.button!==0||centerPointer!==null)return;
   e.preventDefault();e.stopPropagation();
-  centerPointer=e.pointerId;centerHeld=false;
+  centerPointer=e.pointerId;centerHeld=false;center.classList.add('taiji-charging');
   center.setPointerCapture(e.pointerId);
   centerTimer=setTimeout(()=>{centerTimer=null;if(centerPointer!==e.pointerId)return;centerHeld=true;startAutoSpin();},400);
  });
@@ -166,7 +177,7 @@ function buildCompass(){
   if(centerPointer!==e.pointerId)return;
   e.preventDefault();e.stopPropagation();
   if(centerTimer!==null){clearTimeout(centerTimer);centerTimer=null;}
-  const wasHeld=centerHeld;centerPointer=null;centerHeld=false;
+  const wasHeld=centerHeld;centerPointer=null;centerHeld=false;if(!wasHeld)center.classList.remove('taiji-charging');
   if(center.hasPointerCapture(e.pointerId))center.releasePointerCapture(e.pointerId);
   if(wasHeld)releaseAutoSpin();else clearSelection();
  });
@@ -200,7 +211,7 @@ function setUpper(name){state.inspected=null;state.upper=name;state.lower=null;s
 function selectGua(name){if(state.target==='upper'){setUpper(name);return;}if(state.target==='lower'){state.inspected=null;state.lower=name;state.target=null;paintSelection();renderResult();$('status').textContent=`${state.upper}上${state.lower}下 · 長按可重新組卦`;return;}state.inspected=name;paintSelection();$('status').textContent=name+'為'+D.trigrams[name].nature+' · '+D.trigrams[name].meaning;}
 function cancelTimer(){if(longTimer!==null)clearTimeout(longTimer);longTimer=null;document.querySelectorAll('.is-holding').forEach(e=>e.classList.remove('is-holding'));paintSelectionOutlines();}
 let spinFrame=null,spinLast=0,spinVelocity=0,spinHeld=false;
-function stopAutoSpin(){if(spinFrame!==null)cancelAnimationFrame(spinFrame);spinFrame=null;spinLast=0;spinVelocity=0;spinHeld=false;}
+function stopAutoSpin(){if(spinFrame!==null)cancelAnimationFrame(spinFrame);spinFrame=null;spinLast=0;spinVelocity=0;spinHeld=false;if(taijiCenter)taijiCenter.classList.remove('taiji-charging','taiji-spinning','taiji-coasting');}
 function animateAutoSpin(ts){
  if(!spinLast)spinLast=ts;
  const dt=Math.min((ts-spinLast)/1000,.05);spinLast=ts;
@@ -208,8 +219,8 @@ function animateAutoSpin(ts){
  if(!spinHeld){spinVelocity*=Math.exp(-3.0*dt);if(Math.abs(spinVelocity)<2){stopAutoSpin();return;}}
  spinFrame=requestAnimationFrame(animateAutoSpin);
 }
-function startAutoSpin(){stopAutoSpin();spinHeld=true;spinVelocity=240;spinLast=0;spinFrame=requestAnimationFrame(animateAutoSpin);}
-function releaseAutoSpin(){if(!spinHeld)return;spinHeld=false;}
+function startAutoSpin(){if(spinFrame!==null)cancelAnimationFrame(spinFrame);spinFrame=null;spinLast=0;spinVelocity=240;spinHeld=true;if(taijiCenter)taijiCenter.classList.remove('taiji-charging','taiji-coasting'),taijiCenter.classList.add('taiji-spinning');spinFrame=requestAnimationFrame(animateAutoSpin);}
+function releaseAutoSpin(){if(!spinHeld)return;spinHeld=false;if(taijiCenter)taijiCenter.classList.remove('taiji-spinning'),taijiCenter.classList.add('taiji-coasting');}
 function cancelGesture(){cancelTimer();gesture=null;$('compass').classList.remove('dragging');stopAutoSpin();}
 function pointerAngle(e){const b=$('compass').getBoundingClientRect();return Math.atan2(e.clientY-b.top-b.height/2,e.clientX-b.left-b.width/2)*180/Math.PI;}
 const compass=$('compass');
