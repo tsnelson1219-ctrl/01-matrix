@@ -158,7 +158,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 .stage-input{font-size:10px;color:var(--muted);line-height:1.6}
 .method-note{margin-top:12px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
 .method-title{font-size:12px;font-weight:700;color:var(--gold);margin-bottom:5px}
-.method-text{font-size:11px;line-height:1.8;color:var(--muted)}
+.method-text{font-size:11px;line-height:1.8;color:var(--muted)}\n.element-analysis{margin-top:12px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}\n.relation-row{display:grid;grid-template-columns:auto 16px auto;gap:5px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:11px;color:var(--ink)}\n.relation-arrow{color:var(--gold);text-align:center}\n.relation-row strong{grid-column:1/-1;font-size:10px;font-weight:500;color:var(--gold)}\n.analysis-note{font-size:10px;line-height:1.7;color:var(--muted);margin-top:8px}
 @media(max-width:430px){.stage-grid{gap:5px}.stage-card{padding:10px 3px}.stage-name{font-size:17px}.stage-input{font-size:9px}}
 
 /* 三階段解讀：起因、發展、結果以不同色彩建立閱讀順序。 */
@@ -362,8 +362,34 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     const method=simpleMode
       ? '<div class="method-note"><div class="method-title">六宮掌訣</div><div class="method-text">月起、日起、時落；六宮循環，時宮為最後落點。</div></div>'
       : '<div class="method-note"><div class="method-title">九宮三傳</div><div class="method-text">月定初傳、日定中傳、時定末傳；九宮循環，末傳為最後落點。</div></div>';
+    const elementOf = simpleMode
+      ? ['木','水','火','金','木','土']
+      : list.map(item=>item.element);
+    const generate = {'木':'火','火':'土','土':'金','金':'水','水':'木'};
+    const control = {'木':'土','土':'水','水':'火','火':'金','金':'木'};
+    function relation(a,b){
+      if(a===b) return '比和：同氣相扶';
+      if(generate[a]===b) return '前宮生後宮：前段助長後段';
+      if(generate[b]===a) return '後宮生前宮：後段回助前段';
+      if(control[a]===b) return '前宮剋後宮：前段制約後段';
+      if(control[b]===a) return '後宮剋前宮：後段反制前段';
+      return '五行關係待確認';
+    }
+    const relationHtml = [
+      {from:stageCards[0],to:stageCards[1]},
+      {from:stageCards[1],to:stageCards[2]}
+    ].map(pair=>{
+      const a=elementOf[list.indexOf(pair.from.item)];
+      const b=elementOf[list.indexOf(pair.to.item)];
+      return '<div class="relation-row"><span>'+pair.from.item.name+'（'+a+'）</span><span class="relation-arrow">→</span><span>'+pair.to.item.name+'（'+b+'）</span><strong>'+relation(a,b)+'</strong></div>';
+    }).join('');
+    const extra = '<div class="element-analysis"><div class="method-title">五行生剋串接</div>'+relationHtml+
+      (simpleMode
+        ? '<div class="analysis-note">六宮採用：大安木、留連水、速喜火、赤口金、小吉木、空亡土。八卦配位各派不同，本模式不強行套用。</div>'
+        : '<div class="analysis-note">卦位：'+stageCards.map(x=>x.item.name+'・'+x.item.palace+'（'+x.item.direction+'）').join(' → ')+'</div>')+
+      '</div>';
     const interpretation='<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
-    const full=stages+method+interpretation;
+    const full=stages+method+extra+interpretation;
     const simple=stages+method+interpretation;
     const meta='<div class="time-stamp">'+(simpleMode?'六宮掌訣':'九宮三傳')+' · 農曆 '+r.monthLabel+' '+r.day+' 日 · '+BRANCHES[r.hourIndex]+'時'+(r.timeLabel?' · '+r.timeLabel:'')+'</div>';
     area.className='';
