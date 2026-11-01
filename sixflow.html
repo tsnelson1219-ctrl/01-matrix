@@ -390,7 +390,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
       '</div>';
     const interpretation='<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
     const full=stages+method+extra+interpretation;
-    const simple=stages+method+interpretation;
+    const simple=stages+method+extra+interpretation;
     const meta='<div class="time-stamp">'+(simpleMode?'六宮掌訣':'九宮三傳')+' · 農曆 '+r.monthLabel+' '+r.day+' 日 · '+BRANCHES[r.hourIndex]+'時'+(r.timeLabel?' · '+r.timeLabel:'')+'</div>';
     area.className='';
     area.innerHTML=common+(displayMode==='full'?full:simple)+meta+
