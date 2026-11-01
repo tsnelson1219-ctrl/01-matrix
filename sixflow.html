@@ -160,6 +160,31 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 .method-title{font-size:12px;font-weight:700;color:var(--gold);margin-bottom:5px}
 .method-text{font-size:11px;line-height:1.8;color:var(--muted)}
 @media(max-width:430px){.stage-grid{gap:5px}.stage-card{padding:10px 3px}.stage-name{font-size:17px}.stage-input{font-size:9px}}
+
+/* 三階段解讀：起因、發展、結果以不同色彩建立閱讀順序。 */
+.stage-intro{font-size:11px;color:var(--muted);line-height:1.75;margin:2px 0 9px}
+.stage-grid{align-items:stretch;gap:9px;margin:10px 0 14px}
+.stage-card{--phase:#79a9c7;display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;text-align:left;align-items:stretch;padding:11px 9px;border:1px solid color-mix(in srgb,var(--phase) 42%,transparent);background:color-mix(in srgb,var(--phase) 7%,var(--bg));border-radius:10px;box-shadow:none}
+.stage-card.phase-start{--phase:#78a9cb}
+.stage-card.phase-middle{--phase:#65ad9a}
+.stage-card.phase-end{--phase:#d4a75b}
+.stage-card.final{border:1px solid var(--phase);background:color-mix(in srgb,var(--phase) 13%,var(--bg));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--phase) 30%,transparent)}
+.stage-rail{display:flex;align-items:center;justify-content:center;border-right:1px solid color-mix(in srgb,var(--phase) 42%,transparent);padding-right:6px}
+.stage-role{writing-mode:vertical-rl;text-orientation:upright;font-size:11px;letter-spacing:2px;font-weight:700;color:var(--phase);white-space:nowrap}
+.stage-content{min-width:0}
+.stage-label{font-size:10px;color:var(--phase);font-weight:700;letter-spacing:.5px}
+.stage-name{font-size:18px;color:var(--ink);margin:3px 0 2px}
+.stage-input{font-size:10px;color:var(--muted);line-height:1.55}
+.stage-reading{font-size:11px;line-height:1.75;color:var(--ink);margin-top:7px;overflow-wrap:anywhere}
+.stage-card.final .stage-name{color:var(--phase)}
+.stage-guide{font-size:11px;color:var(--muted);line-height:1.8;margin:-3px 0 12px;padding:9px 11px;background:var(--panel2);border-radius:8px}
+.palace-grid{gap:7px;margin:8px auto 12px}
+.palace{border-color:color-mix(in srgb,var(--line) 65%,transparent);background:var(--panel);opacity:.78}
+.palace-name{color:var(--muted)}
+.palace-meaning{white-space:normal;line-height:1.5}
+.palace.active{opacity:1;border-color:var(--gold);background:var(--gold-soft);box-shadow:inset 0 0 0 1px var(--gold)}
+.palace.active .palace-name{color:var(--gold)}
+@media(max-width:430px){.stage-grid{gap:6px}.stage-card{grid-template-columns:19px minmax(0,1fr);gap:6px;padding:9px 6px}.stage-role{font-size:10px}.stage-name{font-size:16px}.stage-reading{font-size:10px;line-height:1.65}.stage-input{font-size:9px}}
 </style>
 </head>
 <body>
@@ -322,17 +347,24 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
       : '<div class="result-top"><div class="result-kicker">九宮三傳 · 末傳結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+' · '+p.element+' · '+p.palace+'</div></div>';
     const list=simpleMode?PALACES:PALACES9;
     const stageLabels=simpleMode?['月宮','日宮','時宮']:['初傳','中傳','末傳'];
+    const stageRoles=['起因','發展','結果'];
     const stageInputs=simpleMode
       ? ['農曆 '+r.month+' 月','農曆 '+r.day+' 日',BRANCHES[r.hourIndex]+'時（子時起算）']
       : ['月數 '+r.month,'日數 '+r.day,'時辰序數 '+(r.hourIndex+1)];
     const stageCards=[
-      {label:stageLabels[0],input:stageInputs[0],item:list[r.steps.monthStep]},
-      {label:stageLabels[1],input:stageInputs[1],item:list[r.steps.dayStep]},
-      {label:stageLabels[2],input:stageInputs[2],item:list[r.steps.hourStep]}
+      {label:stageLabels[0],role:stageRoles[0],phase:'start',input:stageInputs[0],item:list[r.steps.monthStep]},
+      {label:stageLabels[1],role:stageRoles[1],phase:'middle',input:stageInputs[1],item:list[r.steps.dayStep]},
+      {label:stageLabels[2],role:stageRoles[2],phase:'end',input:stageInputs[2],item:list[r.steps.hourStep]}
     ];
-    const stages='<div class="stage-grid">'+stageCards.map((step,i)=>
-      '<div class="stage-card '+(i===2?'final':'')+'"><div class="stage-label">'+step.label+'</div><div class="stage-name">'+step.item.name+'</div><div class="stage-input">'+step.input+'</div>'+(simpleMode?'':'<div class="stage-input">'+step.item.element+'・'+step.item.palace+'</div>')+'</div>'
-    ).join('')+'</div>';
+    const phaseReading=(item,phase)=>{
+      const meaning=item.desc;
+      if(phase==='start') return '看事情的起點與背景：'+meaning+' 這一格提供的是理解事情從何處起步的線索，不代表單一原因已被證實。';
+      if(phase==='middle') return '看事情如何推進：'+meaning+' 可留意過程中的助力、阻力與反覆之處，這是從起因走向結果時的觀察重點。';
+      return '看目前推算的落點：'+meaning+' 將它視為這次占問呈現的結果傾向，再對照前兩階段，判斷事情如何走到這裡。';
+    };
+    const stages='<div class="stage-intro">以下三格不是三個獨立答案，而是依序串接的閱讀線索：先看起點，再看過程，最後看落點。</div><div class="stage-grid">'+stageCards.map((step,i)=>
+      '<div class="stage-card phase-'+step.phase+' '+(i===2?'final':'')+'"><div class="stage-rail"><div class="stage-role">'+step.role+'</div></div><div class="stage-content"><div class="stage-label">'+step.label+'</div><div class="stage-name">'+step.item.name+'</div><div class="stage-input">'+step.input+(simpleMode?'':' · '+step.item.element+'・'+step.item.palace)+'</div><div class="stage-reading">'+phaseReading(step.item,step.phase)+'</div></div></div>'
+    ).join('')+'</div><div class="stage-guide">閱讀方式：先讀「起因」理解背景，再讀「發展」找出事情的牽動，最後以「結果」作為整體落點；若三階段出現不同象意，重點就在它們之間的變化。</div>';
     const method=simpleMode
       ? '<div class="method-note"><div class="method-title">六宮掌訣｜推算脈絡</div><div class="method-text">依序以農曆月份、日期、時辰接續推算：先從大安起月，得到月宮；再從月宮起日，得到日宮；最後從日宮起時，得到時宮。六宮依「大安、留連、速喜、赤口、小吉、空亡」循環。三個落點是同一條推算鏈，不是三個互不相關的卦；時宮是本次推算的最後落點。</div></div>'
       : '<div class="method-note"><div class="method-title">九宮三傳｜推算脈絡</div><div class="method-text">初傳以大安為起點，按農曆月數推算；中傳從初傳落點接續，按農曆日數推算；末傳再從中傳落點接續，按時辰序數推算。九宮依「大安、留連、速喜、赤口、小吉、空亡、病符、桃花、天德」循環。三傳呈現同一推算鏈的起始、承接與最後落點，末傳為本次推算的結果。此處採用的是本工具設定的九宮擴充算法。</div></div>';
