@@ -1,8 +1,8 @@
 // Change this version whenever a bundled file changes, so updates are atomic.
 const CACHE_PREFIX = 'matrix-offline:' + self.registration.scope + ':';
-const CACHE_NAME = CACHE_PREFIX + 'v41';
+const CACHE_NAME = CACHE_PREFIX + 'v42';
 const ASSETS = [
-  'index.html', 'offline.js', 'ZW clock.html', 'cal.html', '101010.html',
+  'index.html', 'offline.js', 'ZW clock.html', 'cal.html', 'sixflow.html', '101010.html',
   '12 h.html', '12life.html', '9P.html', 'Matrix_九宮飛星_流年羅盤與宅盤_v2.html', 'lifeData.js', 'lunar.min.js',
   'bagua.html', 'bagua-data.js', 'ornaments.js'
 ];
