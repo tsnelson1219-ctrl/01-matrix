@@ -357,7 +357,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
       {label:stageLabels[2],role:stageRoles[2],phase:'end',input:stageInputs[2],item:list[r.steps.hourStep]}
     ];
     const stages='<div class="stage-grid">'+stageCards.map((step,i)=>
-      '<div class="stage-card phase-'+step.phase+' '+(i===2?'final':'')+'"><div class="stage-rail"><div class="stage-role">'+step.role+'</div></div><div class="stage-content"><div class="stage-label">'+step.label+'</div><div class="stage-name">'+step.item.name+'</div><div class="stage-input">'+step.input+(simpleMode?'':' · '+step.item.element+'・'+step.item.palace)+'</div><div class="stage-reading">'+step.item.hint+'</div></div></div>'
+      '<div class="stage-card phase-'+step.phase+' '+(i===2?'final':'')+'"><div class="stage-rail"><div class="stage-role">'+step.role+'</div></div><div class="stage-content"><div class="stage-label">'+step.label+'</div><div class="stage-name">'+step.item.name+'</div><div class="stage-input">'+step.input+(simpleMode?'（'+elementOf[list.indexOf(step.item)]+'）':' · '+step.item.element+'・'+step.item.palace)+'</div><div class="stage-reading">'+step.item.hint+'</div></div></div>'
     ).join('')+'</div>';
     const method=simpleMode
       ? '<div class="method-note"><div class="method-title">六宮掌訣</div><div class="method-text">月起、日起、時落；六宮循環，時宮為最後落點。</div></div>'
