@@ -346,6 +346,9 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
       ? '<div class="result-top"><div class="result-kicker">六宮掌訣 · 時宮結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+'</div></div><div class="palace-grid">'+palaceHtml+'</div>'
       : '<div class="result-top"><div class="result-kicker">九宮三傳 · 末傳結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+' · '+p.element+' · '+p.palace+'</div></div>';
     const list=simpleMode?PALACES:PALACES9;
+    const elementOf = simpleMode
+      ? ['木','水','火','金','木','土']
+      : list.map(item=>item.element);
     const stageLabels=simpleMode?['月宮','日宮','時宮']:['初傳','中傳','末傳'];
     const stageRoles=['起因','發展','結果'];
     const stageInputs=simpleMode
@@ -362,9 +365,6 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     const method=simpleMode
       ? '<div class="method-note"><div class="method-title">六宮掌訣</div><div class="method-text">月起、日起、時落；六宮循環，時宮為最後落點。</div></div>'
       : '<div class="method-note"><div class="method-title">九宮三傳</div><div class="method-text">月定初傳、日定中傳、時定末傳；九宮循環，末傳為最後落點。</div></div>';
-    const elementOf = simpleMode
-      ? ['木','水','火','金','木','土']
-      : list.map(item=>item.element);
     const generate = {'木':'火','火':'土','土':'金','金':'水','水':'木'};
     const control = {'木':'土','土':'水','水':'火','火':'金','金':'木'};
     function relation(a,b){
