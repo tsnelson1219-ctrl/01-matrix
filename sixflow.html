@@ -368,7 +368,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     ).join('')+'</div>';
     const category=[0,2,4].includes(r.resultIndex)?'三吉':'三凶';
     const interpretation=simpleMode
-      ? '<div class="explain"><div class="explain-title">古籍所載：'+category+'</div><div class="explain-text">清代《西齋雜著二種・鳳城瑣錄》〈六壬口訣〉記載六課陰陽消長。此處只呈現吉凶分類；各宮細部斷語及五行配屬仍待逐條核對文獻。</div></div>'
+      ? '<div class="explain"><div class="explain-title">'+category+'</div></div>'
       : '<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
     const method=simpleMode?'':'<div class="method-note"><div class="method-title">九宮三傳</div><div class="method-text">初傳：大安起數農曆月；中傳：初傳起數農曆日；末傳：中傳起數時辰序數（子時為一），九宮循環。</div></div>';
     const nineInfo=simpleMode?'':'<div class="analysis-note">九宮五行與方位：'+stageCards.map(x=>x.item.name+'・'+x.item.element+'・'+x.item.palace+'（'+x.item.direction+'）').join(' → ')+'</div>';
