@@ -356,18 +356,12 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
       {label:stageLabels[1],role:stageRoles[1],phase:'middle',input:stageInputs[1],item:list[r.steps.dayStep]},
       {label:stageLabels[2],role:stageRoles[2],phase:'end',input:stageInputs[2],item:list[r.steps.hourStep]}
     ];
-    const phaseReading=(item,phase)=>{
-      const meaning=item.desc;
-      if(phase==='start') return '看事情的起點與背景：'+meaning+' 這一格提供的是理解事情從何處起步的線索，不代表單一原因已被證實。';
-      if(phase==='middle') return '看事情如何推進：'+meaning+' 可留意過程中的助力、阻力與反覆之處，這是從起因走向結果時的觀察重點。';
-      return '看目前推算的落點：'+meaning+' 將它視為這次占問呈現的結果傾向，再對照前兩階段，判斷事情如何走到這裡。';
-    };
-    const stages='<div class="stage-intro">以下三格不是三個獨立答案，而是依序串接的閱讀線索：先看起點，再看過程，最後看落點。</div><div class="stage-grid">'+stageCards.map((step,i)=>
-      '<div class="stage-card phase-'+step.phase+' '+(i===2?'final':'')+'"><div class="stage-rail"><div class="stage-role">'+step.role+'</div></div><div class="stage-content"><div class="stage-label">'+step.label+'</div><div class="stage-name">'+step.item.name+'</div><div class="stage-input">'+step.input+(simpleMode?'':' · '+step.item.element+'・'+step.item.palace)+'</div><div class="stage-reading">'+phaseReading(step.item,step.phase)+'</div></div></div>'
-    ).join('')+'</div><div class="stage-guide">閱讀方式：先讀「起因」理解背景，再讀「發展」找出事情的牽動，最後以「結果」作為整體落點；若三階段出現不同象意，重點就在它們之間的變化。</div>';
+    const stages='<div class="stage-grid">'+stageCards.map((step,i)=>
+      '<div class="stage-card phase-'+step.phase+' '+(i===2?'final':'')+'"><div class="stage-rail"><div class="stage-role">'+step.role+'</div></div><div class="stage-content"><div class="stage-label">'+step.label+'</div><div class="stage-name">'+step.item.name+'</div><div class="stage-input">'+step.input+(simpleMode?'':' · '+step.item.element+'・'+step.item.palace)+'</div><div class="stage-reading">'+step.item.hint+'</div></div></div>'
+    ).join('')+'</div>';
     const method=simpleMode
-      ? '<div class="method-note"><div class="method-title">六宮掌訣｜推算脈絡</div><div class="method-text">依序以農曆月份、日期、時辰接續推算：先從大安起月，得到月宮；再從月宮起日，得到日宮；最後從日宮起時，得到時宮。六宮依「大安、留連、速喜、赤口、小吉、空亡」循環。三個落點是同一條推算鏈，不是三個互不相關的卦；時宮是本次推算的最後落點。</div></div>'
-      : '<div class="method-note"><div class="method-title">九宮三傳｜推算脈絡</div><div class="method-text">初傳以大安為起點，按農曆月數推算；中傳從初傳落點接續，按農曆日數推算；末傳再從中傳落點接續，按時辰序數推算。九宮依「大安、留連、速喜、赤口、小吉、空亡、病符、桃花、天德」循環。三傳呈現同一推算鏈的起始、承接與最後落點，末傳為本次推算的結果。此處採用的是本工具設定的九宮擴充算法。</div></div>';
+      ? '<div class="method-note"><div class="method-title">六宮掌訣</div><div class="method-text">月起、日起、時落；六宮循環，時宮為最後落點。</div></div>'
+      : '<div class="method-note"><div class="method-title">九宮三傳</div><div class="method-text">月定初傳、日定中傳、時定末傳；九宮循環，末傳為最後落點。</div></div>';
     const interpretation='<div class="explain"><div class="explain-title">'+p.name+' · '+p.hint+'</div><div class="explain-text">'+p.desc+'</div></div>';
     const full=stages+method+interpretation;
     const simple=stages+method+interpretation;
@@ -383,8 +377,8 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
     displayMode=mode;
     document.querySelectorAll('[data-mode]').forEach(btn=>btn.classList.toggle('active',btn.dataset.mode===mode));
     $('modeDescription').textContent=mode==='full'
-      ? '以初傳、中傳、末傳呈現事情的連續變化，並結合五行與八卦宮位延伸觀察。'
-      : '以月宮、日宮、時宮逐步推算，適合日常快速問事與掌握事情狀態。';
+      ? '九宮三傳：看事情的起因、發展與結果。'
+      : '六宮掌訣：以月、日、時推算，快速看事情走向。';
     if(currentResult) runCast({...currentResult});
   }
 
