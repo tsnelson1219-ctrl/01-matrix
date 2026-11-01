@@ -124,7 +124,7 @@ details{font-size:11px;color:var(--muted);margin-top:15px}summary{cursor:pointer
 const $=id=>document.getElementById(id),D=window.BAGUA_DATA,NS='http://www.w3.org/2000/svg';
 const state={mode:'later',rotation:0,upper:null,lower:null,target:null,inspected:null};
 const hexLookup=new Map(D.hexagrams.map((h,i)=>[h[1]+h[2],{data:h,number:i+1}]));
-let labels=[],gesture=null,longTimer=null,taijiCenter=null;
+let labels=[],gesture=null,longTimer=null,taijiCenter=null,taijiGraphic=null;
 function svg(tag,attrs={},text){const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;return e;}
 function polar(r,deg){const a=(deg-90)*Math.PI/180;return [340+r*Math.cos(a),340+r*Math.sin(a)];}
 function annularPath(inner,outer,first,last){const p=(r,d)=>polar(r,d).join(' ');return `M ${p(inner,first)} L ${p(outer,first)} A ${outer} ${outer} 0 0 1 ${p(outer,last)} L ${p(inner,last)} A ${inner} ${inner} 0 0 0 ${p(inner,first)} Z`;}
@@ -163,7 +163,7 @@ function buildCompass(){
  root.append(lettering);
  $('ringGuide').textContent=state.mode==='earlier'?'方位 · 八卦 · 六親 · 四象':'方位 · 八卦 · 六親';
  const center=svg('g',{id:'compassCenter',role:'button',tabindex:0,'aria-label':'取消選取上下卦'});center.append(svg('title',{},'取消選取'),svg('circle',{cx:340,cy:340,r:state.mode==='earlier'?48:105,class:'center-ring'}));
- taijiCenter=center;const tai=svg('g',{transform:state.mode==='earlier'?'translate(340 340) scale(.68)':'translate(340 340)'});tai.append(svg('circle',{r:42,class:'taiji-light'}),svg('path',{d:'M0 -42 A42 42 0 0 1 0 42 A21 21 0 0 1 0 0 A21 21 0 0 0 0 -42',class:'taiji-dark'}),svg('circle',{cx:0,cy:-21,r:6,class:'taiji-dark'}),svg('circle',{cx:0,cy:21,r:6,class:'taiji-light'}));center.append(tai);root.append(center);
+ taijiCenter=center;const tai=svg('g',{transform:state.mode==='earlier'?'translate(340 340) scale(.68)':'translate(340 340)'});taijiGraphic=tai;tai.append(svg('circle',{r:42,class:'taiji-light'}),svg('path',{d:'M0 -42 A42 42 0 0 1 0 42 A21 21 0 0 1 0 0 A21 21 0 0 0 0 -42',class:'taiji-dark'}),svg('circle',{cx:0,cy:-21,r:6,class:'taiji-dark'}),svg('circle',{cx:0,cy:21,r:6,class:'taiji-light'}));center.append(tai);root.append(center);
  // The Taiji owns its pointer sequence. Stop it before the compass-level drag handler.
  let centerTimer=null,centerHeld=false,centerPointer=null;
  center.addEventListener('pointerdown',e=>{
@@ -191,7 +191,7 @@ function buildCompass(){
  });
  root.append(center);paintRotation();paintSelection();
 }
-function paintRotation(){const r=state.rotation;$('rotating').setAttribute('transform',`rotate(${r} 340 340)`);for(const l of labels)l.el.setAttribute('transform',`translate(${l.x} ${l.y}) rotate(${-r})`);$('compassCenter').setAttribute('transform',`rotate(${-r} 340 340)`);$('angle').textContent=((r%360+360)%360).toFixed(0)+'°';}
+function paintRotation(){const r=state.rotation;$('rotating').setAttribute('transform',`rotate(${r} 340 340)`);for(const l of labels)l.el.setAttribute('transform',`translate(${l.x} ${l.y}) rotate(${-r})`);$('compassCenter').setAttribute('transform',`rotate(${-r} 340 340)`);if(taijiGraphic)taijiGraphic.setAttribute('transform',`translate(340 340) rotate(${r})${state.mode==='earlier'?' scale(.68)':''}`);$('angle').textContent=((r%360+360)%360).toFixed(0)+'°';}
 function paintSelectionOutlines(){
  const root=$('rotating');let outlines=$('selectionOutlines');
  if(!outlines){outlines=svg('g',{id:'selectionOutlines','pointer-events':'none','aria-hidden':'true'});root.append(outlines);}
