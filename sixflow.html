@@ -480,8 +480,14 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
       $('timeStamp').textContent='已取得 '+stamp+' · GMT+8'+(rawMonth<0?' · 閏月':'');
       runCast({month,day,hourIndex,monthLabel,timeLabel:stamp,source:'auto'});
     }catch(error){
-      $('timeStamp').textContent='時間換算失敗，請改用手動輸入。';
-      console.error(error);
+      const panel=$('customTimePanel');
+      panel.hidden=false;
+      $('customToggle').setAttribute('aria-expanded','true');
+      $('timeStamp').textContent='自動換算暫時無法使用，請手動選擇農曆月、日與時辰。';
+      $('resultArea').className='result-empty';
+      $('resultArea').textContent='請在上方選擇農曆月、日與時辰，再按「以自訂時間起卦」。';
+      console.error('自動陽曆轉農曆失敗：',error);
+      panel.scrollIntoView({behavior:'smooth',block:'nearest'});
     }
   }
 
