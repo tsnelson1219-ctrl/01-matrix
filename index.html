@@ -121,11 +121,12 @@
         <div class="tab-group">
             <div class="nav-btn active" onclick="switchApp(0)">子午流注</div>
             <div class="nav-btn" onclick="switchApp(1)">干支曆</div>
-            <div class="nav-btn" onclick="switchApp(2)">十神五極</div>
-            <div class="nav-btn" onclick="switchApp(3)">地支藏干</div>
-            <div class="nav-btn" onclick="switchApp(4)">12長生</div>
-            <div class="nav-btn" onclick="switchApp(5)">九宮飛星</div>
-            <div class="nav-btn" onclick="switchApp(6)">八卦</div>
+            <div class="nav-btn" onclick="switchApp(2)">小六壬</div>
+            <div class="nav-btn" onclick="switchApp(3)">八卦</div>
+            <div class="nav-btn" onclick="switchApp(4)">十神五極</div>
+            <div class="nav-btn" onclick="switchApp(5)">地支藏干</div>
+            <div class="nav-btn" onclick="switchApp(6)">12長生</div>
+            <div class="nav-btn" onclick="switchApp(7)">九宮飛星</div>
         </div>
         
         <div class="nav-arrow" onclick="nextApp()">&#10095;</div>
@@ -142,11 +143,12 @@
     const apps = [
         {"name":"子午流注","file":"ZW clock.html","themeClass":"light-theme","darkClass":false,"themeControl":".theme-switch"},
         {"name":"干支曆","file":"cal.html","themeClass":"light","darkClass":false,"themeControl":".theme-btn"},
+        {"name":"小六壬","file":"sixflow.html","themeClass":"light","darkClass":false,"themeControl":"#themeBtn"},
+        {"name":"八卦","file":"bagua.html","themeClass":"light","darkClass":false,"themeControl":".theme-control"},
         {"name":"十神五極","file":"101010.html","themeClass":"dark-theme","darkClass":true,"themeControl":".theme-btn"},
         {"name":"地支藏干","file":"12 h.html","themeClass":"light-theme","darkClass":false,"themeControl":".theme-switch"},
         {"name":"12長生","file":"12life.html","themeClass":"light-theme","darkClass":false,"themeControl":".theme-switch"},
-        {"name":"九宮飛星","file":"Matrix_九宮飛星_流年羅盤與宅盤_v2.html","themeClass":"light","darkClass":false,"themeControl":".head-actions"},
-        {"name":"八卦","file":"bagua.html","themeClass":"light","darkClass":false,"themeControl":".theme-control"}
+        {"name":"九宮飛星","file":"Matrix_九宮飛星_流年羅盤與宅盤_v2.html","themeClass":"light","darkClass":false,"themeControl":".head-actions"}
     ];
 
     let currentIndex = 0;
