@@ -152,7 +152,33 @@ function buildCompass(){
  root.append(lettering);
  $('ringGuide').textContent=state.mode==='earlier'?'方位 · 八卦 · 六親 · 四象':'方位 · 八卦 · 六親';
  const center=svg('g',{id:'compassCenter',role:'button',tabindex:0,'aria-label':'取消選取上下卦'});center.append(svg('title',{},'取消選取'),svg('circle',{cx:340,cy:340,r:state.mode==='earlier'?48:105,class:'center-ring'}));
- const tai=svg('g',{transform:state.mode==='earlier'?'translate(340 340) scale(.68)':'translate(340 340)'});tai.append(svg('circle',{r:42,class:'taiji-light'}),svg('path',{d:'M0 -42 A42 42 0 0 1 0 42 A21 21 0 0 1 0 0 A21 21 0 0 0 0 -42',class:'taiji-dark'}),svg('circle',{cx:0,cy:-21,r:6,class:'taiji-dark'}),svg('circle',{cx:0,cy:21,r:6,class:'taiji-light'}));center.append(tai);root.append(center);paintRotation();paintSelection();
+ const tai=svg('g',{transform:state.mode==='earlier'?'translate(340 340) scale(.68)':'translate(340 340)'});tai.append(svg('circle',{r:42,class:'taiji-light'}),svg('path',{d:'M0 -42 A42 42 0 0 1 0 42 A21 21 0 0 1 0 0 A21 21 0 0 0 0 -42',class:'taiji-dark'}),svg('circle',{cx:0,cy:-21,r:6,class:'taiji-dark'}),svg('circle',{cx:0,cy:21,r:6,class:'taiji-light'}));center.append(tai);root.append(center);
+ // The Taiji owns its pointer sequence. Stop it before the compass-level drag handler.
+ let centerTimer=null,centerHeld=false,centerPointer=null;
+ center.addEventListener('pointerdown',e=>{
+  if(e.button!==0||centerPointer!==null)return;
+  e.preventDefault();e.stopPropagation();
+  centerPointer=e.pointerId;centerHeld=false;
+  center.setPointerCapture(e.pointerId);
+  centerTimer=setTimeout(()=>{centerTimer=null;if(centerPointer!==e.pointerId)return;centerHeld=true;startAutoSpin();},400);
+ });
+ center.addEventListener('pointerup',e=>{
+  if(centerPointer!==e.pointerId)return;
+  e.preventDefault();e.stopPropagation();
+  if(centerTimer!==null){clearTimeout(centerTimer);centerTimer=null;}
+  const wasHeld=centerHeld;centerPointer=null;centerHeld=false;
+  if(center.hasPointerCapture(e.pointerId))center.releasePointerCapture(e.pointerId);
+  if(wasHeld)releaseAutoSpin();else clearSelection();
+ });
+ center.addEventListener('pointercancel',e=>{
+  if(centerPointer!==e.pointerId)return;
+  e.stopPropagation();if(centerTimer!==null)clearTimeout(centerTimer);
+  centerTimer=null;centerPointer=null;centerHeld=false;stopAutoSpin();
+ });
+ center.addEventListener('lostpointercapture',()=>{
+  if(centerPointer!==null){if(centerTimer!==null)clearTimeout(centerTimer);centerTimer=null;centerPointer=null;centerHeld=false;stopAutoSpin();}
+ });
+ root.append(center);paintRotation();paintSelection();
 }
 function paintRotation(){const r=state.rotation;$('rotating').setAttribute('transform',`rotate(${r} 340 340)`);for(const l of labels)l.el.setAttribute('transform',`translate(${l.x} ${l.y}) rotate(${-r})`);$('compassCenter').setAttribute('transform',`rotate(${-r} 340 340)`);$('angle').textContent=((r%360+360)%360).toFixed(0)+'°';}
 function paintSelectionOutlines(){
@@ -190,9 +216,9 @@ const compass=$('compass');
 compass.addEventListener('focusin',paintSelectionOutlines);
 compass.addEventListener('focusout',()=>requestAnimationFrame(paintSelectionOutlines));
 compass.addEventListener('contextmenu',e=>e.preventDefault());
-compass.addEventListener('pointerdown',e=>{if(e.button!==0)return;if(gesture){cancelGesture();return;}const g=e.target.closest('.gua');const bounds=compass.getBoundingClientRect();const centerRadius=(state.mode==='earlier'?48:105)*(bounds.width/680);const center= Math.hypot(e.clientX-(bounds.left+bounds.width/2),e.clientY-(bounds.top+bounds.height/2))<=centerRadius;gesture={id:e.pointerId,name:g?.dataset.gua,center,x:e.clientX,y:e.clientY,last:pointerAngle(e),moved:false,held:false,autoSpin:false};compass.setPointerCapture(e.pointerId);if(center){longTimer=setTimeout(()=>{longTimer=null;if(!gesture||gesture.moved||gesture.id!==e.pointerId)return;gesture.held=true;gesture.autoSpin=true;startAutoSpin();},400);}else if(g){g.classList.add('is-holding');paintSelectionOutlines();longTimer=setTimeout(()=>{longTimer=null;if(!gesture||gesture.moved)return;gesture.held=true;setUpper(gesture.name);g.classList.remove('is-holding');paintSelectionOutlines();},550);}});
+compass.addEventListener('pointerdown',e=>{if(e.button!==0)return;if(gesture){cancelGesture();return;}const g=e.target.closest('.gua');gesture={id:e.pointerId,name:g?.dataset.gua,center:false,x:e.clientX,y:e.clientY,last:pointerAngle(e),moved:false,held:false,autoSpin:false};compass.setPointerCapture(e.pointerId);if(g){g.classList.add('is-holding');paintSelectionOutlines();longTimer=setTimeout(()=>{longTimer=null;if(!gesture||gesture.moved)return;gesture.held=true;setUpper(gesture.name);g.classList.remove('is-holding');paintSelectionOutlines();},550);}});
 compass.addEventListener('pointermove',e=>{if(!gesture||e.pointerId!==gesture.id)return;const g=gesture;if(g.center){g.last=pointerAngle(e);return;}if(!g.moved&&Math.hypot(e.clientX-g.x,e.clientY-g.y)>9){g.moved=true;cancelTimer();compass.classList.add('dragging');}if(g.moved){const a=pointerAngle(e),delta=((a-g.last+540)%360)-180;state.rotation+=delta;paintRotation();}g.last=pointerAngle(e);});
-compass.addEventListener('pointerup',e=>{if(!gesture||e.pointerId!==gesture.id)return;const g=gesture;cancelTimer();gesture=null;compass.classList.remove('dragging');if(compass.hasPointerCapture(e.pointerId))compass.releasePointerCapture(e.pointerId);if(g.autoSpin){releaseAutoSpin();return;}if(!g.moved&&!g.held){if(g.center)clearSelection();else if(g.name)selectGua(g.name);}});
+compass.addEventListener('pointerup',e=>{if(!gesture||e.pointerId!==gesture.id)return;const g=gesture;cancelTimer();gesture=null;compass.classList.remove('dragging');if(compass.hasPointerCapture(e.pointerId))compass.releasePointerCapture(e.pointerId);if(!g.moved&&!g.held&&g.name)selectGua(g.name);});
 compass.addEventListener('pointercancel',cancelGesture);
 compass.addEventListener('lostpointercapture',()=>{if(gesture)cancelGesture();});
 compass.addEventListener('click',e=>{if(e.detail===0){if(e.target.closest('#compassCenter'))clearSelection();else{const g=e.target.closest('.gua');if(g)selectGua(g.dataset.gua);}}});
