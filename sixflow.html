@@ -190,6 +190,16 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
 .palace.active{opacity:1;border-color:var(--gold);background:var(--gold-soft);box-shadow:inset 0 0 0 1px var(--gold)}
 .palace.active .palace-name{color:var(--gold)}
 @media(max-width:430px){.stage-grid{gap:6px}.stage-card{grid-template-columns:19px minmax(0,1fr);gap:6px;padding:9px 6px}.stage-role{font-size:10px}.stage-name{font-size:16px}.stage-reading{font-size:10px;line-height:1.65}.stage-input{font-size:9px}}
+
+/* 六宮時宮結果：宮名與代表含義並列，吉凶標籤沿用下方既有區塊。 */
+.simple-result-card{display:grid;grid-template-columns:minmax(112px,.82fr) minmax(0,1.5fr);border:1px solid var(--gold);border-radius:11px;overflow:hidden;margin:4px 0 14px;background:var(--panel)}
+.simple-result-palace{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:116px;padding:14px 10px;background:var(--gold-soft);border-right:1px solid var(--line)}
+.simple-result-label{font-size:11px;letter-spacing:1px;color:var(--muted)}
+.simple-result-name{font-size:29px;letter-spacing:4px;font-weight:700;color:var(--gold);margin-top:5px}
+.simple-result-meaning{display:flex;flex-direction:column;justify-content:center;padding:14px 16px;min-width:0}
+.simple-result-desc{font-size:13px;line-height:1.9;color:var(--ink);margin-top:6px}
+@media(max-width:430px){.simple-result-card{grid-template-columns:minmax(92px,.72fr) minmax(0,1.55fr)}.simple-result-palace{min-height:108px;padding:10px 6px}.simple-result-name{font-size:25px;letter-spacing:2px}.simple-result-meaning{padding:11px 12px}.simple-result-desc{font-size:12px;line-height:1.75}}
+
 </style>
 </head>
 <body>
@@ -351,7 +361,7 @@ h1{font-size:25px;letter-spacing:5px;font-weight:500;color:var(--gold);margin:5p
       return '<div class="palace palace-slot '+(index===r.resultIndex?'active':'')+'"><div class="palace-name">'+item.name+'</div><div class="palace-meaning">'+category+'</div></div>';
     }).join('');
     const common=simpleMode
-      ? '<div class="result-top"><div class="result-kicker">傳統六宮掌訣 · 時宮結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+([0,2,4].includes(r.resultIndex)?'三吉':'三凶')+'</div></div><div class="palace-grid">'+palaceHtml+'</div>'
+      ? '<div class="result-top"><div class="result-kicker">傳統六宮掌訣 · 時宮結果</div></div><div class="simple-result-card"><div class="simple-result-palace"><div class="simple-result-label">時宮</div><div class="simple-result-name">'+p.name+'</div></div><div class="simple-result-meaning"><div class="simple-result-label">代表含義</div><div class="simple-result-desc">'+p.desc+'</div></div></div><div class="palace-grid">'+palaceHtml+'</div>'
       : '<div class="result-top"><div class="result-kicker">九宮三傳 · 末傳結果</div><div class="result-name">'+p.name+'</div><div class="result-tagline">'+p.hint+' · '+p.element+' · '+p.palace+'</div></div>';
     const stageLabels=simpleMode?['月宮','日宮','時宮']:['初傳','中傳','末傳'];
     const stageRoles=simpleMode?['月起','日起','時落']:['初傳','中傳','末傳'];
