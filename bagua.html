@@ -94,6 +94,25 @@ details{font-size:11px;color:var(--muted);margin-top:15px}summary{cursor:pointer
 @media(max-width:680px){header{padding:9px 12px}h1{font-size:20px;line-height:1.4;letter-spacing:2px}main{padding:8px 6px 20px}.toolbar{margin-bottom:8px}.selection{padding:12px}.result-top{gap:15px}.hex-title{font-size:25px}}
 @media(prefers-reduced-motion:no-preference){.slot{transition:box-shadow .15s}}
 
+
+/* Light theme: use cool blue/green energy instead of warm gold. */
+body.light #compassCenter.taiji-charging .center-ring,
+body.light #compassCenter.taiji-spinning .center-ring,
+body.light #compassCenter.taiji-coasting .center-ring{
+ stroke:#3987d8;
+ filter:drop-shadow(0 0 8px #3987d8) drop-shadow(0 0 17px #3987d8);
+}
+body.light #compassCenter.taiji-charging .taiji-light,
+body.light #compassCenter.taiji-spinning .taiji-light,
+body.light #compassCenter.taiji-coasting .taiji-light{
+ filter:drop-shadow(0 0 9px #3987d8) drop-shadow(0 0 19px #3987d8);
+}
+body.light #compassCenter.taiji-charging .taiji-dark,
+body.light #compassCenter.taiji-spinning .taiji-dark,
+body.light #compassCenter.taiji-coasting .taiji-dark{
+ filter:drop-shadow(0 0 9px #22a477) drop-shadow(0 0 19px #22a477);
+}
+
 /* Interactive SVGs use their own shaped highlight, never a browser selection box. */
 #compass *,#compass{user-select:none!important;-webkit-user-select:none!important;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #compass:focus,#compass :focus{outline:none!important}
