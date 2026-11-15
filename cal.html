@@ -8,12 +8,12 @@
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
 :root{
-  --bg:#0f0e0c;--bg2:#1a1814;--gold:#d4a75b;--gold2:rgba(212,167,91,.15);
+  --bg:#0f0e0c;--bg2:#1a1814;--future-bg:#080706;--gold:#d4a75b;--gold2:rgba(212,167,91,.15);
   --gold3:rgba(212,167,91,.35);--text:#c8a96e;--dim:rgba(212,167,91,.45);
   --green:#7aab8a;--red:#c06060;--border:rgba(212,167,91,.18);--trans:all 0.2s ease;
 }
 body.light{
-  --bg:#f5eedc;--bg2:#ede4cc;--gold:#7a5020;--gold2:rgba(122,80,32,.1);
+  --bg:#f5eedc;--bg2:#ede4cc;--future-bg:#e7ddc4;--gold:#7a5020;--gold2:rgba(122,80,32,.1);
   --gold3:rgba(122,80,32,.3);--text:#6b4010;--dim:rgba(122,80,32,.5);
   --green:#3d7a52;--red:#9a3030;--border:rgba(122,80,32,.2);
 }
@@ -113,6 +113,8 @@ body{
 }
 .day-cell:active{background:var(--gold2);}
 .day-cell.other-month{opacity:.28;}
+/* 尚未到達的國曆月份：僅降低底色，保留文字與特殊日期樣式。 */
+.day-cell.future-month:not(.today):not(.selected):not(:active){background:var(--future-bg);}
 .day-cell.today{background:var(--gold2);box-shadow:inset 0 0 0 2px var(--green);}
 .day-cell.today .day-num{color:var(--gold);font-weight:800;}
 body.light .day-cell.today{box-shadow:inset 0 0 0 2px var(--red);}
@@ -633,6 +635,8 @@ function renderWeek(container, weekStart){
     const isSolRemind=!!solRemindLabel; // 國曆框兩種模式都顯示
     cell.className='day-cell'+(dd===1?' month-start':'')+(isTdy?' today':'')+(selectedKey===key?' selected':'')+(isTracked?' gz-tracked':'')+(isLmRemind?' lm-remind':'')+(isSolRemind&&!isTracked&&!isLmRemind?' sol-remind':'');
     cell.dataset.date=key;
+    cell.dataset.monthIndex=String(dy*12+dm);
+    cell.classList.toggle('future-month',dy*12+dm>vy*12+vm);
 
     // ── 格頂標籤 ──
     const {gzLabel,lmLabel}=getCellTopLabels(dy,dm,dd);
@@ -777,9 +781,8 @@ function attachCellEvents(cell, key, dy, dm, dd, lunar){
 }
 
 // ── Header ──
-function updateHeader(){
+function updateHeader(date){
   document.getElementById('main-title').textContent=`${vy}年 ${vm}月`;
-  const date=firstWeek?addDays(topDate(),6):new Date(vy,vm-1,1);
   const mid=Solar.fromYmd(date.getFullYear(),date.getMonth()+1,date.getDate()).getLunar();
   document.getElementById('ganzhi-year').textContent=mid.getYearInGanZhiByLiChun()+'年';
   const btn=document.getElementById('mode-btn');
@@ -807,11 +810,22 @@ function makeWeek(date){
   renderWeek(row,date);
   return row;
 }
+function visibleMonthDate(){
+  // 前一週滑出頂端一半時，提前以新週的星期六判斷月份。
+  const weekIndex=Math.floor(viewport.scrollTop/weekHeight+0.5);
+  return addDays(firstWeek,weekIndex*7+6);
+}
 function updateVisibleMonth(){
-  // 頂端週列跨月時顯示新月份，跳轉月初也能立即看到目標月份。
-  const date=addDays(topDate(),6);
-  vy=date.getFullYear();vm=date.getMonth()+1;
-  updateHeader();
+  const date=visibleMonthDate();
+  const y=date.getFullYear(),m=date.getMonth()+1;
+  if(y!==vy||m!==vm){
+    vy=y;vm=m;
+    const current=vy*12+vm;
+    calendarGrid.querySelectorAll('.day-cell').forEach(cell=>{
+      cell.classList.toggle('future-month',Number(cell.dataset.monthIndex)>current);
+    });
+  }
+  updateHeader(date);
 }
 function buildCalendar(date,offset=0){
   firstWeek=addDays(weekOf(date),-BUFFER_WEEKS*7);
