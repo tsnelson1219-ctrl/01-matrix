@@ -8,12 +8,12 @@
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
 :root{
-  --bg:#0f0e0c;--bg2:#1a1814;--future-bg:#080706;--gold:#d4a75b;--gold2:rgba(212,167,91,.15);
+  --bg:#0f0e0c;--bg2:#1a1814;--calendar-current-bg:#2d261d;--calendar-outside-bg:#0b0a08;--gold:#d4a75b;--gold2:rgba(212,167,91,.15);
   --gold3:rgba(212,167,91,.35);--text:#c8a96e;--dim:rgba(212,167,91,.45);
   --green:#7aab8a;--red:#c06060;--border:rgba(212,167,91,.18);--trans:all 0.2s ease;
 }
 body.light{
-  --bg:#f5eedc;--bg2:#ede4cc;--future-bg:#e7ddc4;--gold:#7a5020;--gold2:rgba(122,80,32,.1);
+  --bg:#f5eedc;--bg2:#ede4cc;--calendar-current-bg:#f5eedc;--calendar-outside-bg:#ded2b7;--gold:#7a5020;--gold2:rgba(122,80,32,.1);
   --gold3:rgba(122,80,32,.3);--text:#6b4010;--dim:rgba(122,80,32,.5);
   --green:#3d7a52;--red:#9a3030;--border:rgba(122,80,32,.2);
 }
@@ -95,7 +95,7 @@ body{
   align-items:center;justify-content:center;
   border-radius:6px;cursor:pointer;border:none;
   padding:2px 2px 2px 2px;
-  overflow:hidden;background:var(--bg);
+  overflow:hidden;background:var(--calendar-current-bg);
   transition:background .12s;
   user-select:none;-webkit-user-select:none;
 }
@@ -113,14 +113,12 @@ body{
 }
 .day-cell:active{background:var(--gold2);}
 .day-cell.other-month{opacity:.28;}
-/* 尚未到達的國曆月份：僅降低底色，保留文字與特殊日期樣式。 */
-.day-cell.future-month:not(.today):not(.selected):not(:active){background:var(--future-bg);}
+/* 非當前國曆月份：前後月份皆使用較暗底色，保留文字及特殊日期樣式。 */
+.day-cell.outside-month:not(.today):not(.selected):not(:active){background:var(--calendar-outside-bg);}
 .day-cell.today{background:var(--gold2);box-shadow:inset 0 0 0 2px var(--green);}
 .day-cell.today .day-num{color:var(--gold);font-weight:800;}
 body.light .day-cell.today{box-shadow:inset 0 0 0 2px var(--red);}
 .day-cell.selected{background:var(--bg);box-shadow:inset 0 0 0 2px var(--gold);}
-/* 國曆月初：僅加金色內框，保留原本底色及文字顏色。 */
-.day-cell.month-start:not(.today):not(.selected){box-shadow:inset 0 0 0 1px var(--gold);}
 
 /* ── 格頂標籤（絕對定位貼頂）── */
 .cell-top{
@@ -633,10 +631,10 @@ function renderWeek(container, weekStart){
     const _solRemind=getSolRemind(dm,dd);
     const solRemindLabel=_solRemind?_solRemind.label:null;
     const isSolRemind=!!solRemindLabel; // 國曆框兩種模式都顯示
-    cell.className='day-cell'+(dd===1?' month-start':'')+(isTdy?' today':'')+(selectedKey===key?' selected':'')+(isTracked?' gz-tracked':'')+(isLmRemind?' lm-remind':'')+(isSolRemind&&!isTracked&&!isLmRemind?' sol-remind':'');
+    cell.className='day-cell'+(isTdy?' today':'')+(selectedKey===key?' selected':'')+(isTracked?' gz-tracked':'')+(isLmRemind?' lm-remind':'')+(isSolRemind&&!isTracked&&!isLmRemind?' sol-remind':'');
     cell.dataset.date=key;
     cell.dataset.monthIndex=String(dy*12+dm);
-    cell.classList.toggle('future-month',dy*12+dm>vy*12+vm);
+    cell.classList.toggle('outside-month',dy*12+dm!==vy*12+vm);
 
     // ── 格頂標籤 ──
     const {gzLabel,lmLabel}=getCellTopLabels(dy,dm,dd);
@@ -822,7 +820,7 @@ function updateVisibleMonth(){
     vy=y;vm=m;
     const current=vy*12+vm;
     calendarGrid.querySelectorAll('.day-cell').forEach(cell=>{
-      cell.classList.toggle('future-month',Number(cell.dataset.monthIndex)>current);
+      cell.classList.toggle('outside-month',Number(cell.dataset.monthIndex)!==current);
     });
   }
   updateHeader(date);
