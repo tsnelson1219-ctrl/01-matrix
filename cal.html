@@ -8,7 +8,7 @@
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
 :root{
-  --bg:#0f0e0c;--bg2:#1a1814;--calendar-current-bg:#2d261d;--calendar-outside-bg:#0b0a08;--gold:#d4a75b;--gold2:rgba(212,167,91,.15);
+  --bg:#0f0e0c;--bg2:#1a1814;--calendar-current-bg:var(--bg);--calendar-outside-bg:#29231b;--gold:#d4a75b;--gold2:rgba(212,167,91,.15);
   --gold3:rgba(212,167,91,.35);--text:#c8a96e;--dim:rgba(212,167,91,.45);
   --green:#7aab8a;--red:#c06060;--border:rgba(212,167,91,.18);--trans:all 0.2s ease;
 }
@@ -96,7 +96,7 @@ body{
   border-radius:6px;cursor:pointer;border:none;
   padding:2px 2px 2px 2px;
   overflow:hidden;background:var(--calendar-current-bg);
-  transition:background .12s;
+  transition:background-color .36s ease-in-out;
   user-select:none;-webkit-user-select:none;
 }
 /* 中間橫排：左欄(數字+農曆) + 節氣膠囊，整體置中 */
@@ -112,6 +112,7 @@ body{
   gap:2px;
 }
 .day-cell:active{background:var(--gold2);}
+@media(prefers-reduced-motion:reduce){.day-cell{transition:none;}}
 .day-cell.other-month{opacity:.28;}
 /* 非當前國曆月份：前後月份皆使用較暗底色，保留文字及特殊日期樣式。 */
 .day-cell.outside-month:not(.today):not(.selected):not(:active){background:var(--calendar-outside-bg);}
