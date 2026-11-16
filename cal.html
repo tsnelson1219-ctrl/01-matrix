@@ -833,8 +833,9 @@ function makeWeek(date){
   return row;
 }
 function visibleMonthDate(){
-  // 前一週滑出頂端一半時，提前以新週的星期六判斷月份。
-  const weekIndex=Math.floor(viewport.scrollTop/weekHeight+0.5);
+  // 電腦六週視野較大：提前一整週切換；手機維持原本半週觸發。
+  const monthLead=isDesktopCalendar()?1.5:0.5;
+  const weekIndex=Math.floor(viewport.scrollTop/weekHeight+monthLead);
   return addDays(firstWeek,weekIndex*7+6);
 }
 function updateVisibleMonth(){
