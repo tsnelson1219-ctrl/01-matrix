@@ -833,8 +833,8 @@ function makeWeek(date){
   return row;
 }
 function visibleMonthDate(){
-  // 電腦六週視野較大：提前一整週切換；手機維持原本半週觸發。
-  const monthLead=isDesktopCalendar()?1.5:0.5;
+  // 電腦與手機統一提前一週半判斷月份，避免畫面大半已跨月才切換。
+  const monthLead=1.5;
   const weekIndex=Math.floor(viewport.scrollTop/weekHeight+monthLead);
   return addDays(firstWeek,weekIndex*7+6);
 }
