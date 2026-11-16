@@ -362,6 +362,25 @@ body.light .lm-label-input{background:rgba(255,255,255,.5);}
 .ji-label{color:var(--red);font-weight:700;flex-shrink:0;font-size:13px;}
 .yi-text{color:var(--text);font-size:12px;flex:1;}
 .ji-text{color:var(--text);font-size:12px;flex:1;}
+/* 電腦版：日期／干支與月份／節氣分欄，六週依實際高度縮放。手機排版維持原樣。 */
+.cell-reminders{display:contents;}
+@media(min-width:600px) and (pointer:fine){
+  .day-cell{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:repeat(2,minmax(0,1fr)) auto;gap:1px 3px;padding:3px;align-items:center;justify-content:stretch;}
+  .cell-mid{display:contents;}
+  .cell-left{grid-column:1;grid-row:1 / 3;min-width:0;gap:2px;}
+  .day-cell:not(:has(.cell-top,.jq-label)) .cell-left{grid-column:1 / -1;}
+  .cell-top{position:static;grid-column:2;grid-row:1;justify-content:center;align-self:center;}
+  .day-cell:not(:has(.jq-label)) .cell-top{grid-row:1 / 3;}
+  .jq-label{grid-column:2;grid-row:2;justify-content:center;align-self:center;}
+  .day-cell:not(:has(.cell-top)) .jq-label{grid-row:1 / 3;}
+  .gz-month-tag,.lm-month-tag{font-size:clamp(9px,min(calc(var(--week-height)*.17),1.5vw),12px);line-height:1.25;padding:1px 3px;letter-spacing:0;}
+  .jq-inner{writing-mode:horizontal-tb;font-size:clamp(9px,min(calc(var(--week-height)*.18),1.5vw),13px);line-height:1.2;padding:1px 3px;letter-spacing:0;}
+  .day-num{font-size:clamp(14px,min(calc(var(--week-height)*.36),3vw),28px);line-height:1.05;white-space:nowrap;}
+  .day-sub{font-size:clamp(10px,min(calc(var(--week-height)*.22),2vw),18px);line-height:1.1;margin-top:0;padding:1px 2px;white-space:nowrap;}
+  .cell-reminders{grid-column:1 / -1;grid-row:3;display:flex;justify-content:center;gap:4px;min-width:0;overflow:hidden;}
+  .cell-reminders:empty{display:none;}
+  .cell-reminders .remind-label,.cell-reminders .sol-remind-label{min-width:0;max-width:100%;margin:0;font-size:clamp(9px,calc(var(--week-height)*.15),11px);line-height:1.15;}
+}
 </style>
 </head>
 <body>
@@ -695,6 +714,8 @@ function renderWeek(container, weekStart){
     }
     // ── 正確 DOM 順序：cellMid → 提醒文字 → note-dot ──
     cell.appendChild(cellMid);
+    const reminders=document.createElement('div');
+    reminders.className='cell-reminders';
 
     if(remindLabel){
       const remind=lmReminds[Object.keys(lmReminds).find(k=>{
@@ -706,7 +727,7 @@ function renderWeek(container, weekStart){
       const rl=document.createElement('span');
       rl.className='remind-label';
       rl.textContent=remindLabel+yearCount;
-      cell.appendChild(rl);
+      reminders.appendChild(rl);
     }
 
     if(solRemindLabel){
@@ -715,8 +736,10 @@ function renderWeek(container, weekStart){
       const sl=document.createElement('span');
       sl.className='sol-remind-label';
       sl.textContent=solRemindLabel+yearCount;
-      cell.appendChild(sl);
+      reminders.appendChild(sl);
     }
+
+    if(reminders.childElementCount) cell.appendChild(reminders);
 
     if(localStorage.getItem('cal_note_'+key)){
       const dot=document.createElement('span');dot.className='note-dot';dot.textContent='●';cell.appendChild(dot);
@@ -835,13 +858,23 @@ function buildCalendar(date,offset=0){
   viewport.scrollTop=BUFFER_WEEKS*weekHeight+offset;
   updateVisibleMonth();
 }
+function isDesktopCalendar(){
+  return window.matchMedia('(min-width:600px) and (pointer:fine)').matches;
+}
+function fitWeekHeight(){
+  if(isDesktopCalendar()){
+    const available=viewport.clientHeight-parseFloat(getComputedStyle(viewport).paddingBottom||'0');
+    return Math.max(48,Math.floor(available/6));
+  }
+  return Math.max(window.innerWidth<=420?94:72,Math.round(viewport.clientHeight/6));
+}
 function render(){
   hideBubble();
   if(firstWeek){
     const date=topDate(),offset=viewport.scrollTop%weekHeight;
     buildCalendar(date,offset);
   }else{
-    weekHeight=Math.max(window.innerWidth<=420?94:72,Math.round(viewport.clientHeight/6));
+    weekHeight=fitWeekHeight();
     calendarGrid.style.setProperty('--week-height',weekHeight+'px');
     buildCalendar(new Date(vy,vm-1,1,12));
   }
@@ -884,7 +917,7 @@ viewport.addEventListener('scroll',()=>{
 // 旋轉螢幕或外層導覽列改變高度時，保留頂端週與週內位置。
 new ResizeObserver(()=>{
   if(!firstWeek||!viewport.clientHeight) return;
-  const nextHeight=Math.max(window.innerWidth<=420?94:72,Math.round(viewport.clientHeight/6));
+  const nextHeight=fitWeekHeight();
   if(Math.abs(nextHeight-weekHeight)<0.5) return;
   const date=topDate(),fraction=(viewport.scrollTop%weekHeight)/weekHeight;
   weekHeight=nextHeight;
@@ -994,7 +1027,7 @@ function goToToday(){
   today=new Date();
   vy=today.getFullYear();vm=today.getMonth()+1;
   selectedKey=null;closeJumpModal();
-  hideBubble();buildCalendar(today);
+  hideBubble();buildCalendar(isDesktopCalendar()?new Date(vy,vm-1,1,12):today);
 }
 
 // ── IO Modal ──
